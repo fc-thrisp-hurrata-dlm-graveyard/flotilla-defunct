@@ -1,26 +1,10 @@
-package gin
+package fleet
 
 import (
 	"log"
 	"os"
 	"time"
 )
-
-func ErrorLogger() HandlerFunc {
-	return ErrorLoggerT(ErrorTypeAll)
-}
-
-func ErrorLoggerT(typ uint32) HandlerFunc {
-	return func(c *Context) {
-		c.Next()
-
-		errs := c.Errors.ByType(typ)
-		if len(errs) > 0 {
-			// -1 status code = do not change current one
-			c.JSON(-1, c.Errors)
-		}
-	}
-}
 
 var (
 	green  = string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
@@ -32,7 +16,6 @@ var (
 
 func Logger() HandlerFunc {
 	stdlogger := log.New(os.Stdout, "", 0)
-	//errlogger := log.New(os.Stderr, "", 0)
 
 	return func(c *Context) {
 		// Start timer
@@ -43,6 +26,7 @@ func Logger() HandlerFunc {
 
 		// save the IP of the requester
 		requester := c.Request.Header.Get("X-Real-IP")
+
 		// if the requester-header is empty, check the forwarded-header
 		if requester == "" {
 			requester = c.Request.Header.Get("X-Forwarded-For")
@@ -67,12 +51,15 @@ func Logger() HandlerFunc {
 		}
 		end := time.Now()
 		latency := end.Sub(start)
-		stdlogger.Printf("[GIN] %v |%s %3d %s| %12v | %s %4s %s\n%s",
+		stdlogger.Printf("[FLEET] %v |%s %3d %s| %12v | %s %4s %s\n%s",
 			end.Format("2006/01/02 - 15:04:05"),
-			color, code, reset,
+			color,
+			code,
+			reset,
 			latency,
 			requester,
-			c.Request.Method, c.Request.URL.Path,
+			c.Request.Method,
+			c.Request.URL.Path,
 			c.Errors.String(),
 		)
 	}

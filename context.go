@@ -1,17 +1,18 @@
-package gin
+package fleet
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/gin-gonic/gin/render"
-	"github.com/julienschmidt/httprouter"
 	"log"
+	"math"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 const (
+	AbortIndex        = math.MaxInt8 / 2
 	ErrorTypeInternal = 1 << iota
 	ErrorTypeExternal = 1 << iota
 	ErrorTypeAll      = 0xffffffff
@@ -51,8 +52,7 @@ func (a errorMsgs) String() string {
 	return buffer.String()
 }
 
-// Context is the most important part of gin. It allows us to pass variables between middleware,
-// manage the flow, validate the JSON of a request and render a JSON response for example.
+// Allows us to pass variables between middleware & manage the flow
 type Context struct {
 	writermem responseWriter
 	Request   *http.Request
@@ -64,10 +64,6 @@ type Context struct {
 	handlers  []HandlerFunc
 	index     int8
 }
-
-/************************************/
-/********** ROUTES GROUPING *********/
-/************************************/
 
 func (engine *Engine) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
 	c := engine.cache.Get().(*Context)
@@ -81,10 +77,6 @@ func (engine *Engine) createContext(w http.ResponseWriter, req *http.Request, pa
 	return c
 }
 
-/************************************/
-/****** FLOW AND ERROR MANAGEMENT****/
-/************************************/
-
 func (c *Context) Copy() *Context {
 	var cp Context = *c
 	cp.index = AbortIndex
@@ -94,7 +86,6 @@ func (c *Context) Copy() *Context {
 
 // Next should be used only in the middlewares.
 // It executes the pending handlers in the chain inside the calling handler.
-// See example in github.
 func (c *Context) Next() {
 	c.index++
 	s := int8(len(c.handlers))
@@ -132,9 +123,11 @@ func (c *Context) ErrorTyped(err error, typ uint32, meta interface{}) {
 	})
 }
 
-// Attaches an error to the current context. The error is pushed to a list of errors.
-// It's a good idea to call Error for each error that occurred during the resolution of a request.
-// A middleware can be used to collect all the errors and push them to a database together, print a log, or append it in the HTTP response.
+// Attaches an error to the current context. The error is pushed to a list of
+// errors. It's a good idea to call Error for each error that occurred during
+// the resolution of a request. A middleware can be used to collect all the
+// errors and push them to a database together, print a log, or append it in
+// the HTTP response.
 func (c *Context) Error(err error, meta interface{}) {
 	c.ErrorTyped(err, ErrorTypeExternal, meta)
 }
@@ -148,10 +141,6 @@ func (c *Context) LastError() error {
 	}
 }
 
-/************************************/
-/******** METADATA MANAGEMENT********/
-/************************************/
-
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
 func (c *Context) Set(key string, item interface{}) {
@@ -161,7 +150,7 @@ func (c *Context) Set(key string, item interface{}) {
 	c.Keys[key] = item
 }
 
-// Get returns the value for the given key or an error if the key does not exist.
+// Get returns the value for the given key or an error if nonexistent.
 func (c *Context) Get(key string) (interface{}, error) {
 	if c.Keys != nil {
 		item, ok := c.Keys[key]
@@ -172,79 +161,13 @@ func (c *Context) Get(key string) (interface{}, error) {
 	return nil, errors.New("Key does not exist.")
 }
 
-// MustGet returns the value for the given key or panics if the value doesn't exist.
+// MustGet returns the value for the given key or panics if nonexistent.
 func (c *Context) MustGet(key string) interface{} {
 	value, err := c.Get(key)
 	if err != nil || value == nil {
 		log.Panicf("Key %s doesn't exist", key)
 	}
 	return value
-}
-
-/************************************/
-/******** ENCOGING MANAGEMENT********/
-/************************************/
-
-// This function checks the Content-Type to select a binding engine automatically,
-// Depending the "Content-Type" header different bindings are used:
-// "application/json" --> JSON binding
-// "application/xml"  --> XML binding
-// else --> returns an error
-// if Parses the request's body as JSON if Content-Type == "application/json"  using JSON or XML  as a JSON input. It decodes the json payload into the struct specified as a pointer.Like ParseBody() but this method also writes a 400 error if the json is not valid.
-func (c *Context) Bind(obj interface{}) bool {
-	var b binding.Binding
-	ctype := filterFlags(c.Request.Header.Get("Content-Type"))
-	switch {
-	case c.Request.Method == "GET" || ctype == MIMEPOSTForm:
-		b = binding.Form
-	case ctype == MIMEJSON:
-		b = binding.JSON
-	case ctype == MIMEXML || ctype == MIMEXML2:
-		b = binding.XML
-	default:
-		c.Fail(400, errors.New("unknown content-type: "+ctype))
-		return false
-	}
-	return c.BindWith(obj, b)
-}
-
-func (c *Context) BindWith(obj interface{}, b binding.Binding) bool {
-	if err := b.Bind(c.Request, obj); err != nil {
-		c.Fail(400, err)
-		return false
-	}
-	return true
-}
-
-func (c *Context) Render(code int, render render.Render, obj ...interface{}) {
-	if err := render.Render(c.Writer, code, obj...); err != nil {
-		c.ErrorTyped(err, ErrorTypeInternal, obj)
-		c.Abort(500)
-	}
-}
-
-// Serializes the given struct as JSON into the response body in a fast and efficient way.
-// It also sets the Content-Type as "application/json".
-func (c *Context) JSON(code int, obj interface{}) {
-	c.Render(code, render.JSON, obj)
-}
-
-// Serializes the given struct as XML into the response body in a fast and efficient way.
-// It also sets the Content-Type as "application/xml".
-func (c *Context) XML(code int, obj interface{}) {
-	c.Render(code, render.XML, obj)
-}
-
-// Renders the HTTP template specified by its file name.
-// It also updates the HTTP code and sets the Content-Type as "text/html".
-// See http://golang.org/doc/articles/wiki/
-func (c *Context) HTML(code int, name string, obj interface{}) {
-	c.Render(code, c.Engine.HTMLRender, name, obj)
-}
-
-// Writes the given string into the response body and sets the Content-Type to "text/plain".
-func (c *Context) String(code int, format string, values ...interface{}) {
-	c.Render(code, render.Plain, format, values)
 }
 
 // Writes some data into the body stream and updates the HTTP code.
@@ -256,9 +179,4 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 		c.Writer.WriteHeader(code)
 	}
 	c.Writer.Write(data)
-}
-
-// Writes the specified file into the body stream
-func (c *Context) File(filepath string) {
-	http.ServeFile(c.Writer, c.Request, filepath)
 }

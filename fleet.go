@@ -1,23 +1,11 @@
-package gin
+package fleet
 
 import (
-	"github.com/gin-gonic/gin/render"
-	"github.com/julienschmidt/httprouter"
-	"html/template"
-	"math"
 	"net/http"
 	"path"
 	"sync"
-)
 
-const (
-	AbortIndex   = math.MaxInt8 / 2
-	MIMEJSON     = "application/json"
-	MIMEHTML     = "text/html"
-	MIMEXML      = "application/xml"
-	MIMEXML2     = "text/xml"
-	MIMEPlain    = "text/plain"
-	MIMEPOSTForm = "application/x-www-form-urlencoded"
+	"github.com/julienschmidt/httprouter"
 )
 
 type (
@@ -35,7 +23,6 @@ type (
 	// Represents the web framework, it wraps the blazing fast httprouter multiplexer and a list of global middlewares.
 	Engine struct {
 		*RouterGroup
-		HTMLRender   render.Render
 		cache        sync.Pool
 		finalNoRoute []HandlerFunc
 		noRoute      []HandlerFunc
@@ -48,7 +35,7 @@ func (engine *Engine) handle404(w http.ResponseWriter, req *http.Request) {
 	c.Writer.setStatus(404)
 	c.Next()
 	if !c.Writer.Written() {
-		c.Data(404, MIMEPlain, []byte("404 page not found"))
+		c.Data(404, "text/plain", []byte("404 page not found"))
 	}
 	engine.cache.Put(c)
 }
@@ -75,23 +62,7 @@ func Default() *Engine {
 	return engine
 }
 
-func (engine *Engine) LoadHTMLGlob(pattern string) {
-	templ := template.Must(template.ParseGlob(pattern))
-	engine.SetHTMLTemplate(templ)
-}
-
-func (engine *Engine) LoadHTMLFiles(files ...string) {
-	templ := template.Must(template.ParseFiles(files...))
-	engine.SetHTMLTemplate(templ)
-}
-
-func (engine *Engine) SetHTMLTemplate(templ *template.Template) {
-	engine.HTMLRender = render.HTMLRender{
-		Template: templ,
-	}
-}
-
-// Adds handlers for NoRoute. It return a 404 code by default.
+// Adds handlers for NoRoute
 func (engine *Engine) NoRoute(handlers ...HandlerFunc) {
 	engine.noRoute = handlers
 	engine.finalNoRoute = engine.combineHandlers(engine.noRoute)
@@ -113,17 +84,11 @@ func (engine *Engine) Run(addr string) {
 	}
 }
 
-func (engine *Engine) RunTLS(addr string, cert string, key string) {
-	if err := http.ListenAndServeTLS(addr, cert, key, engine); err != nil {
-		panic(err)
-	}
-}
-
 /************************************/
 /********** ROUTES GROUPING *********/
 /************************************/
 
-// Adds middlewares to the group, see example code in github.
+// Adds middlewares to the group.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 	group.Handlers = append(group.Handlers, middlewares...)
 }
@@ -152,7 +117,6 @@ func (group *RouterGroup) pathFor(p string) string {
 
 // Handle registers a new request handle and middlewares with the given path and method.
 // The last handler should be the real handler, the other ones should be middlewares that can and should be shared among different routes.
-// See the example code in github.
 //
 // For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used.
@@ -170,37 +134,30 @@ func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	})
 }
 
-// POST is a shortcut for router.Handle("POST", path, handle)
 func (group *RouterGroup) POST(path string, handlers ...HandlerFunc) {
 	group.Handle("POST", path, handlers)
 }
 
-// GET is a shortcut for router.Handle("GET", path, handle)
 func (group *RouterGroup) GET(path string, handlers ...HandlerFunc) {
 	group.Handle("GET", path, handlers)
 }
 
-// DELETE is a shortcut for router.Handle("DELETE", path, handle)
 func (group *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
 	group.Handle("DELETE", path, handlers)
 }
 
-// PATCH is a shortcut for router.Handle("PATCH", path, handle)
 func (group *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
 	group.Handle("PATCH", path, handlers)
 }
 
-// PUT is a shortcut for router.Handle("PUT", path, handle)
 func (group *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
 	group.Handle("PUT", path, handlers)
 }
 
-// OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle)
 func (group *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
 	group.Handle("OPTIONS", path, handlers)
 }
 
-// HEAD is a shortcut for router.Handle("HEAD", path, handle)
 func (group *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
 	group.Handle("HEAD", path, handlers)
 }
