@@ -120,10 +120,6 @@ func (group *RouterGroup) pathFor(p string) string {
 //
 // For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used.
-//
-// This function is intended for bulk loading and to allow the usage of less
-// frequently used, non-standardized or custom methods (e.g. for internal
-// communication with a proxy).
 func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	p = group.pathFor(p)
 	handlers = group.combineHandlers(handlers)

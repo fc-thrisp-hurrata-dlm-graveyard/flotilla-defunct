@@ -9,6 +9,38 @@ import (
 	"runtime"
 )
 
+
+const (
+    panicHtml = `<html>
+<head><title>PANIC: %s</title>
+<style type="text/css">
+html, body {
+font-family: "Roboto", sans-serif;
+color: #333333;
+background-color: #ea5343;
+margin: 0px;
+}
+h1 {
+color: #d04526;
+background-color: #ffffff;
+padding: 20px;
+border-bottom: 1px dashed #2b3848;
+}
+pre {
+margin: 20px;
+padding: 20px;
+border: 2px solid #2b3848;
+background-color: #ffffff;
+}
+</style>
+</head><body>
+<h1>PANIC</h1>
+<pre style="font-weight: bold;">%s</pre>
+<pre>%s</pre>
+</body>
+</html>`
+)
+
 var (
 	dunno     = []byte("???")
 	centerDot = []byte("·")
@@ -78,7 +110,6 @@ func function(pc uintptr) []byte {
 }
 
 // Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
-// While Martini is in development mode, Recovery will also output the panic as HTML.
 func Recovery() HandlerFunc {
 	return func(c *Context) {
 		defer func() {
