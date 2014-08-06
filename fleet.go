@@ -1,8 +1,11 @@
 package fleet
 
 import (
+	"fmt"
 	"net/http"
-	"path"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/julienschmidt/httprouter"
@@ -11,17 +14,27 @@ import (
 type (
 	HandlerFunc func(*Context)
 
-	// Used internally to configure router, a RouterGroup is associated with a prefix
-	// and an array of handlers (middlewares)
+	// Store information about routes outside of the router for use & reuse
+	Route struct {
+		method   string
+		path     string
+		handlers []HandlerFunc
+	}
+
+	// Used internally to configure router, a RouterGroup is associated with a
+	// prefix and an array of handlers (middlewares)
 	RouterGroup struct {
 		Handlers []HandlerFunc
 		prefix   string
 		parent   *RouterGroup
+		children []*RouterGroup
+		routes   []*Route
 		engine   *Engine
 	}
 
-	// Represents the web framework, it wraps the blazing fast httprouter multiplexer and a list of global middlewares.
+	// Basic struct that represents the web framework
 	Engine struct {
+		*FleetEnv
 		*RouterGroup
 		cache        sync.Pool
 		finalNoRoute []HandlerFunc
@@ -29,6 +42,29 @@ type (
 		router       *httprouter.Router
 	}
 )
+
+// Returns a new blank Engine
+func New() *Engine {
+	engine := &Engine{}
+	engine.RouterGroup = &RouterGroup{nil, "/", nil, nil, nil, engine}
+	engine.router = httprouter.New()
+	engine.router.NotFound = engine.handle404
+	engine.cache.New = func() interface{} {
+		c := &Context{Engine: engine}
+		c.Writer = &c.writermem
+		return c
+	}
+	return engine
+}
+
+// Returns a basic Engine instance with sensible defaults
+func Basic() *Engine {
+	engine := New()
+	engine.Use(Recovery(), Logger())
+	engine.FleetEnv = NewFleetEnv("")
+	engine.Static("static")
+	return engine
+}
 
 func (engine *Engine) handle404(w http.ResponseWriter, req *http.Request) {
 	c := engine.createContext(w, req, nil, engine.finalNoRoute)
@@ -40,26 +76,12 @@ func (engine *Engine) handle404(w http.ResponseWriter, req *http.Request) {
 	engine.cache.Put(c)
 }
 
-// Returns a new blank Engine instance without any middleware attached.
-// The most basic configuration
-func New() *Engine {
-	engine := &Engine{}
-	engine.RouterGroup = &RouterGroup{nil, "/", nil, engine}
-	engine.router = httprouter.New()
-	engine.router.NotFound = engine.handle404
-	engine.cache.New = func() interface{} {
-		c := &Context{Engine: engine}
-		c.Writer = &c.writermem
-		return c
+//merge another engine(routes, handlers, middleware, etc) with existing engine
+func (engine *Engine) Merge(e *Engine) error {
+	for _, x := range e.Groups() {
+		fmt.Printf("\n%+v\n", x)
 	}
-	return engine
-}
-
-// Returns a Engine instance with the Logger and Recovery already attached.
-func Default() *Engine {
-	engine := New()
-	engine.Use(Recovery(), Logger())
-	return engine
+	return nil
 }
 
 // Adds handlers for NoRoute
@@ -84,9 +106,26 @@ func (engine *Engine) Run(addr string) {
 	}
 }
 
-/************************************/
-/********** ROUTES GROUPING *********/
-/************************************/
+func (engine *Engine) Groups() []*RouterGroup {
+	type IterC func(r []*RouterGroup, fn IterC)
+
+	var rg []*RouterGroup
+
+	rg = append(rg, engine.RouterGroup)
+
+	iter := func(r []*RouterGroup, fn IterC) {
+		for _, x := range r {
+			rg = append(rg, x)
+			fn(x.children, fn)
+		}
+	}
+
+	iter(engine.children, iter)
+
+	return rg
+}
+
+// ROUTES GROUPING //
 
 // Adds middlewares to the group.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
@@ -94,36 +133,49 @@ func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 }
 
 // Creates a new router group. You should add all the routes that have common middlwares or the same path prefix.
-// For example, all the routes that use a common middlware for authorization could be grouped.
 func (group *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
 	prefix := group.pathFor(component)
 
-	return &RouterGroup{
+	newroutergroup := &RouterGroup{
 		Handlers: group.combineHandlers(handlers),
 		parent:   group,
 		prefix:   prefix,
 		engine:   group.engine,
 	}
+
+	group.children = append(group.children, newroutergroup)
+
+	return newroutergroup
 }
 
-func (group *RouterGroup) pathFor(p string) string {
-	joined := path.Join(group.prefix, p)
+func (group *RouterGroup) pathFor(path string) string {
+	joined := filepath.Join(group.prefix, path)
 	// Append a '/' if the last component had one, but only if it's not there already
-	if len(p) > 0 && p[len(p)-1] == '/' && joined[len(joined)-1] != '/' {
+	if len(path) > 0 && path[len(path)-1] == '/' && joined[len(joined)-1] != '/' {
 		return joined + "/"
 	}
 	return joined
 }
+
+//a non-absolute path fragment for the group provided a path
+func (group *RouterGroup) pathNoLeadingSlash(path string) string {
+	return strings.TrimLeft(strings.Join([]string{group.prefix, path}, "/"), "/")
+}
+
+//func (group *RouterGroup) newRoute(method string, path string, handlers ...HandlerFunc) *Route {
+//	return &Route{method, path, handlers}
+//}
 
 // Handle registers a new request handle and middlewares with the given path and method.
 // The last handler should be the real handler, the other ones should be middlewares that can and should be shared among different routes.
 //
 // For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used.
-func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
-	p = group.pathFor(p)
-	handlers = group.combineHandlers(handlers)
-	group.engine.router.Handle(method, p, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (group *RouterGroup) Handle(route *Route) {
+	path := group.pathFor(route.path)
+	handlers := group.combineHandlers(route.handlers)
+	group.routes = append(group.routes, route)
+	group.engine.router.Handle(route.method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		c := group.engine.createContext(w, req, params, handlers)
 		c.Next()
 		group.engine.cache.Put(c)
@@ -131,49 +183,50 @@ func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 }
 
 func (group *RouterGroup) POST(path string, handlers ...HandlerFunc) {
-	group.Handle("POST", path, handlers)
+	group.Handle(&Route{"POST", path, handlers})
 }
 
 func (group *RouterGroup) GET(path string, handlers ...HandlerFunc) {
-	group.Handle("GET", path, handlers)
+	group.Handle(&Route{"GET", path, handlers})
 }
 
 func (group *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
-	group.Handle("DELETE", path, handlers)
+	group.Handle(&Route{"DELETE", path, handlers})
 }
 
 func (group *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
-	group.Handle("PATCH", path, handlers)
+	group.Handle(&Route{"PATCH", path, handlers})
 }
 
 func (group *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
-	group.Handle("PUT", path, handlers)
+	group.Handle(&Route{"PUT", path, handlers})
 }
 
 func (group *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
-	group.Handle("OPTIONS", path, handlers)
+	group.Handle(&Route{"OPTIONS", path, handlers})
 }
 
 func (group *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
-	group.Handle("HEAD", path, handlers)
+	group.Handle(&Route{"HEAD", path, handlers})
 }
 
 // Static serves files from the given file system root.
-// Internally a http.FileServer is used, therefore http.NotFound is used instead
-// of the Router's NotFound handler.
-// To use the operating system's file system implementation,
-// use :
-//     router.Static("/static", "/var/www")
-func (group *RouterGroup) Static(p, root string) {
-	prefix := group.pathFor(p)
-	p = path.Join(p, "/*filepath")
-	fileServer := http.StripPrefix(prefix, http.FileServer(http.Dir(root)))
-	group.GET(p, func(c *Context) {
-		fileServer.ServeHTTP(c.Writer, c.Request)
-	})
-	group.HEAD(p, func(c *Context) {
-		fileServer.ServeHTTP(c.Writer, c.Request)
-	})
+func (group *RouterGroup) Static(staticpath string) {
+	group.engine.AddStaticPath(group.pathNoLeadingSlash(staticpath))
+	staticpath = filepath.Join(staticpath, "/*filepath")
+	group.Handle(&Route{"GET", staticpath, []HandlerFunc{group.handleStatic}})
+	group.Handle(&Route{"HEAD", staticpath, []HandlerFunc{group.handleStatic}})
+}
+
+func (group *RouterGroup) handleStatic(c *Context) {
+	for _, dir := range c.Engine.StaticPaths {
+		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) error {
+			if filepath.Base(path) == filepath.Base(c.Request.URL.Path) {
+				c.File(path)
+			}
+			return nil
+		})
+	}
 }
 
 func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
