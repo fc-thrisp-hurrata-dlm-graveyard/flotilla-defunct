@@ -14,15 +14,15 @@ import (
 type (
 	HandlerFunc func(*Context)
 
-	// Store information about routes outside of the router for use & reuse
+	// Store information about a route as a unit outside of the router
+	// for use & reuse
 	Route struct {
 		method   string
 		path     string
 		handlers []HandlerFunc
 	}
 
-	// Used internally to configure router, a RouterGroup is associated with a
-	// prefix and an array of handlers (middlewares)
+	// A RouterGroup is associated with a prefix and an array of handlers
 	RouterGroup struct {
 		Handlers []HandlerFunc
 		prefix   string
@@ -34,6 +34,7 @@ type (
 
 	// Basic struct that represents the web framework
 	Engine struct {
+		Name string
 		*FleetEnv
 		*RouterGroup
 		cache        sync.Pool
@@ -44,9 +45,9 @@ type (
 )
 
 // Returns a new blank Engine
-func New() *Engine {
-	engine := &Engine{}
-	engine.RouterGroup = &RouterGroup{nil, "/", nil, nil, nil, engine}
+func New(name string) *Engine {
+	engine := &Engine{Name: name}
+	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router = httprouter.New()
 	engine.router.NotFound = engine.handle404
 	engine.cache.New = func() interface{} {
@@ -59,7 +60,7 @@ func New() *Engine {
 
 // Returns a basic Engine instance with sensible defaults
 func Basic() *Engine {
-	engine := New()
+	engine := New("fleet")
 	engine.Use(Recovery(), Logger())
 	engine.FleetEnv = NewFleetEnv("")
 	engine.Static("static")
@@ -127,12 +128,12 @@ func (engine *Engine) Groups() []*RouterGroup {
 
 // ROUTES GROUPING //
 
-// Adds middlewares to the group.
+// Adds handler middlewares to the group.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 	group.Handlers = append(group.Handlers, middlewares...)
 }
 
-// Creates a new router group. You should add all the routes that have common middlwares or the same path prefix.
+// Creates a new router group.
 func (group *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
 	prefix := group.pathFor(component)
 

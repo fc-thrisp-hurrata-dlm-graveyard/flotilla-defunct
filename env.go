@@ -18,7 +18,8 @@ import (
 //)
 
 var (
-	defaultEnv = `HttpPort = 8080
+	defaultEnv = `workingPath = %s
+HttpPort = 8080
 AppName = fleet
 RunInMode = development
 StaticBase = static
@@ -38,7 +39,7 @@ type (
 )
 
 func getDefaultEnv() []byte {
-	env := fmt.Sprintf(defaultEnv, workingStatic)
+	env := fmt.Sprintf(defaultEnv, workingPath)
 	return []byte(env)
 }
 

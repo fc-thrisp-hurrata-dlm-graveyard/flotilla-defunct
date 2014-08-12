@@ -94,9 +94,10 @@ func (c *Context) Next() {
 	}
 }
 
-// Forces the system to do not continue calling the pending handlers.
-// For example, the first handler checks if the request is authorized. If it's not, context.Abort(401) should be called.
-// The rest of pending handlers would never be called for that request.
+// Forces the system to discontinue calling the pending handlers.
+// For example, a handler checks if the request is authorized.
+// If not authorized, context.Abort(401) is called and no pending handlers
+// called for that request.
 func (c *Context) Abort(code int) {
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
