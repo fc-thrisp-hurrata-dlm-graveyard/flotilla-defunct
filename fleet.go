@@ -1,7 +1,6 @@
 package fleet
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,10 +36,12 @@ type (
 		Name string
 		*FleetEnv
 		*RouterGroup
+		IEngineAsset
 		cache        sync.Pool
 		finalNoRoute []HandlerFunc
 		noRoute      []HandlerFunc
 		router       *httprouter.Router
+		engines      []*Engine
 	}
 )
 
@@ -77,11 +78,13 @@ func (engine *Engine) handle404(w http.ResponseWriter, req *http.Request) {
 	engine.cache.Put(c)
 }
 
-//merge another engine(routes, handlers, middleware, etc) with existing engine
+//merge other engine(routes, handlers, middleware, etc) with existing engine
 func (engine *Engine) Merge(e *Engine) error {
-	for _, x := range e.Groups() {
-		fmt.Printf("\n%+v\n", x)
-	}
+	engine.engines = append(engine.engines, e)
+	//fmt.Printf("engine to merge\n%+v\n", e)
+	//for _, x := range e.Groups() {
+	//	fmt.Printf("group: \n%+v\n", x)
+	//}
 	return nil
 }
 
