@@ -36,7 +36,6 @@ type (
 		Name string
 		*FleetEnv
 		*RouterGroup
-		IEngineAsset
 		cache        sync.Pool
 		finalNoRoute []HandlerFunc
 		noRoute      []HandlerFunc
