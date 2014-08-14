@@ -41,12 +41,14 @@ type (
 		noRoute      []HandlerFunc
 		router       *httprouter.Router
 		engines      []*Engine
+		*AssetFS
 	}
 )
 
 // Returns a new blank Engine
 func New(name string) *Engine {
 	engine := &Engine{Name: name}
+	engine.FleetEnv = &FleetEnv{engine: engine}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router = httprouter.New()
 	engine.router.NotFound = engine.handle404
@@ -62,7 +64,7 @@ func New(name string) *Engine {
 func Basic() *Engine {
 	engine := New("fleet")
 	engine.Use(Recovery(), Logger())
-	engine.FleetEnv = NewFleetEnv("")
+	engine.FleetEnv = NewFleetEnv(engine, "")
 	engine.Static("static")
 	return engine
 }
@@ -80,10 +82,6 @@ func (engine *Engine) handle404(w http.ResponseWriter, req *http.Request) {
 //merge other engine(routes, handlers, middleware, etc) with existing engine
 func (engine *Engine) Merge(e *Engine) error {
 	engine.engines = append(engine.engines, e)
-	//fmt.Printf("engine to merge\n%+v\n", e)
-	//for _, x := range e.Groups() {
-	//	fmt.Printf("group: \n%+v\n", x)
-	//}
 	return nil
 }
 
@@ -222,13 +220,31 @@ func (group *RouterGroup) Static(staticpath string) {
 }
 
 func (group *RouterGroup) handleStatic(c *Context) {
+	requested := filepath.Base(c.Request.URL.Path)
+	// check current paths
 	for _, dir := range c.Engine.StaticPaths {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) error {
-			if filepath.Base(path) == filepath.Base(c.Request.URL.Path) {
+			if filepath.Base(path) == requested {
 				c.File(path)
 			}
 			return nil
 		})
+	}
+	// check main engine AssetFS, if it exists
+	if c.Engine.AssetFS != nil {
+		if hasfile, ok := c.Engine.HasAsset(requested); ok {
+			c.ServeAssetFS(hasfile, c.Engine.AssetFS)
+		}
+	}
+	// check each engine AssetFS
+	if c.Engine.engines != nil {
+		for _, engine := range c.Engine.engines {
+			if engine.AssetFS != nil {
+				if hasfile, ok := engine.HasAsset(requested); ok {
+					c.ServeAssetFS(hasfile, engine.AssetFS)
+				}
+			}
+		}
 	}
 }
 

@@ -186,3 +186,12 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 func (c *Context) File(filepath string) {
 	http.ServeFile(c.Writer, c.Request, filepath)
 }
+
+//serves the file from the given AssetFS
+func (c *Context) ServeAssetFS(requested string, a *AssetFS) {
+	f, err := a.Open(requested)
+	fi, err := f.Stat()
+	if err == nil {
+		http.ServeContent(c.Writer, c.Request, requested, fi.ModTime(), f)
+	}
+}

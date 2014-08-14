@@ -8,17 +8,10 @@ import (
 	"time"
 
 	"github.com/thrisp/triago"
-	//"./triago"
 )
 
-//const (
-//	development = iota
-//	testing
-//	production
-//)
-
 var (
-	defaultEnv = `workingPath = %s
+	defaultConf = `workingPath = %s
 HttpPort = 8080
 AppName = fleet
 RunInMode = development
@@ -35,11 +28,12 @@ type (
 		*triago.Config
 		ConfPaths   []string
 		StaticPaths []string
+		engine      *Engine
 	}
 )
 
-func getDefaultEnv() []byte {
-	env := fmt.Sprintf(defaultEnv, workingPath)
+func getDefaultConf() []byte {
+	env := fmt.Sprintf(defaultConf, workingPath)
 	return []byte(env)
 }
 
@@ -49,8 +43,8 @@ func newFleetConf(conf *triago.Config) *triago.Config {
 	return conf
 }
 
-func NewFleetEnv(filepaths ...string) *FleetEnv {
-	f := &FleetEnv{Config: newFleetConf(triago.NewDefault())}
+func NewFleetEnv(e *Engine, filepaths ...string) *FleetEnv {
+	f := &FleetEnv{Config: newFleetConf(triago.NewDefault()), engine: e}
 	f.makeConfFile(f.Config.FileName)
 	f.AddConfPath(f.Config.FileName)
 	for _, fp := range filepaths {
@@ -72,7 +66,7 @@ func (f *FleetEnv) makeConfFile(filePath string) {
 		if err = os.MkdirAll(dirPath, 0755); err != nil {
 			return
 		}
-		if err = ioutil.WriteFile(filePath, getDefaultEnv(), 0644); err != nil {
+		if err = ioutil.WriteFile(filePath, getDefaultConf(), 0644); err != nil {
 			return
 		}
 	}
@@ -92,7 +86,7 @@ func (f *FleetEnv) AddConfs(paths ...string) {
 func (f *FleetEnv) mergeConf(path string) {
 	m, err := triago.ReadDefault(path)
 	if err != nil {
-		fmt.Printf("%+v\n", err) //log
+		fmt.Printf("%+v\n", err)
 	}
 	f.Merge(m)
 }
@@ -114,7 +108,6 @@ func (f *FleetEnv) compileConf() {
 }
 
 func (f *FleetEnv) initEnv() {
-	// log
 	f.compileConf()
 }
 

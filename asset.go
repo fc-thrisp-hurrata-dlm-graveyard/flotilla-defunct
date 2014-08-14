@@ -118,6 +118,15 @@ func (f *AssetDirectory) Stat() (os.FileInfo, error) {
 	return f, nil
 }
 
+func (fs *AssetFS) HasAsset(requested string) (string, bool) {
+	for _, filename := range fs.AssetNames() {
+		if path.Base(filename) == requested {
+			return filename, true
+		}
+	}
+	return "", false
+}
+
 func (fs *AssetFS) Open(name string) (http.File, error) {
 	name = path.Join(fs.Prefix, name)
 	if len(name) > 0 && name[0] == '/' {
