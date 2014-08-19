@@ -13,8 +13,7 @@ import (
 type (
 	HandlerFunc func(*Context)
 
-	// Store information about a route as a unit outside of the router
-	// for use & reuse
+	// Information about a route as a unit outside of the router, for use & reuse
 	Route struct {
 		method   string
 		path     string
@@ -48,7 +47,7 @@ type (
 // Returns a new blank Engine
 func New(name string) *Engine {
 	engine := &Engine{Name: name}
-	engine.FleetEnv = &FleetEnv{engine: engine}
+	engine.FleetEnv = &FleetEnv{}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router = httprouter.New()
 	engine.router.NotFound = engine.handle404
@@ -64,7 +63,7 @@ func New(name string) *Engine {
 func Basic() *Engine {
 	engine := New("fleet")
 	engine.Use(Recovery(), Logger())
-	engine.FleetEnv = NewFleetEnv(engine, "")
+	engine.FleetEnv = NewFileEnv("")
 	engine.Static("static")
 	return engine
 }
@@ -246,6 +245,7 @@ func (group *RouterGroup) handleStatic(c *Context) {
 			}
 		}
 	}
+	//not found
 }
 
 func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
