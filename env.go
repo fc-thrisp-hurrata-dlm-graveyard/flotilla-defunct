@@ -1,6 +1,8 @@
 package fleet
 
 import (
+	"bufio"
+	"bytes"
 	"os"
 	"path/filepath"
 )
@@ -20,26 +22,30 @@ type (
 )
 
 func NewFileEnv(flpth string) *FleetEnv {
-	f := &FleetEnv{}
-	f.configureFromFile(flpth)
+	f := &FleetEnv{FleetConf: make(map[string]string)}
+	f.LoadConfFile(flpth)
 	return f
 }
 
 func NewMapEnv(m map[string]string) *FleetEnv {
-	f := &FleetEnv{}
-	f.configureFromMap(m)
-	return f
+	return &FleetEnv{FleetConf: m}
 }
 
-func (f *FleetEnv) configureFromMap(conf FleetConf) {
-	f.FleetConf = conf
-}
-
-func (f *FleetEnv) configureFromFile(confpath string) {
-	raw, _ := f.LoadConfFile(confpath)
-	if raw != nil {
-		f.FleetConf = raw
+func (env *FleetEnv) LoadConfFile(filename string) (err error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
 	}
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	err = env.FleetConf.parse(reader, filename)
+	return err
+}
+
+func (env *FleetEnv) LoadConfByte(b []byte, name string) (err error) {
+	reader := bufio.NewReader(bytes.NewReader(b))
+	err = env.FleetConf.parse(reader, name)
+	return err
 }
 
 func (f *FleetEnv) AddStaticPath(staticpath string) {

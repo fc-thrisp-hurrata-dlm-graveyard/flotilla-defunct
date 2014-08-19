@@ -2,9 +2,7 @@ package fleet
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"unicode"
@@ -21,34 +19,7 @@ type (
 	FleetConf map[string]string
 )
 
-func (env *FleetEnv) getConf() FleetConf {
-	if env.FleetConf == nil {
-		return make(map[string]string)
-	} else {
-		return env.FleetConf
-	}
-}
-
-func (env *FleetEnv) LoadConfFile(filename string) (FleetConf, error) {
-	f := env.getConf()
-	file, err := os.Open(filename)
-	if err != nil {
-		return f, err
-	}
-	defer file.Close()
-	reader := bufio.NewReader(file)
-	f, err = parse(f, reader, filename)
-	return f, err
-}
-
-func (env *FleetEnv) LoadConfByte(b []byte, name string) (returnedf FleetConf, err error) {
-	f := env.getConf()
-	reader := bufio.NewReader(bytes.NewReader(b))
-	f, err = parse(f, reader, name)
-	return f, err
-}
-
-func parse(f FleetConf, reader *bufio.Reader, filename string) (returnedf FleetConf, err error) {
+func (f FleetConf) parse(reader *bufio.Reader, filename string) (err error) {
 	lineno := 0
 	section := ""
 	for err == nil {
@@ -65,17 +36,17 @@ func parse(f FleetConf, reader *bufio.Reader, filename string) (returnedf FleetC
 			line = line[:len(line)-1]
 			l, _, err := reader.ReadLine()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			line += strings.TrimFunc(string(l), unicode.IsSpace)
 		}
 		section, err = f.parseLine(section, line)
 		if err != nil {
-			return nil, newError(
+			return newError(
 				err.Error() + fmt.Sprintf("'%s:%d'.", filename, lineno))
 		}
 	}
-	return f, err
+	return err
 }
 
 func (f FleetConf) parseLine(section, line string) (string, error) {
