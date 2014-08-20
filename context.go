@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 import (
 	"bytes"
@@ -188,10 +188,9 @@ func (c *Context) File(filepath string) {
 }
 
 //serves the file from the given AssetFS
-func (c *Context) ServeAssetFS(requested string, a *AssetFS) {
-	f, err := a.Open(requested)
+func (c *Context) ServeAsset(f http.File) {
 	fi, err := f.Stat()
 	if err == nil {
-		http.ServeContent(c.Writer, c.Request, requested, fi.ModTime(), f)
+		http.ServeContent(c.Writer, c.Request, fi.Name(), fi.ModTime(), f)
 	}
 }

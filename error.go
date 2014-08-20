@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 type (
 	Error string

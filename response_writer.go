@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 import (
 	"net/http"
@@ -9,8 +9,6 @@ type (
 		http.ResponseWriter
 		Status() int
 		Written() bool
-
-		// private
 		setStatus(int)
 	}
 

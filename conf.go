@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 import (
 	"bufio"
@@ -16,10 +16,17 @@ var (
 )
 
 type (
-	FleetConf map[string]string
+	Conf map[string]string
 )
 
-func (f FleetConf) parse(reader *bufio.Reader, filename string) (err error) {
+func (c Conf) parsemap(m Conf) (err error) {
+	for k, v := range m {
+		c.add("", k, v)
+	}
+	return err
+}
+
+func (c Conf) parse(reader *bufio.Reader, filename string) (err error) {
 	lineno := 0
 	section := ""
 	for err == nil {
@@ -40,7 +47,7 @@ func (f FleetConf) parse(reader *bufio.Reader, filename string) (err error) {
 			}
 			line += strings.TrimFunc(string(l), unicode.IsSpace)
 		}
-		section, err = f.parseLine(section, line)
+		section, err = c.parseLine(section, line)
 		if err != nil {
 			return newError(
 				err.Error() + fmt.Sprintf("'%s:%d'.", filename, lineno))
@@ -49,7 +56,7 @@ func (f FleetConf) parse(reader *bufio.Reader, filename string) (err error) {
 	return err
 }
 
-func (f FleetConf) parseLine(section, line string) (string, error) {
+func (c Conf) parseLine(section, line string) (string, error) {
 	if line[0] == '#' || line[0] == ';' {
 		return section, nil
 	}
@@ -61,24 +68,24 @@ func (f FleetConf) parseLine(section, line string) (string, error) {
 	}
 
 	if m := regDoubleQuote.FindAllStringSubmatch(line, 1); m != nil {
-		f.add(section, m[0][1], m[0][2])
+		c.add(section, m[0][1], m[0][2])
 		return section, nil
 	} else if m = regSingleQuote.FindAllStringSubmatch(line, 1); m != nil {
-		f.add(section, m[0][1], m[0][2])
+		c.add(section, m[0][1], m[0][2])
 		return section, nil
 	} else if m = regNoQuote.FindAllStringSubmatch(line, 1); m != nil {
-		f.add(section, m[0][1], strings.TrimFunc(m[0][2], unicode.IsSpace))
+		c.add(section, m[0][1], strings.TrimFunc(m[0][2], unicode.IsSpace))
 		return section, nil
 	} else if m = regNoValue.FindAllStringSubmatch(line, 1); m != nil {
-		f.add(section, m[0][1], "")
+		c.add(section, m[0][1], "")
 		return section, nil
 	}
 	return section, newError("iniparser: syntax error at ")
 }
 
-func (f FleetConf) add(section, key, value string) {
+func (c Conf) add(section, key, value string) {
 	if len(section) != 0 {
 		key = fmt.Sprintf("%s_%s", section, strings.ToLower(key))
 	}
-	f[strings.ToLower(key)] = value
+	c[strings.ToLower(key)] = value
 }

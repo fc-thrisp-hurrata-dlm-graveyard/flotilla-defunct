@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 import (
 	"bytes"
@@ -9,9 +9,8 @@ import (
 	"runtime"
 )
 
-
 const (
-    panicHtml = `<html>
+	panicHtml = `<html>
 <head><title>PANIC: %s</title>
 <style type="text/css">
 html, body {

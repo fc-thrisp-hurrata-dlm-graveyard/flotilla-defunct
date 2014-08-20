@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 import (
 	"bytes"
@@ -125,6 +125,14 @@ func (fs *AssetFS) HasAsset(requested string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (fs *AssetFS) GetAsset(requested string) (http.File, error) {
+	if hasasset, ok := fs.HasAsset(requested); ok {
+		f, err := fs.Open(hasasset)
+		return f, err
+	}
+	return nil, newError("asset does not exist")
 }
 
 func (fs *AssetFS) Open(name string) (http.File, error) {

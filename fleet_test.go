@@ -1,4 +1,4 @@
-package fleet
+package flotilla
 
 // "net/http"
 // "net/http/httptest"
