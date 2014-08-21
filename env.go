@@ -37,7 +37,7 @@ func (engine *Engine) NewMapEnv(m map[string]string) bool {
 	if err == nil {
 		return true
 	}
-	return true
+	return false
 }
 
 func (env *Env) LoadConfFile(filename string) (err error) {

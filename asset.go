@@ -38,6 +38,8 @@ type (
 		AssetNames func() []string
 		Prefix     string
 	}
+
+	Assets []*AssetFS
 )
 
 func (f *FakeFile) Name() string {
@@ -132,7 +134,7 @@ func (fs *AssetFS) GetAsset(requested string) (http.File, error) {
 		f, err := fs.Open(hasasset)
 		return f, err
 	}
-	return nil, newError("asset does not exist")
+	return nil, newError("asset %s unvailable", requested)
 }
 
 func (fs *AssetFS) Open(name string) (http.File, error) {
@@ -148,4 +150,14 @@ func (fs *AssetFS) Open(name string) (http.File, error) {
 		return nil, err
 	}
 	return NewAssetFile(name, b), nil
+}
+
+func (a Assets) Get(requested string) (http.File, error) {
+	for _, x := range a {
+		f, err := x.GetAsset(requested)
+		if err == nil {
+			return f, nil
+		}
+	}
+	return nil, newError("asset %s unavailable", requested)
 }

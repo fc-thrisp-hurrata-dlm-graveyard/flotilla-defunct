@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -13,6 +14,23 @@ var (
 	regSingleQuote = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*'([^']*)'$")
 	regNoQuote     = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*([^#;]+)")
 	regNoValue     = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*([#;].*)?")
+)
+
+var (
+	boolString = map[string]bool{
+		"t":     true,
+		"true":  true,
+		"y":     true,
+		"yes":   true,
+		"on":    true,
+		"1":     true,
+		"f":     false,
+		"false": false,
+		"n":     false,
+		"no":    false,
+		"off":   false,
+		"0":     false,
+	}
 )
 
 type (
@@ -49,8 +67,7 @@ func (c Conf) parse(reader *bufio.Reader, filename string) (err error) {
 		}
 		section, err = c.parseLine(section, line)
 		if err != nil {
-			return newError(
-				err.Error() + fmt.Sprintf("'%s:%d'.", filename, lineno))
+			return newError("iniparser: syntax error at '%s:%d'.", filename, lineno)
 		}
 	}
 	return err
@@ -80,7 +97,7 @@ func (c Conf) parseLine(section, line string) (string, error) {
 		c.add(section, m[0][1], "")
 		return section, nil
 	}
-	return section, newError("iniparser: syntax error at ")
+	return section, newError("ini parse error")
 }
 
 func (c Conf) add(section, key, value string) {
@@ -88,4 +105,38 @@ func (c Conf) add(section, key, value string) {
 		key = fmt.Sprintf("%s_%s", section, strings.ToLower(key))
 	}
 	c[strings.ToLower(key)] = value
+}
+
+func (c Conf) rawstring(key string) (string, error) {
+	if value, ok := c[key]; ok {
+		return value, nil
+	}
+	return "", newError("key: %s is unavailable or does not exist", key)
+}
+
+func (c Conf) Bool(key string) (bool, error) {
+	if val, err := c.rawstring(key); err == nil {
+		if value, ok := boolString[strings.ToLower(val)]; ok {
+			return value, nil
+		}
+	}
+	return false, newError("could not parse bool valuefrom key: %s", key)
+}
+
+func (c Conf) Float(key string) (value float64, err error) {
+	if val, err := c.rawstring(key); err == nil {
+		if value, err := strconv.ParseFloat(val, 64); err == nil {
+			return value, nil
+		}
+	}
+	return 0.0, err
+}
+
+func (c Conf) Int(key string) (value int, err error) {
+	if val, err := c.rawstring(key); err == nil {
+		if value, err := strconv.Atoi(val); err == nil {
+			return value, nil
+		}
+	}
+	return 0, err
 }

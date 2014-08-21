@@ -18,23 +18,15 @@ func engineStaticFile(engine *Engine, requested string) (hasfile http.File, err 
 	return hasfile, err
 }
 
-func engineStaticAsset(flotilla []Flotilla, requested string) (hasfile http.File, err error) {
-	for _, f := range flotilla {
-		if f.HasAssets() {
-			hasfile, err = f.GetAsset(requested)
-			return hasfile, err
-		}
-	}
-	return nil, newError("no matching asset file")
-}
-
 func handleStatic(c *Context) {
 	requested := filepath.Base(c.Request.URL.Path)
 	hasfile, err := engineStaticFile(c.Engine, requested)
 	if hasfile == nil {
-		hasfile, err = engineStaticAsset(c.Engine.Flotilla(), requested)
+		hasfile, err = c.Engine.Assets.Get(requested)
 	}
 	if err == nil {
 		c.ServeAsset(hasfile)
+	} else {
+		c.Abort(404)
 	}
 }

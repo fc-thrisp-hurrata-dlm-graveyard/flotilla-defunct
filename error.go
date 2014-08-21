@@ -1,13 +1,21 @@
 package flotilla
 
+import "fmt"
+
 type (
-	Error string
+	FlotillaError struct {
+		format     string
+		parameters []interface{}
+	}
 )
 
-func newError(message string) (e error) {
-	return Error(message)
+func newError(format string, parameters ...interface{}) error {
+	return &FlotillaError{
+		format:     format,
+		parameters: parameters,
+	}
 }
 
-func (e Error) Error() string {
-	return string(e)
+func (e *FlotillaError) Error() string {
+	return fmt.Sprintf(e.format, e.parameters...)
 }
