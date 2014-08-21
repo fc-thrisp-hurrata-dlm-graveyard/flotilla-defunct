@@ -1,6 +1,7 @@
 package flotilla
 
 import (
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -14,9 +15,11 @@ type (
 
 	// Information about a route as a unit outside of the router, for use & reuse
 	Route struct {
-		method   string
-		path     string
-		handlers []HandlerFunc
+		method     string
+		path       string
+		static     bool
+		staticbase string
+		handlers   []HandlerFunc
 	}
 
 	// A RouterGroup is associated with a prefix and an array of handlers
@@ -46,6 +49,7 @@ type (
 		Groups() []*RouterGroup
 		HasAssets() bool
 		GetAsset(string) (http.File, error)
+		GetEnv() *Env
 	}
 )
 
@@ -83,8 +87,20 @@ func (engine *Engine) handle404(w http.ResponseWriter, req *http.Request) {
 }
 
 //merge other engine(routes, handlers, middleware, etc) with existing engine
-func (engine *Engine) Merge(f Flotilla) error {
+func (engine *Engine) Extend(f Flotilla) error {
 	engine.flotilla = append(engine.flotilla, f)
+	fe := f.GetEnv()
+	//staticpaths := fe.StaticPaths
+	//for _, s := range staticpaths {
+	//	engine.Static(s)
+	//}
+	fmt.Printf("%+v\n", fe)
+	for _, r := range f.Groups() {
+		fmt.Printf("routergroup: %+v\n", r)
+		for _, rt := range r.routes {
+			fmt.Printf("\n%+v\n", rt)
+		}
+	}
 	return nil
 }
 
@@ -116,6 +132,13 @@ func (engine *Engine) HasAssets() bool {
 		return true
 	}
 	return false
+}
+
+func (engine *Engine) GetEnv() *Env {
+	if engine.Env != nil {
+		return engine.Env
+	}
+	return nil
 }
 
 func (engine *Engine) Groups() []*RouterGroup {
@@ -183,10 +206,6 @@ func (group *RouterGroup) pathNoLeadingSlash(path string) string {
 	return strings.TrimLeft(strings.Join([]string{group.prefix, path}, "/"), "/")
 }
 
-//func (group *RouterGroup) newRoute(method string, path string, handlers ...HandlerFunc) *Route {
-//	return &Route{method, path, handlers}
-//}
-
 // Handle registers a new request handle and middlewares with the given path and method.
 // The last handler should be the real handler, the other ones should be middlewares that can and should be shared among different routes.
 //
@@ -204,39 +223,40 @@ func (group *RouterGroup) Handle(route *Route) {
 }
 
 func (group *RouterGroup) POST(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"POST", path, handlers})
+	group.Handle(CommonRoute("POST", path, handlers))
 }
 
 func (group *RouterGroup) GET(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"GET", path, handlers})
+	group.Handle(CommonRoute("GET", path, handlers))
 }
 
 func (group *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"DELETE", path, handlers})
+	group.Handle(CommonRoute("DELETE", path, handlers))
 }
 
 func (group *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"PATCH", path, handlers})
+	group.Handle(CommonRoute("PATCH", path, handlers))
 }
 
 func (group *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"PUT", path, handlers})
+	group.Handle(CommonRoute("PUT", path, handlers))
 }
 
 func (group *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"OPTIONS", path, handlers})
+	group.Handle(CommonRoute("OPTIONS", path, handlers))
 }
 
 func (group *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
-	group.Handle(&Route{"HEAD", path, handlers})
+	group.Handle(CommonRoute("HEAD", path, handlers))
 }
 
 // Static serves files from the given file system root.
 func (group *RouterGroup) Static(staticpath string) {
-	group.engine.AddStaticPath(group.pathNoLeadingSlash(staticpath))
-	staticpath = filepath.Join(staticpath, "/*filepath")
-	group.Handle(&Route{"GET", staticpath, []HandlerFunc{handleStatic}})
-	group.Handle(&Route{"HEAD", staticpath, []HandlerFunc{handleStatic}})
+	staticbase := group.pathNoLeadingSlash(staticpath)
+	group.engine.AddStaticPath(staticbase)
+	staticroute := filepath.Join(staticpath, "/*filepath")
+	group.Handle(StaticRoute("GET", staticroute, staticbase, []HandlerFunc{handleStatic}))
+	group.Handle(StaticRoute("HEAD", staticroute, staticbase, []HandlerFunc{handleStatic}))
 }
 
 func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
@@ -245,4 +265,12 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 	h = append(h, group.Handlers...)
 	h = append(h, handlers...)
 	return h
+}
+
+func CommonRoute(method string, path string, handlers []HandlerFunc) *Route {
+	return &Route{method: method, path: path, handlers: handlers}
+}
+
+func StaticRoute(method string, path string, pathbase string, handlers []HandlerFunc) *Route {
+	return &Route{method: method, path: path, static: true, staticbase: pathbase, handlers: handlers}
 }
