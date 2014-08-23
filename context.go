@@ -171,6 +171,15 @@ func (c *Context) MustGet(key string) interface{} {
 	return value
 }
 
+// Returns a HTTP redirect to the specific location.
+//func (c *Context) Redirect(code int, location string) {
+//	if code >= 300 && code <= 308 {
+//		c.Render(code, render.Redirect, location)
+//	} else {
+//		panic(fmt.Sprintf("Cannot send a redirect with status code %d", code))
+//	}
+//}
+
 // Writes some data into the body stream and updates the HTTP code.
 func (c *Context) Data(code int, contentType string, data []byte) {
 	if len(contentType) > 0 {

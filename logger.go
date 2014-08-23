@@ -28,12 +28,12 @@ func Logger() HandlerFunc {
 		requester := c.Request.Header.Get("X-Real-IP")
 
 		// if the requester-header is empty, check the forwarded-header
-		if requester == "" {
+		if len(requester) == 0 {
 			requester = c.Request.Header.Get("X-Forwarded-For")
 		}
 
 		// if the requester is still empty, use the hard-coded address from the socket
-		if requester == "" {
+		if len(requester) == 0 {
 			requester = c.Request.RemoteAddr
 		}
 
@@ -51,7 +51,7 @@ func Logger() HandlerFunc {
 		}
 		end := time.Now()
 		latency := end.Sub(start)
-		stdlogger.Printf("[FLEET] %v |%s %3d %s| %12v | %s %4s %s\n%s",
+		stdlogger.Printf("[FLOTILLA] %v |%s %3d %s| %12v | %s %4s %s\n%s",
 			end.Format("2006/01/02 - 15:04:05"),
 			color,
 			code,

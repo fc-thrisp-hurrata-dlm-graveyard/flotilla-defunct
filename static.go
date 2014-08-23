@@ -7,7 +7,7 @@ import (
 )
 
 func engineStaticFile(engine *Engine, requested string) (hasfile http.File, err error) {
-	for _, dir := range engine.StaticPaths {
+	for _, dir := range engine.StaticDirs {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) error {
 			if filepath.Base(path) == requested {
 				hasfile, err = os.Open(path)

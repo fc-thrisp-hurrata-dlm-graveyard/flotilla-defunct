@@ -7,21 +7,29 @@ import (
 	"path/filepath"
 )
 
+const (
+	devmode  = iota
+	prodmode = iota
+	testmode = iota
+)
+
 var (
 	FlotillaPath  string
 	workingPath   string
 	workingStatic string
+	defaultmode   int = devmode
 )
 
 type (
 	Env struct {
 		Conf
-		StaticPaths []string
+		StaticDirs []string
+		Mode       int
 	}
 )
 
 func BaseEnv() *Env {
-	return &Env{Conf: make(map[string]string)}
+	return &Env{Conf: make(map[string]string), Mode: defaultmode}
 }
 
 func (engine *Engine) NewFileEnv(flpth string) bool {
@@ -62,11 +70,24 @@ func (env *Env) LoadConfMap(m map[string]string) (err error) {
 	return err
 }
 
-func (env *Env) AddStaticPath(staticpath string) {
-	if filepath.IsAbs(staticpath) {
-		env.StaticPaths = append(env.StaticPaths, staticpath)
+func (env *Env) SetMode(value string) {
+	switch value {
+	case "development":
+		env.Mode = devmode
+	case "production":
+		env.Mode = prodmode
+	case "testing":
+		env.Mode = testmode
+	default:
+		env.Mode = defaultmode
+	}
+}
+
+func (env *Env) AddStaticDir(dir string) {
+	if filepath.IsAbs(dir) {
+		env.StaticDirs = append(env.StaticDirs, dir)
 	} else {
-		env.StaticPaths = append(env.StaticPaths, filepath.Join(workingPath, staticpath))
+		env.StaticDirs = append(env.StaticDirs, filepath.Join(workingPath, dir))
 	}
 }
 
