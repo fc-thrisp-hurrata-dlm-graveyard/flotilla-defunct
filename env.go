@@ -81,7 +81,7 @@ func (env *Env) LoadConfFile(filename string) (err error) {
 	return err
 }
 
-// Loads a conf in []byte format into the env
+// Loads a conf as []byte into the env
 func (env *Env) LoadConfByte(b []byte, name string) (err error) {
 	reader := bufio.NewReader(bytes.NewReader(b))
 	err = env.Conf.parse(reader, name)

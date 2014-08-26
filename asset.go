@@ -154,6 +154,8 @@ func (fs *AssetFS) Open(name string) (http.File, error) {
 	return NewAssetFile(name, b), nil
 }
 
+// Return the requested asset as http.File from the AssetFS's contained
+// in Asset, by supplying a string
 func (a Assets) Get(requested string) (http.File, error) {
 	for _, x := range a {
 		f, err := x.GetAsset(requested)

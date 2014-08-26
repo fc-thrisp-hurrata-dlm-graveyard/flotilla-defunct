@@ -124,7 +124,7 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 	return h
 }
 
-// Creates a Route struct instance that is not static
+// Creates a Route struct instance that is not a static route
 func CommonRoute(method string, path string, handlers []HandlerFunc) *Route {
 	return &Route{method: method,
 		path:     path,
