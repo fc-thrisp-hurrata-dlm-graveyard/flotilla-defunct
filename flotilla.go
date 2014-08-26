@@ -21,7 +21,6 @@ type (
 		noRoute      []HandlerFunc
 		router       *httprouter.Router
 		flotilla     map[string]Flotilla
-		Assets
 	}
 
 	Blueprint struct {
@@ -29,7 +28,6 @@ type (
 		Prefix string
 		Groups []*RouterGroup
 		Env    *Env
-		Assets Assets
 	}
 
 	Flotilla interface {
@@ -62,6 +60,40 @@ func Basic() *Engine {
 	return engine
 }
 
+//merge other engine(routes, handlers, middleware, etc) with existing engine
+func (engine *Engine) Extend(f Flotilla) error {
+	fmt.Printf("extending with flotilla %+v", f)
+	b := f.Blueprint()
+	//name
+	engine.flotilla[b.Name] = f
+	//groups
+	for _, x := range b.Groups {
+		if _, ok := engine.existingGroup(x.prefix); ok {
+			fmt.Printf("\ngroup with %s matches EXISTING group\n", x.prefix)
+			fmt.Printf("\n%+v\n", x)
+		} else {
+			fmt.Printf("\ngroup with %s is a NEW group\n", x.prefix)
+			fmt.Printf("\n%+v\n", x)
+		}
+		for _, y := range x.routes {
+			fmt.Printf("\nroute: %+v\n", y)
+		}
+	}
+	//conf
+	fmt.Printf("\nblueprint *Env %+v\n", b.Env)
+	engine.LoadConfMap(b.Env.Conf)
+	//assets
+	for _, fs := range b.Env.Assets {
+		engine.Env.Assets = append(engine.Env.Assets, fs)
+	}
+	//
+	fmt.Printf("\n*Env.Templator %+v\n", b.Env.Templator)
+	for _, l := range b.Env.Templator.Loaders {
+		fmt.Printf("\n*Env.Templator has loader %+v\n", l)
+	}
+	return nil
+}
+
 func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
 	c := engine.createContext(w, req, nil, engine.finalNoRoute)
 	c.Writer.WriteHeader(404)
@@ -74,31 +106,6 @@ func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	engine.cache.Put(c)
-}
-
-//merge other engine(routes, handlers, middleware, etc) with existing engine
-func (engine *Engine) Extend(f Flotilla) error {
-	b := f.Blueprint()
-	//name
-	engine.flotilla[b.Name] = f
-	//groups
-	for _, x := range b.Groups {
-		if exists, ok := engine.existingGroup(x.prefix); ok {
-			fmt.Printf("\ngroup with %s matches existing group: %v\n", x.prefix, exists)
-		} else {
-			fmt.Printf("\n%v is a new group\n", x)
-		}
-		for _, y := range x.routes {
-			fmt.Printf("\nroute: %+v\n", y)
-		}
-	}
-	//conf
-	engine.LoadConfMap(b.Env.Conf)
-	//assets
-	for _, fs := range b.Assets {
-		engine.Assets = append(engine.Assets, fs)
-	}
-	return nil
 }
 
 // Adds handlers for NoRoute
@@ -127,8 +134,7 @@ func (engine *Engine) Run(addr string) {
 func (engine *Engine) Blueprint() *Blueprint {
 	return &Blueprint{Name: engine.Name,
 		Groups: engine.Groups(),
-		Env:    engine.Env,
-		Assets: engine.Assets}
+		Env:    engine.Env}
 }
 
 func (engine *Engine) Groups() []*RouterGroup {

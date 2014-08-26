@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+
+	"github.com/thrisp/jingo"
 )
 
 const (
@@ -14,10 +16,11 @@ const (
 )
 
 var (
-	FlotillaPath  string
-	workingPath   string
-	workingStatic string
-	defaultmode   int = devmode
+	FlotillaPath     string
+	workingPath      string
+	workingStatic    string
+	workingTemplates string
+	defaultmode      int = devmode
 )
 
 type (
@@ -25,11 +28,16 @@ type (
 		Conf
 		StaticDirs []string
 		Mode       int
+		Templator  *jingo.Jingo
+		Assets
 	}
 )
 
 func BaseEnv() *Env {
-	return &Env{Conf: make(map[string]string), Mode: defaultmode}
+	e := &Env{Conf: make(map[string]string),
+		Mode: defaultmode}
+	e.Templator = NewTemplator(e)
+	return e
 }
 
 func (engine *Engine) NewFileEnv(flpth string) bool {
@@ -84,16 +92,50 @@ func (env *Env) SetMode(value string) {
 }
 
 func (env *Env) AddStaticDir(dir string) {
-	if filepath.IsAbs(dir) {
-		env.StaticDirs = append(env.StaticDirs, dir)
-	} else {
-		env.StaticDirs = append(env.StaticDirs, filepath.Join(workingPath, dir))
+	env.StaticDirs = env.dirAdd(dir, env.StaticDirs)
+}
+
+// adds a dir(checked as absolute & appendable) to the first FlotillaLoader found in
+// Env.Templator.(*jingo.Jingo)
+func (env *Env) AddTemplatesDir(dir string) {
+	for _, l := range env.Templator.Loaders {
+		if _, ok := l.(*FlotillaLoader); ok {
+			sd := l.(*FlotillaLoader).TemplateDirs
+			l.(*FlotillaLoader).TemplateDirs = env.dirAdd(dir, sd)
+			break
+		}
 	}
+}
+
+func (env *Env) dirAdd(dir string, envDirs []string) []string {
+	adddir := env.dirAbs(dir)
+	if env.dirAppendable(adddir, envDirs) {
+		envDirs = append(envDirs, adddir)
+	}
+	return envDirs
+}
+
+func (env *Env) dirAbs(dir string) string {
+	if filepath.IsAbs(dir) {
+		return dir
+	} else {
+		return filepath.Join(workingPath, dir)
+	}
+}
+
+func (env *Env) dirAppendable(dir string, envDirs []string) bool {
+	for _, d := range envDirs {
+		if d == dir {
+			return false
+		}
+	}
+	return true
 }
 
 func init() {
 	workingPath, _ = os.Getwd()
 	workingPath, _ = filepath.Abs(workingPath)
 	workingStatic, _ = filepath.Abs("./static")
+	workingTemplates, _ = filepath.Abs("./templates")
 	FlotillaPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 }

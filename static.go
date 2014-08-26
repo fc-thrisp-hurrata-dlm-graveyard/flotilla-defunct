@@ -25,7 +25,7 @@ func handleStatic(c *Context) {
 		hasfile, err = c.Engine.Assets.Get(requested)
 	}
 	if err == nil {
-		c.ServeAsset(hasfile)
+		c.ServeFile(hasfile)
 	} else {
 		c.Abort(404)
 	}

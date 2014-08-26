@@ -172,13 +172,13 @@ func (c *Context) MustGet(key string) interface{} {
 }
 
 // Returns a HTTP redirect to the specific location.
-//func (c *Context) Redirect(code int, location string) {
-//	if code >= 300 && code <= 308 {
-//		c.Render(code, render.Redirect, location)
-//	} else {
-//		panic(fmt.Sprintf("Cannot send a redirect with status code %d", code))
-//	}
-//}
+func (c *Context) Redirect(code int, location string) {
+	if code >= 300 && code <= 308 {
+		http.Redirect(c.Writer, c.Request, location, code)
+	} else {
+		panic(fmt.Sprintf("Cannot send a redirect with status code %d", code))
+	}
+}
 
 // Writes some data into the body stream and updates the HTTP code.
 func (c *Context) Data(code int, contentType string, data []byte) {
@@ -192,14 +192,19 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 }
 
 // Writes the specified file into the body stream
-func (c *Context) File(filepath string) {
+func (c *Context) ReturnFile(filepath string) {
 	http.ServeFile(c.Writer, c.Request, filepath)
 }
 
-//serves the file from the given AssetFS
-func (c *Context) ServeAsset(f http.File) {
+// Serves a specified file
+func (c *Context) ServeFile(f http.File) {
 	fi, err := f.Stat()
 	if err == nil {
 		http.ServeContent(c.Writer, c.Request, fi.Name(), fi.ModTime(), f)
 	}
+}
+
+func (c *Context) RenderTemplate(name string, data interface{}) {
+	fmt.Printf("\n*Context.Rendertemplate template %s\n", name)
+	c.Engine.Templator.Render(c.Writer, name, data)
 }
