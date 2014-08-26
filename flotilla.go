@@ -1,7 +1,6 @@
 package flotilla
 
 import (
-	"fmt"
 	"net/http"
 
 	"sync"
@@ -23,6 +22,7 @@ type (
 		flotilla     map[string]Flotilla
 	}
 
+	// Essential information about an engine for export to another engine
 	Blueprint struct {
 		Name   string
 		Prefix string
@@ -30,29 +30,35 @@ type (
 		Env    *Env
 	}
 
+	// Engine extension interface
 	Flotilla interface {
 		Blueprint() *Blueprint
 	}
 )
 
-// Returns a new, default Engine
+// Returns an empty engine instance
+func Empty() *Engine {
+	return &Engine{}
+}
+
+// Returns a new engine
 func New(name string) *Engine {
-	engine := &Engine{}
-	engine.Name = name
-	engine.Env = BaseEnv()
+	engine := &Engine{Name: name,
+		Env:      BaseEnv(),
+		router:   httprouter.New(),
+		flotilla: make(map[string]Flotilla),
+	}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
-	engine.router = httprouter.New()
 	engine.router.NotFound = engine.default404
 	engine.cache.New = func() interface{} {
 		c := &Context{Engine: engine}
 		c.Writer = &c.writermem
 		return c
 	}
-	engine.flotilla = make(map[string]Flotilla)
 	return engine
 }
 
-// Returns a basic Engine instance with sensible defaults
+// Returns a basic engine instance with sensible defaults
 func Basic() *Engine {
 	engine := New("flotilla")
 	engine.Use(Recovery(), Logger())
@@ -60,40 +66,15 @@ func Basic() *Engine {
 	return engine
 }
 
-//merge other engine(routes, handlers, middleware, etc) with existing engine
-func (engine *Engine) Extend(f Flotilla) error {
-	fmt.Printf("extending with flotilla %+v", f)
-	b := f.Blueprint()
-	//name
-	engine.flotilla[b.Name] = f
-	//groups
-	for _, x := range b.Groups {
-		if _, ok := engine.existingGroup(x.prefix); ok {
-			fmt.Printf("\ngroup with %s matches EXISTING group\n", x.prefix)
-			fmt.Printf("\n%+v\n", x)
-		} else {
-			fmt.Printf("\ngroup with %s is a NEW group\n", x.prefix)
-			fmt.Printf("\n%+v\n", x)
-		}
-		for _, y := range x.routes {
-			fmt.Printf("\nroute: %+v\n", y)
-		}
-	}
-	//conf
-	fmt.Printf("\nblueprint *Env %+v\n", b.Env)
-	engine.LoadConfMap(b.Env.Conf)
-	//assets
-	for _, fs := range b.Env.Assets {
-		engine.Env.Assets = append(engine.Env.Assets, fs)
-	}
-	//
-	fmt.Printf("\n*Env.Templator %+v\n", b.Env.Templator)
-	for _, l := range b.Env.Templator.Loaders {
-		fmt.Printf("\n*Env.Templator has loader %+v\n", l)
-	}
-	return nil
+// Extends an engine with anything fitting the Flotilla interface
+func (engine *Engine) Extend(f Flotilla) {
+	blueprint := f.Blueprint()
+	engine.flotilla[blueprint.Name] = f
+	engine.MergeRouterGroups(blueprint.Groups)
+	engine.Env.MergeEnv(blueprint.Env)
 }
 
+// The engine router default NotFound handler
 func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
 	c := engine.createContext(w, req, nil, engine.finalNoRoute)
 	c.Writer.WriteHeader(404)
@@ -114,29 +95,20 @@ func (engine *Engine) NoRoute(handlers ...HandlerFunc) {
 	engine.finalNoRoute = engine.combineHandlers(engine.noRoute)
 }
 
+// Middleware handlers for the engine
 func (engine *Engine) Use(middlewares ...HandlerFunc) {
 	engine.RouterGroup.Use(middlewares...)
 	engine.finalNoRoute = engine.combineHandlers(engine.noRoute)
 }
 
-// ServeHTTP makes the router implement the http.Handler interface.
-func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	engine.router.ServeHTTP(w, req)
-}
-
-func (engine *Engine) Run(addr string) {
-	if err := http.ListenAndServe(addr, engine); err != nil {
-		panic(err)
-	}
-}
-
-//methods to ensure *Engine satisfies interface Flotilla
+// Methods to ensure the engine satisfies interface Flotilla
 func (engine *Engine) Blueprint() *Blueprint {
 	return &Blueprint{Name: engine.Name,
 		Groups: engine.Groups(),
 		Env:    engine.Env}
 }
 
+// A slice of all RouterGroup instances attached to the engine
 func (engine *Engine) Groups() []*RouterGroup {
 	type IterC func(r []*RouterGroup, fn IterC)
 
@@ -156,7 +128,18 @@ func (engine *Engine) Groups() []*RouterGroup {
 	return rg
 }
 
-// list of flotilla, starting with calling *Engine
+// A slice of Route, with all engine routes from all engine routergroups
+func (engine *Engine) Routes() []*Route {
+	var allroutes []*Route
+	for _, group := range engine.Groups() {
+		for _, route := range group.routes {
+			allroutes = append(allroutes, route)
+		}
+	}
+	return allroutes
+}
+
+// Slice of flotilla interfaces of the current engine, starting with calling engine
 func (engine *Engine) Flotilla() []Flotilla {
 	var ret []Flotilla
 	ret = append(ret, engine)
@@ -166,6 +149,20 @@ func (engine *Engine) Flotilla() []Flotilla {
 	return ret
 }
 
+// Merges a slice of RouterGroup instances into the engine
+func (engine *Engine) MergeRouterGroups(groups []*RouterGroup) {
+	for _, x := range groups {
+		if group, ok := engine.existingGroup(x.prefix); ok {
+			//x handlers ?
+			engine.MergeRoutes(group, x.routes)
+		} else {
+			newgroup := engine.RouterGroup.Group(x.prefix, x.Handlers...)
+			engine.MergeRoutes(newgroup, x.routes)
+		}
+	}
+}
+
+// Returns group & boolean group existence by the given prefix from engine routergroups
 func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
 	for _, g := range engine.Groups() {
 		if g.prefix == prefix {
@@ -173,4 +170,38 @@ func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
 		}
 	}
 	return nil, false
+}
+
+// Returns boolean existence of a route in relation to engine routes, based on
+// visiblepath of route
+func (engine *Engine) existingRoute(route *Route) bool {
+	for _, r := range engine.Routes() {
+		if route.visiblepath == r.visiblepath {
+			return true
+		}
+	}
+	return false
+}
+
+// Merges the given group with the given routes using existence of route in engine
+func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
+	for _, route := range routes {
+		if route.static && !engine.existingRoute(route) {
+			group.Static(route.staticpath)
+		}
+		if !route.static && !engine.existingRoute(route) {
+			group.Handle(route)
+		}
+	}
+}
+
+// ServeHTTP makes the router implement the http.Handler interface.
+func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	engine.router.ServeHTTP(w, req)
+}
+
+func (engine *Engine) Run(addr string) {
+	if err := http.ListenAndServe(addr, engine); err != nil {
+		panic(err)
+	}
 }

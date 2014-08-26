@@ -9,13 +9,14 @@ import (
 )
 
 type (
-	// Information about a route as a unit outside of the router, for use & reuse
+	// Information about a route as a unit outside of the router for use & reuse
 	Route struct {
-		static     bool
-		method     string
-		path       string
-		staticpath string
-		handlers   []HandlerFunc
+		static      bool
+		method      string
+		path        string
+		staticpath  string
+		visiblepath string
+		handlers    []HandlerFunc
 	}
 
 	// A RouterGroup is associated with a prefix and an array of handlers
@@ -35,7 +36,7 @@ func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 }
 
 // Creates a new router group.
-func (group *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
+func (group *RouterGroup) NewGroup(component string, handlers ...HandlerFunc) *RouterGroup {
 	prefix := group.pathFor(component)
 
 	newroutergroup := &RouterGroup{
@@ -71,8 +72,9 @@ func (group *RouterGroup) pathNoLeadingSlash(path string) string {
 // functions can be used.
 func (group *RouterGroup) Handle(route *Route) {
 	handlers := group.combineHandlers(route.handlers)
+	route.visiblepath = group.pathFor(route.path)
 	group.routes = append(group.routes, route)
-	group.engine.router.Handle(route.method, group.pathFor(route.path), func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	group.engine.router.Handle(route.method, route.visiblepath, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		c := group.engine.createContext(w, req, params, handlers)
 		c.Next()
 		group.engine.cache.Put(c)
@@ -122,12 +124,14 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 	return h
 }
 
+// Creates a Route struct instance that is not static
 func CommonRoute(method string, path string, handlers []HandlerFunc) *Route {
 	return &Route{method: method,
 		path:     path,
 		handlers: handlers}
 }
 
+// Creates a Route struct for a static route
 func StaticRoute(method string, staticpath string, handlers []HandlerFunc) *Route {
 	path := filepath.Join(staticpath, "/*filepath")
 	return &Route{static: true,

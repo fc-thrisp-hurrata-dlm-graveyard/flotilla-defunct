@@ -120,7 +120,7 @@ func (c Conf) Bool(key string) (bool, error) {
 			return value, nil
 		}
 	}
-	return false, newError("could not parse bool valuefrom key: %s", key)
+	return false, newError("could not parse bool value from key: %s", key)
 }
 
 func (c Conf) Float(key string) (value float64, err error) {
@@ -129,7 +129,7 @@ func (c Conf) Float(key string) (value float64, err error) {
 			return value, nil
 		}
 	}
-	return 0.0, err
+	return 0.0, newError("could not parse float value from key: %s -- %s", key, err)
 }
 
 func (c Conf) Int(key string) (value int, err error) {
@@ -138,5 +138,5 @@ func (c Conf) Int(key string) (value int, err error) {
 			return value, nil
 		}
 	}
-	return 0, err
+	return 0, newError("could not parse int value from key: %s -- %s", key, err)
 }

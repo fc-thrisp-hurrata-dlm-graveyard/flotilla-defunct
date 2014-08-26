@@ -32,6 +32,7 @@ type (
 		Children     []os.FileInfo
 	}
 
+	// An pseudo file structure constructed from functions & optional prefix
 	AssetFS struct {
 		Asset      func(path string) ([]byte, error)
 		AssetDir   func(path string) ([]string, error)
@@ -39,6 +40,7 @@ type (
 		Prefix     string
 	}
 
+	// A slice of AssetFS instances
 	Assets []*AssetFS
 )
 

@@ -205,6 +205,5 @@ func (c *Context) ServeFile(f http.File) {
 }
 
 func (c *Context) RenderTemplate(name string, data interface{}) {
-	fmt.Printf("\n*Context.Rendertemplate template %s\n", name)
 	c.Engine.Templator.Render(c.Writer, name, data)
 }
