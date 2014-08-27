@@ -17,7 +17,7 @@ var (
 func Logger() HandlerFunc {
 	stdlogger := log.New(os.Stdout, "", 0)
 
-	return func(c *Context) {
+	return func(c *Ctx) {
 		// Start timer
 		start := time.Now()
 

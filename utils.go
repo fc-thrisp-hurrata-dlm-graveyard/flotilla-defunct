@@ -1,6 +1,9 @@
 package flotilla
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"reflect"
+)
 
 func dirAdd(dir string, envDirs []string) []string {
 	adddir := dirAbs(dir)
@@ -25,4 +28,18 @@ func dirAppendable(dir string, envDirs []string) bool {
 		}
 	}
 	return true
+}
+
+func isFunc(fn interface{}) bool {
+	return reflect.ValueOf(fn).Kind() == reflect.Func
+}
+
+// Compare functions, see https://github.com/zenazn/goji/blob/master/web/func_equal.go
+func funcEqual(a, b interface{}) bool {
+	if !isFunc(a) || !isFunc(b) {
+		panic("funcEqual: type error!")
+	}
+	av := reflect.ValueOf(&a).Elem()
+	bv := reflect.ValueOf(&b).Elem()
+	return av.InterfaceData() == bv.InterfaceData()
 }

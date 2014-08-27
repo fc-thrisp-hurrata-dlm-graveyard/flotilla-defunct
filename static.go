@@ -18,7 +18,7 @@ func engineStaticFile(engine *Engine, requested string) (hasfile http.File, err 
 	return hasfile, err
 }
 
-func handleStatic(c *Context) {
+func handleStatic(c *Ctx) {
 	requested := filepath.Base(c.Request.URL.Path)
 	hasfile, err := engineStaticFile(c.Engine, requested)
 	if hasfile == nil {

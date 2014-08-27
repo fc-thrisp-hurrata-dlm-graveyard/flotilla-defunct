@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	HandlerFunc func(*Context)
+	HandlerFunc func(*Ctx)
 
 	Engine struct {
 		Name string
@@ -30,7 +30,7 @@ type (
 		Env    *Env
 	}
 
-	// Engine extension interface
+	// Engine exten)ion interface
 	Flotilla interface {
 		Blueprint() *Blueprint
 	}
@@ -51,7 +51,7 @@ func New(name string) *Engine {
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router.NotFound = engine.default404
 	engine.cache.New = func() interface{} {
-		c := &Context{Engine: engine}
+		c := &Ctx{Engine: engine}
 		c.Writer = &c.writermem
 		return c
 	}
@@ -76,7 +76,7 @@ func (engine *Engine) Extend(f Flotilla) {
 
 // The engine router default NotFound handler
 func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
-	c := engine.createContext(w, req, nil, engine.finalNoRoute)
+	c := engine.createCtx(w, req, nil, engine.finalNoRoute)
 	c.Writer.WriteHeader(404)
 	c.Next()
 	if !c.Writer.Written() {
@@ -153,10 +153,10 @@ func (engine *Engine) Flotilla() []Flotilla {
 func (engine *Engine) MergeRouterGroups(groups []*RouterGroup) {
 	for _, x := range groups {
 		if group, ok := engine.existingGroup(x.prefix); ok {
-			//x handlers ?
+			group.Use(x.Handlers...)
 			engine.MergeRoutes(group, x.routes)
 		} else {
-			newgroup := engine.RouterGroup.Group(x.prefix, x.Handlers...)
+			newgroup := engine.RouterGroup.NewGroup(x.prefix, x.Handlers...)
 			engine.MergeRoutes(newgroup, x.routes)
 		}
 	}

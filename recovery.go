@@ -110,7 +110,7 @@ func function(pc uintptr) []byte {
 
 // Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
 func Recovery() HandlerFunc {
-	return func(c *Context) {
+	return func(c *Ctx) {
 		defer func() {
 			if err := recover(); err != nil {
 				stack := stack(3)

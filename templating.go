@@ -41,9 +41,9 @@ func (t *templator) ListTemplateDirs() []string {
 	return t.TemplateDirs
 }
 
-func (t *templator) UpdateTemplateDirs(dir ...string) {
-	for _, d := range dir {
-		t.TemplateDirs = dirAdd(d, t.TemplateDirs)
+func (t *templator) UpdateTemplateDirs(dirs ...string) {
+	for _, dir := range dirs {
+		t.TemplateDirs = dirAdd(dir, t.TemplateDirs)
 	}
 }
 
@@ -63,11 +63,11 @@ func (fl *Loader) ValidExtension(ext string) bool {
 }
 
 func (fl *Loader) ListTemplates() interface{} {
-	return "flotilla loader list templates not implemented"
+	return "flotilla loader ListTemplates not yet implemented"
 }
 
 func (fl *Loader) Load(name string) (string, error) {
-	for _, p := range fl.env.Templator.(*templator).TemplateDirs {
+	for _, p := range fl.env.TemplateDirs() {
 		f := filepath.Join(p, name)
 		if fl.ValidExtension(filepath.Ext(f)) {
 			// existing template dirs

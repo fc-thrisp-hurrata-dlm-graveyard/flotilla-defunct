@@ -114,8 +114,12 @@ func (env *Env) AddStaticDir(dir string) {
 }
 
 // Adds a templates directory to the templator
-func (env *Env) AddTemplatesDir(dir ...string) {
-	env.Templator.UpdateTemplateDirs(dir...)
+func (env *Env) AddTemplatesDir(dirs ...string) {
+	env.Templator.UpdateTemplateDirs(dirs...)
+}
+
+func (env *Env) TemplateDirs() []string {
+	return env.Templator.ListTemplateDirs()
 }
 
 func init() {

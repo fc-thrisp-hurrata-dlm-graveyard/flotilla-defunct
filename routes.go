@@ -32,7 +32,20 @@ type (
 
 // Adds handler middlewares to the group.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
-	group.Handlers = append(group.Handlers, middlewares...)
+	for _, handler := range middlewares {
+		if !group.handlerExists(handler) {
+			group.Handlers = append(group.Handlers, handler)
+		}
+	}
+}
+
+func (group *RouterGroup) handlerExists(outside HandlerFunc) bool {
+	for _, inside := range group.Handlers {
+		if funcEqual(inside, outside) {
+			return true
+		}
+	}
+	return false
 }
 
 // Creates a new router group.
@@ -75,8 +88,10 @@ func (group *RouterGroup) Handle(route *Route) {
 	route.visiblepath = group.pathFor(route.path)
 	group.routes = append(group.routes, route)
 	group.engine.router.Handle(route.method, route.visiblepath, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		c := group.engine.createContext(w, req, params, handlers)
+		c := group.engine.createCtx(w, req, params, handlers)
+		//fmt.Printf("\nPRE HOOK\n")
 		c.Next()
+		//fmt.Printf("\nPOST HOOK\n")
 		group.engine.cache.Put(c)
 	})
 }

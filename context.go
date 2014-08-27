@@ -1,7 +1,6 @@
 package flotilla
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -12,61 +11,26 @@ import (
 )
 
 const (
-	AbortIndex        = math.MaxInt8 / 2
-	ErrorTypeInternal = 1 << iota
-	ErrorTypeExternal = 1 << iota
-	ErrorTypeAll      = 0xffffffff
+	AbortIndex = math.MaxInt8 / 2
 )
 
-// Used internally to collect errors that occurred during an http request.
-type errorMsg struct {
-	Err  string      `json:"error"`
-	Type uint32      `json:"-"`
-	Meta interface{} `json:"meta"`
-}
-
-type errorMsgs []errorMsg
-
-func (a errorMsgs) ByType(typ uint32) errorMsgs {
-	if len(a) == 0 {
-		return a
+type (
+	// Allows us to pass variables between middleware & manage the flow
+	Ctx struct {
+		writermem responseWriter
+		Request   *http.Request
+		Writer    ResponseWriter
+		Keys      map[string]interface{}
+		Errors    errorMsgs
+		Params    httprouter.Params
+		Engine    *Engine
+		handlers  []HandlerFunc
+		index     int8
 	}
-	result := make(errorMsgs, 0, len(a))
-	for _, msg := range a {
-		if msg.Type&typ > 0 {
-			result = append(result, msg)
-		}
-	}
-	return result
-}
+)
 
-func (a errorMsgs) String() string {
-	if len(a) == 0 {
-		return ""
-	}
-	var buffer bytes.Buffer
-	for i, msg := range a {
-		text := fmt.Sprintf("Error #%02d: %s \n     Meta: %v\n", (i + 1), msg.Err, msg.Meta)
-		buffer.WriteString(text)
-	}
-	return buffer.String()
-}
-
-// Allows us to pass variables between middleware & manage the flow
-type Context struct {
-	writermem responseWriter
-	Request   *http.Request
-	Writer    ResponseWriter
-	Keys      map[string]interface{}
-	Errors    errorMsgs
-	Params    httprouter.Params
-	Engine    *Engine
-	handlers  []HandlerFunc
-	index     int8
-}
-
-func (engine *Engine) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
-	c := engine.cache.Get().(*Context)
+func (engine *Engine) createCtx(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Ctx {
+	c := engine.cache.Get().(*Ctx)
 	c.writermem.reset(w)
 	c.Request = req
 	c.Params = params
@@ -77,16 +41,15 @@ func (engine *Engine) createContext(w http.ResponseWriter, req *http.Request, pa
 	return c
 }
 
-func (c *Context) Copy() *Context {
-	var cp Context = *c
+func (c *Ctx) Copy() *Ctx {
+	var cp Ctx = *c
 	cp.index = AbortIndex
 	cp.handlers = nil
 	return &cp
 }
 
-// Next should be used only in the middlewares.
-// It executes the pending handlers in the chain inside the calling handler.
-func (c *Context) Next() {
+// Executes the pending handlers in the chain inside the calling handler.
+func (c *Ctx) Next() {
 	c.index++
 	s := int8(len(c.handlers))
 	for ; c.index < s; c.index++ {
@@ -98,7 +61,7 @@ func (c *Context) Next() {
 // For example, a handler checks if the request is authorized.
 // If not authorized, context.Abort(401) is called and no pending handlers
 // called for that request.
-func (c *Context) Abort(code int) {
+func (c *Ctx) Abort(code int) {
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
@@ -111,12 +74,12 @@ func (c *Context) Abort(code int) {
 // context.Error("Operation aborted", err)
 // context.Abort(500)
 // ```
-func (c *Context) Fail(code int, err error) {
+func (c *Ctx) Fail(code int, err error) {
 	c.Error(err, "Operation aborted")
 	c.Abort(code)
 }
 
-func (c *Context) ErrorTyped(err error, typ uint32, meta interface{}) {
+func (c *Ctx) ErrorTyped(err error, typ uint32, meta interface{}) {
 	c.Errors = append(c.Errors, errorMsg{
 		Err:  err.Error(),
 		Type: typ,
@@ -129,11 +92,11 @@ func (c *Context) ErrorTyped(err error, typ uint32, meta interface{}) {
 // the resolution of a request. A middleware can be used to collect all the
 // errors and push them to a database together, print a log, or append it in
 // the HTTP response.
-func (c *Context) Error(err error, meta interface{}) {
+func (c *Ctx) Error(err error, meta interface{}) {
 	c.ErrorTyped(err, ErrorTypeExternal, meta)
 }
 
-func (c *Context) LastError() error {
+func (c *Ctx) LastError() error {
 	s := len(c.Errors)
 	if s > 0 {
 		return errors.New(c.Errors[s-1].Err)
@@ -144,7 +107,7 @@ func (c *Context) LastError() error {
 
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
-func (c *Context) Set(key string, item interface{}) {
+func (c *Ctx) Set(key string, item interface{}) {
 	if c.Keys == nil {
 		c.Keys = make(map[string]interface{})
 	}
@@ -152,7 +115,7 @@ func (c *Context) Set(key string, item interface{}) {
 }
 
 // Get returns the value for the given key or an error if nonexistent.
-func (c *Context) Get(key string) (interface{}, error) {
+func (c *Ctx) Get(key string) (interface{}, error) {
 	if c.Keys != nil {
 		item, ok := c.Keys[key]
 		if ok {
@@ -163,7 +126,7 @@ func (c *Context) Get(key string) (interface{}, error) {
 }
 
 // MustGet returns the value for the given key or panics if nonexistent.
-func (c *Context) MustGet(key string) interface{} {
+func (c *Ctx) MustGet(key string) interface{} {
 	value, err := c.Get(key)
 	if err != nil || value == nil {
 		log.Panicf("Key %s doesn't exist", key)
@@ -172,7 +135,7 @@ func (c *Context) MustGet(key string) interface{} {
 }
 
 // Returns a HTTP redirect to the specific location.
-func (c *Context) Redirect(code int, location string) {
+func (c *Ctx) Redirect(code int, location string) {
 	if code >= 300 && code <= 308 {
 		http.Redirect(c.Writer, c.Request, location, code)
 	} else {
@@ -180,30 +143,35 @@ func (c *Context) Redirect(code int, location string) {
 	}
 }
 
-// Writes some data into the body stream and updates the HTTP code.
-func (c *Context) Data(code int, contentType string, data []byte) {
+func (c *Ctx) writeHeader(code int, contentType string) {
 	if len(contentType) > 0 {
 		c.Writer.Header().Set("Content-Type", contentType)
 	}
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
+}
+
+// Writes some data into the body stream and updates the HTTP code.
+func (c *Ctx) Data(code int, contentType string, data []byte) {
+	c.writeHeader(code, contentType)
 	c.Writer.Write(data)
 }
 
 // Writes the specified file into the body stream
-func (c *Context) ReturnFile(filepath string) {
+func (c *Ctx) ReturnFile(filepath string) {
 	http.ServeFile(c.Writer, c.Request, filepath)
 }
 
 // Serves a specified file
-func (c *Context) ServeFile(f http.File) {
+func (c *Ctx) ServeFile(f http.File) {
 	fi, err := f.Stat()
 	if err == nil {
 		http.ServeContent(c.Writer, c.Request, fi.Name(), fi.ModTime(), f)
 	}
 }
 
-func (c *Context) RenderTemplate(name string, data interface{}) {
+func (c *Ctx) RenderTemplate(name string, data interface{}) {
+	c.writeHeader(200, "text/html")
 	c.Engine.Templator.Render(c.Writer, name, data)
 }
