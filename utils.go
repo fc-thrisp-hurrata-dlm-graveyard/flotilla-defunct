@@ -5,6 +5,15 @@ import (
 	"reflect"
 )
 
+func existsIn(s string, l []string) bool {
+	for _, x := range l {
+		if s == x {
+			return true
+		}
+	}
+	return false
+}
+
 func dirAdd(dir string, envDirs []string) []string {
 	adddir := dirAbs(dir)
 	if dirAppendable(adddir, envDirs) {

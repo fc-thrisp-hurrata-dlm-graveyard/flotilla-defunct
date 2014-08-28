@@ -44,9 +44,8 @@ func Empty() *Engine {
 // Returns a new engine
 func New(name string) *Engine {
 	engine := &Engine{Name: name,
-		Env:      BaseEnv(),
-		router:   httprouter.New(),
-		flotilla: make(map[string]Flotilla),
+		Env:    BaseEnv(),
+		router: httprouter.New(),
 	}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router.NotFound = engine.default404
@@ -69,6 +68,9 @@ func Basic() *Engine {
 // Extends an engine with anything fitting the Flotilla interface
 func (engine *Engine) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
+	if engine.flotilla == nil {
+		engine.flotilla = make(map[string]Flotilla)
+	}
 	engine.flotilla[blueprint.Name] = f
 	engine.MergeRouterGroups(blueprint.Groups)
 	engine.Env.MergeEnv(blueprint.Env)

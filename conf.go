@@ -67,7 +67,7 @@ func (c Conf) parse(reader *bufio.Reader, filename string) (err error) {
 		}
 		section, err = c.parseLine(section, line)
 		if err != nil {
-			return newError("iniparser: syntax error at '%s:%d'.", filename, lineno)
+			return newError("flotilla conf parser: syntax error at '%s:%d'.", filename, lineno)
 		}
 	}
 	return err
@@ -97,18 +97,22 @@ func (c Conf) parseLine(section, line string) (string, error) {
 		c.add(section, m[0][1], "")
 		return section, nil
 	}
-	return section, newError("ini parse error")
+	return section, newError("flotilla conf parse error")
 }
 
-func (c Conf) add(section, key, value string) {
+func (c Conf) newkey(section string, key string) string {
 	if len(section) != 0 {
 		key = fmt.Sprintf("%s_%s", section, strings.ToLower(key))
 	}
-	c[strings.ToLower(key)] = value
+	return strings.ToLower(key)
+}
+
+func (c Conf) add(section, key, value string) {
+	c[c.newkey(section, key)] = value
 }
 
 func (c Conf) rawstring(key string) (string, error) {
-	if value, ok := c[key]; ok {
+	if value, ok := c[strings.ToLower(key)]; ok {
 		return value, nil
 	}
 	return "", newError("key: %s is unavailable or does not exist", key)
@@ -139,4 +143,11 @@ func (c Conf) Int(key string) (value int, err error) {
 		}
 	}
 	return 0, newError("could not parse int value from key: %s -- %s", key, err)
+}
+
+func (c Conf) List(key string) (value []string, err error) {
+	if val, err := c.rawstring(key); err == nil {
+		return strings.Split(val, ","), err
+	}
+	return value, newError("could not parse list value from key: %s", key)
 }

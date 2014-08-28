@@ -25,8 +25,8 @@ type (
 	// The engine environment
 	Env struct {
 		Conf
-		StaticDirs []string
-		Mode       int
+		staticdirectories []string
+		Mode              int
 		Templator
 		Assets
 	}
@@ -45,7 +45,9 @@ func (env *Env) MergeEnv(mergeenv *Env) {
 	for _, fs := range mergeenv.Assets {
 		env.Assets = append(env.Assets, fs)
 	}
-	for _, dir := range mergeenv.StaticDirs {
+	l, _ := mergeenv.Conf.List("staticdirs")
+	for _, dir := range l {
+		//for _, dir := range mergeenv.StaticDirs {
 		env.AddStaticDir(dir)
 	}
 	env.AddTemplatesDir(mergeenv.Templator.ListTemplateDirs()...)
@@ -108,18 +110,28 @@ func (env *Env) SetMode(value string) {
 	}
 }
 
+func (env *Env) StaticDirs() []string {
+	dirs := env.staticdirectories
+	if c, err := env.List("staticdirectories"); err == nil {
+		for _, d := range c {
+			dirs = append(dirs, d)
+		}
+	}
+	return dirs
+}
+
 // Adds a static directory to be searched when a static route is accessed.
 func (env *Env) AddStaticDir(dir string) {
-	env.StaticDirs = dirAdd(dir, env.StaticDirs)
+	env.staticdirectories = dirAdd(dir, env.staticdirectories)
+}
+
+func (env *Env) TemplateDirs() []string {
+	return env.Templator.ListTemplateDirs()
 }
 
 // Adds a templates directory to the templator
 func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
-}
-
-func (env *Env) TemplateDirs() []string {
-	return env.Templator.ListTemplateDirs()
 }
 
 func init() {
