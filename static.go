@@ -1,48 +1,48 @@
 package flotilla
 
 import (
-	"net/http"
 	"os"
 	"path/filepath"
 )
 
-func engineStaticFile(dirs []string, requested string) (file http.File, exists bool) {
-	file, exists = file, false
-	for _, dir := range dirs {
+func engineStaticFile(requested string, c *Ctx) (exists bool) {
+	exists = false
+	for _, dir := range c.Engine.StaticDirs() {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) (err error) {
 			if filepath.Base(path) == requested {
 				f, _ := os.Open(path)
-				file, exists = f, true
+				c.ServeFile(f)
+				exists = true
 				//fmt.Printf("\n{path: %+v, base: %+v, file: %+v, requested: %+v, exists: %t}\n", path, filepath.Base(path), file, requested, exists)
 			}
 			return err
 		})
 
 	}
-	return file, exists
+	return exists
 }
 
-func engineAssetFile(requested string, engine *Engine) (file http.File, exists bool) {
-	file, exists = file, false
-	f, err := engine.Assets.Get(requested)
+func engineAssetFile(requested string, c *Ctx) (exists bool) {
+	exists = false
+	f, err := c.Engine.Assets.Get(requested)
 	if err == nil {
-		file, exists = f, true
+		c.ServeFile(f)
+		exists = true
 		//fmt.Printf("\n\n{requested: %+v, file: %+v, exists: %t}\n", requested, file, exists)
 	}
-	return file, exists
+	return exists
 }
 
+func staticfile() {}
+
 func handleStatic(c *Ctx) {
-	var f http.File
 	var exists bool = false
 	requested := filepath.Base(c.Request.URL.Path)
-	f, exists = engineStaticFile(c.Engine.StaticDirs(), requested)
+	exists = engineStaticFile(requested, c)
 	if !exists {
-		f, exists = engineAssetFile(requested, c.Engine)
+		exists = engineAssetFile(requested, c)
 	}
-	if exists {
-		c.ServeFile(f)
-	} else {
+	if !exists {
 		c.Abort(404)
 	}
 }
