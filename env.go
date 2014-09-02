@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 )
 
 const (
@@ -29,6 +30,7 @@ type (
 		Mode              int
 		Templator
 		Assets
+		ctxfunctions map[string]interface{}
 	}
 )
 
@@ -36,6 +38,7 @@ func BaseEnv() *Env {
 	e := &Env{Conf: make(map[string]string),
 		Mode: defaultmode}
 	e.Templator = NewTemplator(e)
+	e.AddCtxFuncs(builtinctxfuncs)
 	return e
 }
 
@@ -45,12 +48,11 @@ func (env *Env) MergeEnv(mergeenv *Env) {
 	for _, fs := range mergeenv.Assets {
 		env.Assets = append(env.Assets, fs)
 	}
-	l, _ := mergeenv.Conf.List("staticdirs")
-	for _, dir := range l {
-		//for _, dir := range mergeenv.StaticDirs {
+	for _, dir := range mergeenv.StaticDirs() {
 		env.AddStaticDir(dir)
 	}
 	env.AddTemplatesDir(mergeenv.Templator.ListTemplateDirs()...)
+	env.AddCtxFuncs(mergeenv.ctxfunctions)
 }
 
 // Loads a conf file into the env from the engine
@@ -132,6 +134,31 @@ func (env *Env) TemplateDirs() []string {
 // Adds a templates directory to the templator
 func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
+}
+
+// Adds a cross-handler functions used within Ctx, from a map of
+// ctxfunctions of another env
+func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
+	for k, v := range fns {
+		env.AddCtxFunc(k, v)
+	}
+}
+
+// Adds a cross-handler function used within Ctx
+func (env *Env) AddCtxFunc(name string, fn interface{}) {
+	if env.ctxfunctions == nil {
+		env.ctxfunctions = make(map[string]interface{})
+	}
+
+	env.ctxfunctions[name] = fn
+}
+
+func (env *Env) CtxFunctions() map[string]reflect.Value {
+	ret := make(map[string]reflect.Value)
+	for k, v := range env.ctxfunctions {
+		ret[k] = valueFunc(v)
+	}
+	return ret
 }
 
 func init() {

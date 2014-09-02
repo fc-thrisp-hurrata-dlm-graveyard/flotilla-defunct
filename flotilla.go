@@ -49,11 +49,7 @@ func New(name string) *Engine {
 	}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router.NotFound = engine.default404
-	engine.cache.New = func() interface{} {
-		c := &Ctx{Engine: engine}
-		c.Writer = &c.writermem
-		return c
-	}
+	engine.cache.New = engine.newCtx
 	return engine
 }
 
@@ -78,14 +74,14 @@ func (engine *Engine) Extend(f Flotilla) {
 
 // The engine router default NotFound handler
 func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
-	c := engine.createCtx(w, req, nil, engine.finalNoRoute)
-	c.Writer.WriteHeader(404)
+	c := engine.getCtx(w, req, nil, engine.finalNoRoute)
+	c.rw.WriteHeader(404)
 	c.Next()
-	if !c.Writer.Written() {
-		if c.Writer.Status() == 404 {
+	if !c.rw.Written() {
+		if c.rw.Status() == 404 {
 			c.Data(-1, "text/plain", []byte("404 page not found"))
 		} else {
-			c.Writer.WriteHeaderNow()
+			c.rw.WriteHeaderNow()
 		}
 	}
 	engine.cache.Put(c)

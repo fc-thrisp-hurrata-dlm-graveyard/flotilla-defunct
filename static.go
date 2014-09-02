@@ -13,7 +13,6 @@ func engineStaticFile(requested string, c *Ctx) (exists bool) {
 				f, _ := os.Open(path)
 				c.ServeFile(f)
 				exists = true
-				//fmt.Printf("\n{path: %+v, base: %+v, file: %+v, requested: %+v, exists: %t}\n", path, filepath.Base(path), file, requested, exists)
 			}
 			return err
 		})
@@ -28,12 +27,9 @@ func engineAssetFile(requested string, c *Ctx) (exists bool) {
 	if err == nil {
 		c.ServeFile(f)
 		exists = true
-		//fmt.Printf("\n\n{requested: %+v, file: %+v, exists: %t}\n", requested, file, exists)
 	}
 	return exists
 }
-
-func staticfile() {}
 
 func handleStatic(c *Ctx) {
 	var exists bool = false

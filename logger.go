@@ -38,7 +38,7 @@ func Logger() HandlerFunc {
 		}
 
 		var color string
-		code := c.Writer.Status()
+		code := c.rw.Status()
 		switch {
 		case code >= 200 && code <= 299:
 			color = green

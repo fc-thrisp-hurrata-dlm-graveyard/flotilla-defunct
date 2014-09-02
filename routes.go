@@ -30,7 +30,6 @@ type (
 	}
 )
 
-// Adds handler middlewares to the group.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
 		if !group.handlerExists(handler) {
@@ -88,7 +87,7 @@ func (group *RouterGroup) Handle(route *Route) {
 	route.visiblepath = group.pathFor(route.path)
 	group.routes = append(group.routes, route)
 	group.engine.router.Handle(route.method, route.visiblepath, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		c := group.engine.createCtx(w, req, params, handlers)
+		c := group.engine.getCtx(w, req, params, handlers)
 		//fmt.Printf("\nPRE HOOK\n")
 		c.Next()
 		//fmt.Printf("\nPOST HOOK\n")

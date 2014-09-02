@@ -115,7 +115,7 @@ func Recovery() HandlerFunc {
 			if err := recover(); err != nil {
 				stack := stack(3)
 				log.Printf("PANIC: %s\n%s", err, stack)
-				c.Writer.WriteHeader(http.StatusInternalServerError)
+				c.rw.WriteHeader(http.StatusInternalServerError)
 			}
 		}()
 
