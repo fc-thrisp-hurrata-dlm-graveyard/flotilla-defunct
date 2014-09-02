@@ -79,7 +79,7 @@ func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
 	c.Next()
 	if !c.rw.Written() {
 		if c.rw.Status() == 404 {
-			c.Data(-1, "text/plain", []byte("404 page not found"))
+			c.ServeData(-1, "text/plain", []byte("404 page not found"))
 		} else {
 			c.rw.WriteHeaderNow()
 		}

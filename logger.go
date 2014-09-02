@@ -24,17 +24,19 @@ func Logger() HandlerFunc {
 		// Process request
 		c.Next()
 
+		req := c.Request
+
 		// save the IP of the requester
-		requester := c.Request.Header.Get("X-Real-IP")
+		requester := req.Header.Get("X-Real-IP")
 
 		// if the requester-header is empty, check the forwarded-header
 		if len(requester) == 0 {
-			requester = c.Request.Header.Get("X-Forwarded-For")
+			requester = req.Header.Get("X-Forwarded-For")
 		}
 
 		// if the requester is still empty, use the hard-coded address from the socket
 		if len(requester) == 0 {
-			requester = c.Request.RemoteAddr
+			requester = req.RemoteAddr
 		}
 
 		var color string
@@ -58,8 +60,8 @@ func Logger() HandlerFunc {
 			reset,
 			latency,
 			requester,
-			c.Request.Method,
-			c.Request.URL.Path,
+			req.Method,
+			req.URL.Path,
 			c.Errors.String(),
 		)
 	}

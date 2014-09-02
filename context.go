@@ -2,6 +2,7 @@ package flotilla
 
 import (
 	"errors"
+	"log"
 	"math"
 	"net/http"
 	"reflect"
@@ -30,17 +31,22 @@ type (
 
 	// Allows us to pass variables between middleware & manage the flow
 	Ctx struct {
-		index   int8
-		rwmem   responseWriter
-		rw      ResponseWriter
-		Request *http.Request
-		//Keys      map[string]interface{}
-		Errors   errorMsgs
-		Params   httprouter.Params
-		Engine   *Engine
+		rwmem responseWriter
+		rw    ResponseWriter
+		*D
 		ctxfuncs map[string]reflect.Value
-		handlers []HandlerFunc
+		Engine   *Engine
 		CtxFunc
+	}
+
+	// Ctx data
+	D struct {
+		index    int8
+		handlers []HandlerFunc
+		Request  *http.Request
+		Params   httprouter.Params
+		data     map[string]interface{}
+		Errors   errorMsgs
 	}
 )
 
@@ -54,13 +60,39 @@ func (engine *Engine) newCtx() interface{} {
 func (engine *Engine) getCtx(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Ctx {
 	c := engine.cache.Get().(*Ctx)
 	c.rwmem.reset(w)
-	c.Request = req
-	c.Params = params
-	c.handlers = handlers
-	//c.Keys = nil
-	c.index = -1
-	c.Errors = c.Errors[0:0]
+	c.D = newD(handlers, req, params)
 	return c
+}
+
+func newD(handlers []HandlerFunc, req *http.Request, params httprouter.Params) *D {
+	d := &D{-1, handlers, req, params, nil, nil}
+	return d
+}
+
+// Attaches an error to the current context. The error is pushed to a list of
+// errors. It's a good idea to call Error for each error that occurred during
+// the resolution of a request. A middleware can be used to collect all the
+// errors and push them to a database together, print a log, or append it in
+// the HTTP response.
+func (d *D) Error(err error, meta interface{}) {
+	d.ErrorTyped(err, ErrorTypeExternal, meta)
+}
+
+func (d *D) ErrorTyped(err error, typ uint32, meta interface{}) {
+	d.Errors = append(d.Errors, errorMsg{
+		Err:  err.Error(),
+		Type: typ,
+		Meta: meta,
+	})
+}
+
+func (d *D) LastError() error {
+	s := len(d.Errors)
+	if s > 0 {
+		return errors.New(d.Errors[s-1].Err)
+	} else {
+		return nil
+	}
 }
 
 func (c *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
@@ -105,60 +137,34 @@ func (c *Ctx) Fail(code int, err error) {
 	c.Abort(code)
 }
 
-func (c *Ctx) ErrorTyped(err error, typ uint32, meta interface{}) {
-	c.Errors = append(c.Errors, errorMsg{
-		Err:  err.Error(),
-		Type: typ,
-		Meta: meta,
-	})
-}
-
-// Attaches an error to the current context. The error is pushed to a list of
-// errors. It's a good idea to call Error for each error that occurred during
-// the resolution of a request. A middleware can be used to collect all the
-// errors and push them to a database together, print a log, or append it in
-// the HTTP response.
-func (c *Ctx) Error(err error, meta interface{}) {
-	c.ErrorTyped(err, ErrorTypeExternal, meta)
-}
-
-func (c *Ctx) LastError() error {
-	s := len(c.Errors)
-	if s > 0 {
-		return errors.New(c.Errors[s-1].Err)
-	} else {
-		return nil
-	}
-}
-
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
-//func (c *Ctx) Set(key string, item interface{}) {
-//	if c.Keys == nil {
-//		c.Keys = make(map[string]interface{})
-//	}
-//	c.Keys[key] = item
-//}
+func (c *Ctx) Set(key string, item interface{}) {
+	if c.data == nil {
+		c.data = make(map[string]interface{})
+	}
+	c.data[key] = item
+}
 
 // Get returns the value for the given key or an error if nonexistent.
-//func (c *Ctx) Get(key string) (interface{}, error) {
-//	if c.Keys != nil {
-//		item, ok := c.Keys[key]
-//		if ok {
-//			return item, nil
-//		}
-//	}
-//	return nil, errors.New("Key does not exist.")
-//}
+func (c *Ctx) Get(key string) (interface{}, error) {
+	if c.data != nil {
+		item, ok := c.data[key]
+		if ok {
+			return item, nil
+		}
+	}
+	return nil, newError("Key does not exist.")
+}
 
 // MustGet returns the value for the given key or panics if nonexistent.
-//func (c *Ctx) MustGet(key string) interface{} {
-//	value, err := c.Get(key)
-//	if err != nil || value == nil {
-//		log.Panicf("Key %s doesn't exist", key)
-//	}
-//	return value
-//}
+func (c *Ctx) MustGet(key string) interface{} {
+	value, err := c.Get(key)
+	if err != nil || value == nil {
+		log.Panicf("Key %s doesn't exist", key)
+	}
+	return value
+}
 
 func (c *Ctx) writeHeader(code int, contentType string) {
 	if len(contentType) > 0 {
@@ -190,7 +196,7 @@ func servedata(c *Ctx, code int, contentType string, data []byte) error {
 	return nil
 }
 
-func (c *Ctx) Data(code int, contentType string, data []byte) {
+func (c *Ctx) ServeData(code int, contentType string, data []byte) {
 	c.Call("servedata", c, code, contentType, data)
 }
 

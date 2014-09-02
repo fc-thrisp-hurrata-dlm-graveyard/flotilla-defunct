@@ -25,12 +25,12 @@ var (
 type (
 	// The engine environment
 	Env struct {
-		Conf
-		staticdirectories []string
-		Mode              int
 		Templator
+		Conf
 		Assets
-		ctxfunctions map[string]interface{}
+		staticdirectories []string
+		ctxfunctions      map[string]interface{}
+		Mode              int
 	}
 )
 
@@ -154,11 +154,11 @@ func (env *Env) AddCtxFunc(name string, fn interface{}) {
 }
 
 func (env *Env) CtxFunctions() map[string]reflect.Value {
-	ret := make(map[string]reflect.Value)
+	m := make(map[string]reflect.Value)
 	for k, v := range env.ctxfunctions {
-		ret[k] = valueFunc(v)
+		m[k] = valueFunc(v)
 	}
-	return ret
+	return m
 }
 
 func init() {

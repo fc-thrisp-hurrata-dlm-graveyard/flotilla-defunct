@@ -165,3 +165,13 @@ func (a Assets) Get(requested string) (http.File, error) {
 	}
 	return nil, newError("asset %s unavailable", requested)
 }
+
+func (a Assets) GetByte(requested string) ([]byte, error) {
+	for _, x := range a {
+		b, err := x.Asset(requested)
+		if err == nil {
+			return b, nil
+		}
+	}
+	return nil, newError("asset %s unavailable", requested)
+}
