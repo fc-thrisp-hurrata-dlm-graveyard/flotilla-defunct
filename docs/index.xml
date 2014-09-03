@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-      <title>Recent Content on  </title>
+      <title>Docs on  </title>
       <generator uri="https://hugo.spf13.com">Hugo</generator>
-    <link>http://thrisp.github.io/flotilla/index.xml/</link>
+    <link>http://thrisp.github.io/flotilla/docs/index.xml/</link>
     
     
     
@@ -26,16 +26,6 @@
       
       <guid>http://thrisp.github.io/flotilla/docs/0.0.1/</guid>
       <description>&lt;p&gt;0.0.1 doc index&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>http://thrisp.github.io/flotilla/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/</guid>
-      <description>&lt;p&gt;FLOTILLA - INDEX PAGE&lt;/p&gt;
 </description>
     </item>
     
