@@ -1,6 +1,6 @@
-author = ""
-description = ""
+author = "thrisp/hurrata"
+description = "a simple theme for the flotilla framework & associated extensions"
 license = "MIT"
 name = "flotilla"
-source_repo = ""
-tags = ["", ""]
+source_repo = "n/a yet"
+tags = ["flotilla", "simple", "go", "golang"]
