@@ -195,10 +195,12 @@ func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	engine.parseFlags()
 	engine.router.ServeHTTP(w, req)
 }
 
 func (engine *Engine) Run(addr string) {
+	engine.parseFlags()
 	if err := http.ListenAndServe(addr, engine); err != nil {
 		panic(err)
 	}

@@ -20,6 +20,7 @@ type (
 		http.CloseNotifier
 
 		Status() int
+		Size() int
 		Written() bool
 		WriteHeaderNow()
 	}
@@ -27,15 +28,13 @@ type (
 	responseWriter struct {
 		http.ResponseWriter
 		status int
-		//written bool
-		size int
+		size   int
 	}
 )
 
 func (w *responseWriter) reset(writer http.ResponseWriter) {
 	w.ResponseWriter = writer
 	w.status = 200
-	//w.written = false
 	w.size = NotWritten
 }
 
@@ -50,7 +49,7 @@ func (w *responseWriter) WriteHeader(code int) {
 
 func (w *responseWriter) WriteHeaderNow() {
 	if !w.Written() {
-		w.size = 0 //w.written = true
+		w.size = 0
 		w.ResponseWriter.WriteHeader(w.status)
 	}
 }
@@ -60,15 +59,17 @@ func (w *responseWriter) Write(data []byte) (n int, err error) {
 	n, err = w.ResponseWriter.Write(data)
 	w.size += n
 	return
-	//return w.ResponseWriter.Write(data)
 }
 
 func (w *responseWriter) Status() int {
 	return w.status
 }
 
+func (w *responseWriter) Size() int {
+	return w.size
+}
+
 func (w *responseWriter) Written() bool {
-	//return w.written
 	return w.size != NotWritten
 }
 

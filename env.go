@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+
+	flag "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
@@ -35,8 +37,7 @@ type (
 )
 
 func BaseEnv() *Env {
-	e := &Env{Conf: make(map[string]string),
-		Mode: defaultmode}
+	e := &Env{Conf: make(map[string]string)}
 	e.Templator = NewTemplator(e)
 	e.AddCtxFuncs(builtinctxfuncs)
 	return e
@@ -138,14 +139,14 @@ func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
 }
 
-// Adds cross-handler functions used within Ctx, from a map[string]interface{}
+// Adds cross-handler functions from a map
 func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
 	for k, v := range fns {
 		env.AddCtxFunc(k, v)
 	}
 }
 
-// Adds a cross-handler function used within Ctx by name an interface{}
+// Adds a cross-handler function by name/interface
 func (env *Env) AddCtxFunc(name string, fn interface{}) {
 	if env.ctxfunctions == nil {
 		env.ctxfunctions = make(map[string]interface{})
@@ -161,6 +162,12 @@ func (env *Env) CtxFunctions() map[string]reflect.Value {
 		m[k] = valueFunc(v)
 	}
 	return m
+}
+
+func (env *Env) parseFlags() {
+	flagMode := flag.Flag("mode", "Run Flotilla app in mode: development, production or testing").Short('m').Default("development").String()
+	flag.Parse()
+	env.SetMode(*flagMode)
 }
 
 func init() {

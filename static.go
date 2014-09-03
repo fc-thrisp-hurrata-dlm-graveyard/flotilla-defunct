@@ -7,7 +7,7 @@ import (
 
 func engineStaticFile(requested string, c *Ctx) (exists bool) {
 	exists = false
-	for _, dir := range c.Engine.StaticDirs() {
+	for _, dir := range c.engine.StaticDirs() {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) (err error) {
 			if filepath.Base(path) == requested {
 				f, _ := os.Open(path)
@@ -23,7 +23,7 @@ func engineStaticFile(requested string, c *Ctx) (exists bool) {
 
 func engineAssetFile(requested string, c *Ctx) (exists bool) {
 	exists = false
-	f, err := c.Engine.Assets.Get(requested)
+	f, err := c.engine.Assets.Get(requested)
 	if err == nil {
 		c.ServeFile(f)
 		exists = true

@@ -35,7 +35,7 @@ type (
 		rw    ResponseWriter
 		*D
 		ctxfuncs map[string]reflect.Value
-		Engine   *Engine
+		engine   *Engine
 		CtxFunc
 	}
 
@@ -51,9 +51,9 @@ type (
 )
 
 func (engine *Engine) newCtx() interface{} {
-	c := &Ctx{Engine: engine}
+	c := &Ctx{engine: engine}
 	c.rw = &c.rwmem
-	c.ctxfuncs = c.Engine.Env.CtxFunctions()
+	c.ctxfuncs = c.engine.Env.CtxFunctions()
 	return c
 }
 
@@ -214,7 +214,7 @@ func (c *Ctx) ServeFile(f http.File) {
 
 // render & return HTML template
 func rendertemplate(c *Ctx, name string, data interface{}) error {
-	err := c.Engine.Templator.Render(c.rw, name, data)
+	err := c.engine.Templator.Render(c.rw, name, data)
 	return err
 }
 

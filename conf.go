@@ -14,10 +14,7 @@ var (
 	regSingleQuote = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*'([^']*)'$")
 	regNoQuote     = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*([^#;]+)")
 	regNoValue     = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*([#;].*)?")
-)
-
-var (
-	boolString = map[string]bool{
+	boolString     = map[string]bool{
 		"t":     true,
 		"true":  true,
 		"y":     true,
