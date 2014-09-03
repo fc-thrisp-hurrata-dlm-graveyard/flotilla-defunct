@@ -24,12 +24,12 @@ var (
 )
 
 type (
-	// interface to allow calling context functions by name and arguments
+	// Use context functions by name and argument
 	CtxFunc interface {
 		Call(string, ...interface{}) (interface{}, error)
 	}
 
-	// Allows us to pass variables between middleware & manage the flow
+	// Allows passing & setting data between handlers
 	Ctx struct {
 		rwmem responseWriter
 		rw    ResponseWriter
@@ -69,11 +69,10 @@ func newD(handlers []HandlerFunc, req *http.Request, params httprouter.Params) *
 	return d
 }
 
-// Attaches an error to the current context. The error is pushed to a list of
-// errors. It's a good idea to call Error for each error that occurred during
-// the resolution of a request. A middleware can be used to collect all the
-// errors and push them to a database together, print a log, or append it in
-// the HTTP response.
+// Attaches an error that is pushed to a list of errors. It's a good idea
+// to call Error for each error that occurred during the resolution of a request.
+// A middleware can be used to collect all the errors and push them to a database
+// together, print a log, or append it in the HTTP response.
 func (d *D) Error(err error, meta interface{}) {
 	d.ErrorTyped(err, ErrorTypeExternal, meta)
 }

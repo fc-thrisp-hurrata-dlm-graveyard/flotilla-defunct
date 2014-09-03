@@ -30,7 +30,7 @@ type (
 		Env    *Env
 	}
 
-	// Engine exten)ion interface
+	// Engine extension interface
 	Flotilla interface {
 		Blueprint() *Blueprint
 	}
@@ -61,7 +61,7 @@ func Basic() *Engine {
 	return engine
 }
 
-// Extends an engine with anything fitting the Flotilla interface
+// Extends an engine with Flotilla interface
 func (engine *Engine) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
 	if engine.flotilla == nil {

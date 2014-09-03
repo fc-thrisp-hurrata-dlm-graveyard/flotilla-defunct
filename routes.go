@@ -138,14 +138,14 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 	return h
 }
 
-// Creates a Route struct instance that is not a static route
+// Creates a Route that is not a static route
 func CommonRoute(method string, path string, handlers []HandlerFunc) *Route {
 	return &Route{method: method,
 		path:     path,
 		handlers: handlers}
 }
 
-// Creates a Route struct for a static route
+// Creates a Route for a static route
 func StaticRoute(method string, staticpath string, handlers []HandlerFunc) *Route {
 	path := filepath.Join(staticpath, "/*filepath")
 	return &Route{static: true,

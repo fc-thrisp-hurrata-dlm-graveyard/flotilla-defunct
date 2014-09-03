@@ -25,12 +25,12 @@ var (
 type (
 	// The engine environment
 	Env struct {
-		Templator
-		Conf
-		Assets
 		staticdirectories []string
 		ctxfunctions      map[string]interface{}
 		Mode              int
+		Conf
+		Assets
+		Templator
 	}
 )
 
@@ -85,20 +85,20 @@ func (env *Env) LoadConfFile(filename string) (err error) {
 	return err
 }
 
-// Loads a conf as []byte into the env
+// Loads a conf as byte into the env
 func (env *Env) LoadConfByte(b []byte, name string) (err error) {
 	reader := bufio.NewReader(bytes.NewReader(b))
 	err = env.Conf.parse(reader, name)
 	return err
 }
 
-// Loads a conf as a map[string]string into the env
+// Loads a conf as map into the env
 func (env *Env) LoadConfMap(m map[string]string) (err error) {
 	err = env.Conf.parsemap(m)
 	return err
 }
 
-// Sets the running mode for the engine env
+// Sets the running mode for the engine env by a string
 func (env *Env) SetMode(value string) {
 	switch value {
 	case "development":
@@ -112,6 +112,8 @@ func (env *Env) SetMode(value string) {
 	}
 }
 
+// All static directories specified for the engine including those set directly
+// with the engine and those set in a configuration file
 func (env *Env) StaticDirs() []string {
 	dirs := env.staticdirectories
 	if c, err := env.List("staticdirectories"); err == nil {
@@ -136,15 +138,14 @@ func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
 }
 
-// Adds a cross-handler functions used within Ctx, from a map of
-// ctxfunctions of another env
+// Adds cross-handler functions used within Ctx, from a map[string]interface{}
 func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
 	for k, v := range fns {
 		env.AddCtxFunc(k, v)
 	}
 }
 
-// Adds a cross-handler function used within Ctx
+// Adds a cross-handler function used within Ctx by name an interface{}
 func (env *Env) AddCtxFunc(name string, fn interface{}) {
 	if env.ctxfunctions == nil {
 		env.ctxfunctions = make(map[string]interface{})
@@ -153,6 +154,7 @@ func (env *Env) AddCtxFunc(name string, fn interface{}) {
 	env.ctxfunctions[name] = fn
 }
 
+// All env ctxfunctions available as reflect.Value(for use by *Ctx)
 func (env *Env) CtxFunctions() map[string]reflect.Value {
 	m := make(map[string]reflect.Value)
 	for k, v := range env.ctxfunctions {
