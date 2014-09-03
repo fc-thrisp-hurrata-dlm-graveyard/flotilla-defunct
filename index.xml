@@ -7,7 +7,67 @@
     
     
     
-    <updated>Mon, 01 Jan 0001 00:00:00 UTC</updated>
+    <updated>Tue, 01 Jan 2008 00:00:00 UTC</updated>
+    
+    <item>
+      <title></title>
+      <link>http://thrisp.github.io/flotilla/docs/0.0.1/quickstart/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/quickstart/</guid>
+      <description>&lt;p&gt;quickstart&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://thrisp.github.io/flotilla/docs/0.0.1/tutorial/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/tutorial/</guid>
+      <description>&lt;p&gt;tutorial&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://thrisp.github.io/flotilla/docs/0.0.1/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/</guid>
+      <description>&lt;p&gt;0.0.1 doc index&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://thrisp.github.io/flotilla/docs/0.0.1/installation/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/installation/</guid>
+      <description>&lt;p&gt;installation&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://thrisp.github.io/flotilla/docs/0.0.1/foreword/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/foreword/</guid>
+      <description>&lt;p&gt;foreword&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://thrisp.github.io/flotilla/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/</guid>
+      <description>&lt;p&gt;FLOTILLA - INDEX PAGE&lt;/p&gt;
+</description>
+    </item>
     
   </channel>
 </rss>

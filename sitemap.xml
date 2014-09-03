@@ -3,8 +3,38 @@
   
   <url>
     <loc>http://thrisp.github.io/flotilla/</loc>
-    <lastmod>0001-01-01T00:00:00+00:00</lastmod>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/docs/0.0.1/quickstart/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/docs/0.0.1/tutorial/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/docs/0.0.1/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/docs/0.0.1/installation/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/docs/0.0.1/foreword/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
   </url>
   
 </urlset>
