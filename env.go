@@ -3,6 +3,7 @@ package flotilla
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -30,6 +31,7 @@ type (
 		staticdirectories []string
 		ctxfunctions      map[string]interface{}
 		Mode              int
+		SessionManager    *Manager
 		Conf
 		Assets
 		Templator
@@ -168,6 +170,34 @@ func (env *Env) parseFlags() {
 	flagMode := flag.Flag("mode", "Run Flotilla app in mode: development, production or testing").Short('m').Default("development").String()
 	flag.Parse()
 	env.SetMode(*flagMode)
+}
+
+func (env *Env) Secret() (secret string) {
+	secret = env.Conf["secret"]
+	if len(secret) == 0 {
+		secret = "secretpleasechangethis"
+	}
+	return secret
+}
+
+func (env *Env) defaultsessionconfig() string {
+	return fmt.Sprintf(`{"cookieName":"flotillasessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"flotillasessionid\",\"securityKey\":\"%s\"}"}`, env.Secret())
+}
+
+func (env *Env) defaultsessionmanager() (*Manager, error) {
+	return NewManager("cookie", env.defaultsessionconfig())
+}
+
+func (env *Env) SessionInit() {
+	if env.SessionManager == nil {
+		sm, err := env.defaultsessionmanager()
+		if err == nil {
+			env.SessionManager = sm
+		} else {
+			panic(fmt.Sprintf("Problem with default sesson manager: %s", err))
+		}
+	}
+	go env.SessionManager.GC()
 }
 
 func init() {

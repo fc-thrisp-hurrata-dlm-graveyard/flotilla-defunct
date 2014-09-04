@@ -36,6 +36,7 @@ type (
 		*D
 		ctxfuncs map[string]reflect.Value
 		engine   *Engine
+		session  SessionStore
 		CtxFunc
 	}
 
@@ -61,6 +62,8 @@ func (engine *Engine) getCtx(w http.ResponseWriter, req *http.Request, params ht
 	c := engine.cache.Get().(*Ctx)
 	c.rwmem.reset(w)
 	c.D = newD(handlers, req, params)
+	c.session = engine.SessionManager.SessionStart(w, req)
+	defer c.session.SessionRelease(w)
 	return c
 }
 
@@ -153,7 +156,7 @@ func (c *Ctx) Get(key string) (interface{}, error) {
 			return item, nil
 		}
 	}
-	return nil, newError("Key does not exist.")
+	return nil, newError("Key %s does not exist.", key)
 }
 
 // MustGet returns the value for the given key or panics if nonexistent.

@@ -3,7 +3,7 @@
 ###Flotilla 0.0.2 (0.0.0)
 
 - extend Ctx with cross handler functions
-
+- simple flag parsing for run mode (production, development, testing)
 
 ###Flotilla 0.0.1 (8.20.2014)
 
