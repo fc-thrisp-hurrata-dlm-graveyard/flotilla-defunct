@@ -1,4 +1,4 @@
-package flotilla
+package session
 
 import (
 	"crypto/aes"

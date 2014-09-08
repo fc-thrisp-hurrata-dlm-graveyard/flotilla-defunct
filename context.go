@@ -2,6 +2,7 @@ package flotilla
 
 import (
 	"errors"
+	"lcl/flotilla/session"
 	"log"
 	"math"
 	"net/http"
@@ -24,7 +25,7 @@ var (
 )
 
 type (
-	// Use context functions by name and argument
+	// Use cross-handler context functions by name and argument
 	CtxFunc interface {
 		Call(string, ...interface{}) (interface{}, error)
 	}
@@ -36,11 +37,11 @@ type (
 		*D
 		ctxfuncs map[string]reflect.Value
 		engine   *Engine
-		session  SessionStore
+		session  session.SessionStore
 		CtxFunc
 	}
 
-	// Ctx data
+	// request and response specific or dynamic Ctx data
 	D struct {
 		index    int8
 		handlers []HandlerFunc
@@ -54,7 +55,7 @@ type (
 func (engine *Engine) newCtx() interface{} {
 	c := &Ctx{engine: engine}
 	c.rw = &c.rwmem
-	c.ctxfuncs = c.engine.Env.CtxFunctions()
+	c.ctxfuncs = c.getCtxFunctions()
 	return c
 }
 
@@ -95,6 +96,15 @@ func (d *D) LastError() error {
 	} else {
 		return nil
 	}
+}
+
+// All env ctxfunctions available as reflect.Value(for use by *Ctx)
+func (c *Ctx) getCtxFunctions() map[string]reflect.Value {
+	m := make(map[string]reflect.Value)
+	for k, v := range c.engine.Env.ctxfunctions {
+		m[k] = valueFunc(v)
+	}
+	return m
 }
 
 func (c *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
@@ -141,7 +151,7 @@ func (c *Ctx) Fail(code int, err error) {
 
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
-func (c *Ctx) Set(key string, item interface{}) {
+func (c *Ctx) setData(key string, item interface{}) {
 	if c.data == nil {
 		c.data = make(map[string]interface{})
 	}
@@ -149,7 +159,7 @@ func (c *Ctx) Set(key string, item interface{}) {
 }
 
 // Get returns the value for the given key or an error if nonexistent.
-func (c *Ctx) Get(key string) (interface{}, error) {
+func (c *Ctx) getData(key string) (interface{}, error) {
 	if c.data != nil {
 		item, ok := c.data[key]
 		if ok {
@@ -160,8 +170,8 @@ func (c *Ctx) Get(key string) (interface{}, error) {
 }
 
 // MustGet returns the value for the given key or panics if nonexistent.
-func (c *Ctx) MustGet(key string) interface{} {
-	value, err := c.Get(key)
+func (c *Ctx) mustGetData(key string) interface{} {
+	value, err := c.getData(key)
 	if err != nil || value == nil {
 		log.Panicf("Key %s doesn't exist", key)
 	}

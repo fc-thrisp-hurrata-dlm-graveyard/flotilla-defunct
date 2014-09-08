@@ -11,6 +11,8 @@ import (
 type (
 	HandlerFunc func(*Ctx)
 
+	// The base of running a Flotilla instance is an Engine with a Name, an Env
+	// with information specific to running the engine, and a chain of RouterGroups
 	Engine struct {
 		Name string
 		*Env
@@ -19,7 +21,6 @@ type (
 		finalNoRoute []HandlerFunc
 		noRoute      []HandlerFunc
 		router       *httprouter.Router
-		flotilla     map[string]Flotilla
 	}
 
 	// Essential information about an engine for export to another engine
@@ -64,10 +65,10 @@ func Basic() *Engine {
 // Extends an engine with Flotilla interface
 func (engine *Engine) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
-	if engine.flotilla == nil {
-		engine.flotilla = make(map[string]Flotilla)
+	if engine.Env.flotilla == nil {
+		engine.Env.flotilla = make(map[string]Flotilla)
 	}
-	engine.flotilla[blueprint.Name] = f
+	engine.Env.flotilla[blueprint.Name] = f
 	engine.MergeRouterGroups(blueprint.Groups)
 	engine.Env.MergeEnv(blueprint.Env)
 }

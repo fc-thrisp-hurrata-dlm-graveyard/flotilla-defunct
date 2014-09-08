@@ -4,6 +4,7 @@
 
 - extend Ctx with cross handler functions
 - simple flag parsing for run mode (production, development, testing)
+- cookie based sessions as a default with capacity for adding different backends
 
 ###Flotilla 0.0.1 (8.20.2014)
 
