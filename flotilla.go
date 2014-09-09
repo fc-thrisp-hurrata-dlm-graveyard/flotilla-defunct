@@ -1,6 +1,7 @@
 package flotilla
 
 import (
+	"fmt"
 	"net/http"
 
 	"sync"
@@ -17,10 +18,8 @@ type (
 		Name string
 		*Env
 		*RouterGroup
-		cache        sync.Pool
-		finalNoRoute []HandlerFunc
-		noRoute      []HandlerFunc
-		router       *httprouter.Router
+		cache  sync.Pool
+		router *httprouter.Router
 	}
 
 	// Essential information about an engine for export to another engine
@@ -76,6 +75,7 @@ func (engine *Engine) Extend(f Flotilla) {
 // The engine router default NotFound handler
 func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
 	c := engine.getCtx(w, req, nil, engine.finalNoRoute)
+	fmt.Printf("\nNOT FOUND\n\n")
 	c.rw.WriteHeader(404)
 	c.Next()
 	if !c.rw.Written() {
@@ -86,12 +86,6 @@ func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	engine.cache.Put(c)
-}
-
-// Adds handlers for NoRoute
-func (engine *Engine) NoRoute(handlers ...HandlerFunc) {
-	engine.noRoute = handlers
-	engine.finalNoRoute = engine.combineHandlers(engine.noRoute)
 }
 
 // Middleware handlers for the engine
@@ -195,18 +189,21 @@ func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
 }
 
 func (engine *Engine) Init() {
+	fmt.Printf("INIT\n")
 	engine.parseFlags()
 	engine.Env.SessionInit()
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	engine.Init()
+	a, b, c := engine.router.Lookup(req.Method, req.URL.Path)
+	fmt.Printf("engine.ServeHTTP: %+v, %+v, %+v\n", a, b, c)
 	engine.router.ServeHTTP(w, req)
 }
 
 func (engine *Engine) Run(addr string) {
 	engine.Init()
+	fmt.Printf("engine.Run: %s\n", addr)
 	if err := http.ListenAndServe(addr, engine); err != nil {
 		panic(err)
 	}

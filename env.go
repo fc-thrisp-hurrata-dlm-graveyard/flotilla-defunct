@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	//github.com/thrisp/flotilla/session
 	"lcl/flotilla/session"
 
 	flag "gopkg.in/alecthomas/kingpin.v1"
@@ -118,6 +119,7 @@ func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
 }
 
 func (env *Env) parseFlags() {
+	fmt.Printf("parsing flags\n")
 	flagMode := flag.Flag("mode", "Run Flotilla app in mode: development, production or testing").Short('m').Default("development").String()
 	flag.Parse()
 	env.SetMode(*flagMode)

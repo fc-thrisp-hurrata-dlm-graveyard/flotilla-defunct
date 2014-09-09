@@ -21,12 +21,14 @@ type (
 
 	// A RouterGroup is associated with a prefix and an array of handlers
 	RouterGroup struct {
-		Handlers []HandlerFunc
-		prefix   string
-		parent   *RouterGroup
-		children []*RouterGroup
-		routes   []*Route
-		engine   *Engine
+		Handlers     []HandlerFunc
+		prefix       string
+		parent       *RouterGroup
+		children     []*RouterGroup
+		routes       []*Route
+		engine       *Engine
+		finalNoRoute []HandlerFunc
+		noRoute      []HandlerFunc
 	}
 )
 
@@ -61,6 +63,12 @@ func (group *RouterGroup) NewGroup(component string, handlers ...HandlerFunc) *R
 	group.children = append(group.children, newroutergroup)
 
 	return newroutergroup
+}
+
+// Adds handlers for NoRoute
+func (group *RouterGroup) NoRoute(handlers ...HandlerFunc) {
+	group.noRoute = handlers
+	group.finalNoRoute = group.combineHandlers(group.noRoute)
 }
 
 func (group *RouterGroup) pathFor(path string) string {

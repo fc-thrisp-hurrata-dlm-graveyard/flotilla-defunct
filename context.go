@@ -151,7 +151,7 @@ func (c *Ctx) Fail(code int, err error) {
 
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
-func (c *Ctx) setData(key string, item interface{}) {
+func (c *Ctx) SetData(key string, item interface{}) {
 	if c.data == nil {
 		c.data = make(map[string]interface{})
 	}
@@ -159,7 +159,7 @@ func (c *Ctx) setData(key string, item interface{}) {
 }
 
 // Get returns the value for the given key or an error if nonexistent.
-func (c *Ctx) getData(key string) (interface{}, error) {
+func (c *Ctx) GetData(key string) (interface{}, error) {
 	if c.data != nil {
 		item, ok := c.data[key]
 		if ok {
@@ -170,15 +170,15 @@ func (c *Ctx) getData(key string) (interface{}, error) {
 }
 
 // MustGet returns the value for the given key or panics if nonexistent.
-func (c *Ctx) mustGetData(key string) interface{} {
-	value, err := c.getData(key)
+func (c *Ctx) MustGetData(key string) interface{} {
+	value, err := c.GetData(key)
 	if err != nil || value == nil {
 		log.Panicf("Key %s doesn't exist", key)
 	}
 	return value
 }
 
-func (c *Ctx) writeHeader(code int, contentType string) {
+func (c *Ctx) WriteHeader(code int, contentType string) {
 	if len(contentType) > 0 {
 		c.rw.Header().Set("Content-Type", contentType)
 	}
@@ -203,7 +203,7 @@ func (c *Ctx) Redirect(code int, location string) {
 
 // Writes some data into the body stream and updates the HTTP code.
 func servedata(c *Ctx, code int, contentType string, data []byte) error {
-	c.writeHeader(code, contentType)
+	c.WriteHeader(code, contentType)
 	c.rw.Write(data)
 	return nil
 }

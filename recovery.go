@@ -11,7 +11,7 @@ import (
 
 const (
 	panicHtml = `<html>
-<head><title>PANIC: %s</title>
+<head><title>Flotilla Page Error: %s</title>
 <style type="text/css">
 html, body {
 font-family: "Roboto", sans-serif;
@@ -33,7 +33,7 @@ background-color: #ffffff;
 }
 </style>
 </head><body>
-<h1>PANIC</h1>
+<h1>Flotilla Error</h1>
 <pre style="font-weight: bold;">%s</pre>
 <pre>%s</pre>
 </body>
@@ -41,7 +41,7 @@ background-color: #ffffff;
 )
 
 var (
-	dunno     = []byte("???")
+	unknown   = []byte("???")
 	centerDot = []byte("·")
 	dot       = []byte(".")
 	slash     = []byte("/")
@@ -78,7 +78,7 @@ func stack(skip int) []byte {
 func source(lines [][]byte, n int) []byte {
 	n-- // in stack trace, lines are 1-indexed but our array is 0-indexed
 	if n < 0 || n >= len(lines) {
-		return dunno
+		return unknown
 	}
 	return bytes.TrimSpace(lines[n])
 }
@@ -87,7 +87,7 @@ func source(lines [][]byte, n int) []byte {
 func function(pc uintptr) []byte {
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
-		return dunno
+		return unknown
 	}
 	name := []byte(fn.Name())
 	// The name includes the path name to the package, which is unnecessary
@@ -115,7 +115,13 @@ func Recovery() HandlerFunc {
 			if err := recover(); err != nil {
 				stack := stack(3)
 				log.Printf("PANIC: %s\n%s", err, stack)
-				c.rw.WriteHeader(http.StatusInternalServerError)
+				switch c.engine.Env.Mode {
+				case prodmode:
+					c.rw.WriteHeader(http.StatusInternalServerError)
+				default:
+					servePanic := fmt.Sprintf(panicHtml, err, err, stack)
+					c.ServeData(500, "text/html", []byte(servePanic))
+				}
 			}
 		}()
 
