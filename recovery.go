@@ -109,22 +109,35 @@ func function(pc uintptr) []byte {
 }
 
 // Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
-func Recovery() HandlerFunc {
-	return func(c *Ctx) {
-		defer func() {
-			if err := recover(); err != nil {
-				stack := stack(3)
-				log.Printf("PANIC: %s\n%s", err, stack)
-				switch c.engine.Env.Mode {
-				case prodmode:
-					c.rw.WriteHeader(http.StatusInternalServerError)
-				default:
-					servePanic := fmt.Sprintf(panicHtml, err, err, stack)
-					c.ServeData(500, "text/html", []byte(servePanic))
-				}
-			}
-		}()
+//func Recovery() HandlerFunc {
+//	return func(c *Ctx) {
+//		defer func() {
+//			if err := recover(); err != nil {
+//				stack := stack(3)
+//				log.Printf("PANIC: %s\n%s", err, stack)
+//				switch c.engine.Env.Mode {
+//				case prodmode:
+//					c.rw.WriteHeader(http.StatusInternalServerError)
+//				default:
+//					servePanic := fmt.Sprintf(panicHtml, err, err, stack)
+//					c.ServeData(500, "text/html", []byte(servePanic))
+//				}
+//			}
+//		}()
+//
+//		c.Next()
+//	}
+//}
 
-		c.Next()
+func (group *RouterGroup) default500(w http.ResponseWriter, req *http.Request, err interface{}) {
+	c := group.engine.getCtx(w, req, nil, nil)
+	stack := stack(3)
+	log.Printf("\n-----\nPANIC\n-----\ngroup %s\nerr: %s\n-----\n%s\n-----\n", group.prefix, err, stack)
+	switch group.engine.Env.Mode {
+	case prodmode:
+		c.rw.WriteHeader(http.StatusInternalServerError)
+	default:
+		servePanic := fmt.Sprintf(panicHtml, err, err, stack)
+		c.ServeData(500, "text/html", []byte(servePanic))
 	}
 }

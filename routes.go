@@ -26,9 +26,9 @@ type (
 		parent       *RouterGroup
 		children     []*RouterGroup
 		routes       []*Route
-		engine       *Engine
 		finalNoRoute []HandlerFunc
 		noRoute      []HandlerFunc
+		engine       *Engine
 	}
 )
 
@@ -63,6 +63,21 @@ func (group *RouterGroup) NewGroup(component string, handlers ...HandlerFunc) *R
 	group.children = append(group.children, newroutergroup)
 
 	return newroutergroup
+}
+
+// The group default NotFound handler
+func (group *RouterGroup) default404(w http.ResponseWriter, req *http.Request) {
+	c := group.engine.getCtx(w, req, nil, group.finalNoRoute)
+	c.rw.WriteHeader(404)
+	c.Next()
+	if !c.rw.Written() {
+		if c.rw.Status() == 404 {
+			c.ServeData(-1, "text/plain", []byte("404 page not found"))
+		} else {
+			c.rw.WriteHeaderNow()
+		}
+	}
+	group.engine.cache.Put(c)
 }
 
 // Adds handlers for NoRoute

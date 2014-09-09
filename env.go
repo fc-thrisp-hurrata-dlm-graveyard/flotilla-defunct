@@ -119,7 +119,6 @@ func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
 }
 
 func (env *Env) parseFlags() {
-	fmt.Printf("parsing flags\n")
 	flagMode := flag.Flag("mode", "Run Flotilla app in mode: development, production or testing").Short('m').Default("development").String()
 	flag.Parse()
 	env.SetMode(*flagMode)
@@ -145,6 +144,16 @@ func (env *Env) SessionInit() {
 	}
 	go env.SessionManager.GC()
 }
+
+// Slice of flotilla interfaces of the current engine, starting with calling engine
+//func (engine *Engine) Flotilla() []Flotilla {
+//	var ret []Flotilla
+//	ret = append(ret, engine)
+//	for _, e := range engine.Env.flotilla {
+//		ret = append(ret, e)
+//	}
+//	return ret
+//}
 
 func init() {
 	workingPath, _ = os.Getwd()

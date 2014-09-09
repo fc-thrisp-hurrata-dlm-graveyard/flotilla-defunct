@@ -1,7 +1,6 @@
 package flotilla
 
 import (
-	"fmt"
 	"net/http"
 
 	"sync"
@@ -49,6 +48,7 @@ func New(name string) *Engine {
 	}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
 	engine.router.NotFound = engine.default404
+	engine.router.PanicHandler = engine.default500
 	engine.cache.New = engine.newCtx
 	return engine
 }
@@ -56,7 +56,7 @@ func New(name string) *Engine {
 // Returns a basic engine instance with sensible defaults
 func Basic() *Engine {
 	engine := New("flotilla")
-	engine.Use(Recovery(), Logger())
+	engine.Use(Logger())
 	engine.Static("static")
 	return engine
 }
@@ -70,22 +70,6 @@ func (engine *Engine) Extend(f Flotilla) {
 	engine.Env.flotilla[blueprint.Name] = f
 	engine.MergeRouterGroups(blueprint.Groups)
 	engine.Env.MergeEnv(blueprint.Env)
-}
-
-// The engine router default NotFound handler
-func (engine *Engine) default404(w http.ResponseWriter, req *http.Request) {
-	c := engine.getCtx(w, req, nil, engine.finalNoRoute)
-	fmt.Printf("\nNOT FOUND\n\n")
-	c.rw.WriteHeader(404)
-	c.Next()
-	if !c.rw.Written() {
-		if c.rw.Status() == 404 {
-			c.ServeData(-1, "text/plain", []byte("404 page not found"))
-		} else {
-			c.rw.WriteHeaderNow()
-		}
-	}
-	engine.cache.Put(c)
 }
 
 // Middleware handlers for the engine
@@ -130,16 +114,6 @@ func (engine *Engine) Routes() []*Route {
 		}
 	}
 	return allroutes
-}
-
-// Slice of flotilla interfaces of the current engine, starting with calling engine
-func (engine *Engine) Flotilla() []Flotilla {
-	var ret []Flotilla
-	ret = append(ret, engine)
-	for _, e := range engine.flotilla {
-		ret = append(ret, e)
-	}
-	return ret
 }
 
 // Merges a slice of RouterGroup instances into the engine
@@ -189,21 +163,17 @@ func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
 }
 
 func (engine *Engine) Init() {
-	fmt.Printf("INIT\n")
 	engine.parseFlags()
 	engine.Env.SessionInit()
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	a, b, c := engine.router.Lookup(req.Method, req.URL.Path)
-	fmt.Printf("engine.ServeHTTP: %+v, %+v, %+v\n", a, b, c)
 	engine.router.ServeHTTP(w, req)
 }
 
 func (engine *Engine) Run(addr string) {
 	engine.Init()
-	fmt.Printf("engine.Run: %s\n", addr)
 	if err := http.ListenAndServe(addr, engine); err != nil {
 		panic(err)
 	}
