@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"net/http"
+
 	"runtime"
 )
 
@@ -128,16 +127,3 @@ func function(pc uintptr) []byte {
 //		c.Next()
 //	}
 //}
-
-func (group *RouterGroup) default500(w http.ResponseWriter, req *http.Request, err interface{}) {
-	c := group.engine.getCtx(w, req, nil, nil)
-	stack := stack(3)
-	log.Printf("\n-----\nPANIC\n-----\ngroup %s\nerr: %s\n-----\n%s\n-----\n", group.prefix, err, stack)
-	switch group.engine.Env.Mode {
-	case prodmode:
-		c.rw.WriteHeader(http.StatusInternalServerError)
-	default:
-		servePanic := fmt.Sprintf(panicHtml, err, err, stack)
-		c.ServeData(500, "text/html", []byte(servePanic))
-	}
-}

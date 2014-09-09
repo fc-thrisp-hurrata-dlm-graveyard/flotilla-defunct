@@ -21,14 +21,15 @@ type (
 
 	// A RouterGroup is associated with a prefix and an array of handlers
 	RouterGroup struct {
-		Handlers     []HandlerFunc
-		prefix       string
-		parent       *RouterGroup
-		children     []*RouterGroup
-		routes       []*Route
-		finalNoRoute []HandlerFunc
-		noRoute      []HandlerFunc
-		engine       *Engine
+		*httperrors
+		Handlers []HandlerFunc
+		prefix   string
+		parent   *RouterGroup
+		children []*RouterGroup
+		routes   []*Route
+		// finalNoRoute []HandlerFunc
+		// noRoute      []HandlerFunc
+		engine *Engine
 	}
 )
 
@@ -62,28 +63,9 @@ func (group *RouterGroup) NewGroup(component string, handlers ...HandlerFunc) *R
 
 	group.children = append(group.children, newroutergroup)
 
+	group.httperrors = newhttperrors(group)
+
 	return newroutergroup
-}
-
-// The group default NotFound handler
-func (group *RouterGroup) default404(w http.ResponseWriter, req *http.Request) {
-	c := group.engine.getCtx(w, req, nil, group.finalNoRoute)
-	c.rw.WriteHeader(404)
-	c.Next()
-	if !c.rw.Written() {
-		if c.rw.Status() == 404 {
-			c.ServeData(-1, "text/plain", []byte("404 page not found"))
-		} else {
-			c.rw.WriteHeaderNow()
-		}
-	}
-	group.engine.cache.Put(c)
-}
-
-// Adds handlers for NoRoute
-func (group *RouterGroup) NoRoute(handlers ...HandlerFunc) {
-	group.noRoute = handlers
-	group.finalNoRoute = group.combineHandlers(group.noRoute)
 }
 
 func (group *RouterGroup) pathFor(path string) string {
@@ -151,6 +133,12 @@ func (group *RouterGroup) Static(staticpath string) {
 	staticpath = group.pathNoLeadingSlash(staticpath)
 	group.Handle(StaticRoute("GET", staticpath, []HandlerFunc{handleStatic}))
 	group.Handle(StaticRoute("HEAD", staticpath, []HandlerFunc{handleStatic}))
+}
+
+// Adds handlers for NoRoute
+func (group *RouterGroup) NoRoute(handlers ...HandlerFunc) {
+	//group.noRoute = handlers
+	//group.finalNoRoute = group.combineHandlers(group.noRoute)
 }
 
 func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {

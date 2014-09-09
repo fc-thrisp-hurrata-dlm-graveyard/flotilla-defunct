@@ -47,8 +47,8 @@ func New(name string) *Engine {
 		router: httprouter.New(),
 	}
 	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
-	engine.router.NotFound = engine.default404
-	engine.router.PanicHandler = engine.default500
+	engine.router.NotFound = engine.httperrors.default404
+	engine.router.PanicHandler = engine.httperrors.default500
 	engine.cache.New = engine.newCtx
 	return engine
 }
@@ -75,7 +75,7 @@ func (engine *Engine) Extend(f Flotilla) {
 // Middleware handlers for the engine
 func (engine *Engine) Use(middlewares ...HandlerFunc) {
 	engine.RouterGroup.Use(middlewares...)
-	engine.finalNoRoute = engine.combineHandlers(engine.noRoute)
+	// engine.finalNoRoute = engine.combineHandlers(engine.noRoute)
 }
 
 // Methods to ensure the engine satisfies interface Flotilla
