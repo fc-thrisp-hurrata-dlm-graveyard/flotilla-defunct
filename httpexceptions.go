@@ -118,7 +118,7 @@ func (engine *Engine) handler500(w http.ResponseWriter, req *http.Request, err i
 	e := engine.HttpExceptions[500]
 	e.updatehandlers(func(c *Ctx) {
 		stack := stack(3)
-		log.Printf("\n-----\nPANIC\n-----\nerr: %s\n-----\n%s\n-----\n", err, stack)
+		log.Printf("\n---------------------\nInternal Server Error\n---------------------\nerr: %s\n---------------------\n%s\n---------------------\n", err, stack)
 		switch engine.Env.Mode {
 		case devmode, testmode:
 			servePanic := fmt.Sprintf(panicHtml, err, err, stack)

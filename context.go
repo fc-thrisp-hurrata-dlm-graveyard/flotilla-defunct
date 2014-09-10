@@ -127,10 +127,19 @@ func (c *Ctx) Next() {
 	}
 }
 
-// Forces the system to discontinue calling the pending handlers.
-// For example, a handler checks if the request is authorized.
-// If not authorized, context.Abort(401) is called and no pending handlers
-// called for that request.
+// Calls an HttpException if available otherwise calls Abort
+func (c *Ctx) HttpException(code int) {
+	if e, ok := c.engine.HttpExceptions[code]; ok {
+		for _, h := range e.handlers {
+			h(c)
+		}
+		c.index = AbortIndex
+	} else {
+		c.Abort(code)
+	}
+}
+
+// Immediately end processing of *Ctx and return the code
 func (c *Ctx) Abort(code int) {
 	if code >= 0 {
 		c.rw.WriteHeader(code)
@@ -141,11 +150,11 @@ func (c *Ctx) Abort(code int) {
 // Fail is the same as Abort plus an error message.
 // Calling `context.Fail(500, err)` is equivalent to:
 // ```
-// context.Error("Operation aborted", err)
-// context.Abort(500)
+// c.Error(err, "Failed.")
+// c.HttpException(500)
 // ```
 func (c *Ctx) Fail(code int, err error) {
-	c.Error(err, "Operation aborted")
+	c.Error(err, "Failed.")
 	c.Abort(code)
 }
 
