@@ -32,7 +32,12 @@ type (
 		Children     []os.FileInfo
 	}
 
-	// An pseudo file structure constructed from functions & optional prefix
+	// A pseudo-file structure constructed from functions & optional prefix
+	// Flotilla can use binary data, and is the currently optimal way to define
+	// inbuilt assets for extensions.
+	// See:
+	// https://github.com/jteeuwen/go-bindata
+	// https://github.com/elazarl/go-bindata-assetfs
 	AssetFS struct {
 		Asset      func(path string) ([]byte, error)
 		AssetDir   func(path string) ([]string, error)
@@ -40,7 +45,7 @@ type (
 		Prefix     string
 	}
 
-	// A slice of AssetFS instances
+	// An array of AssetFS instances
 	Assets []*AssetFS
 )
 

@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	// Information about a route as a unit outside of the router for use & reuse
+	// Information about a route as a unit outside of the router for use & reuse.
 	Route struct {
 		static      bool
 		method      string
@@ -19,19 +19,18 @@ type (
 		handlers    []HandlerFunc
 	}
 
-	// A RouterGroup is associated with a prefix and an array of handlers
+	// A RouterGroup is associated with a prefix and an array of handlers.
 	RouterGroup struct {
 		Handlers []HandlerFunc
 		prefix   string
 		parent   *RouterGroup
 		children []*RouterGroup
 		routes   []*Route
-		//finalNoRoute []HandlerFunc
-		//noRoute      []HandlerFunc
-		engine *Engine
+		engine   *Engine
 	}
 )
 
+// Adds an number of HandlerFuncs to the RouterGroup.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
 		if !group.handlerExists(handler) {
@@ -50,7 +49,7 @@ func (group *RouterGroup) handlerExists(outside HandlerFunc) bool {
 }
 
 // Creates a new router group.
-func (group *RouterGroup) NewGroup(component string, handlers ...HandlerFunc) *RouterGroup {
+func (group *RouterGroup) New(component string, handlers ...HandlerFunc) *RouterGroup {
 	prefix := group.pathFor(component)
 
 	newroutergroup := &RouterGroup{
@@ -74,15 +73,12 @@ func (group *RouterGroup) pathFor(path string) string {
 	return joined
 }
 
-//a non-absolute path fragment for the group provided a path
 func (group *RouterGroup) pathNoLeadingSlash(path string) string {
 	return strings.TrimLeft(strings.Join([]string{group.prefix, path}, "/"), "/")
 }
 
-// Handle registers a new request handle and middlewares with the given path and method.
-// The last handler should be the real handler, the other ones should be middlewares that can and should be shared among different routes.
-//
-// For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
+// Handle registers a new request handle and middlewares with the given path and
+// method. For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used.
 func (group *RouterGroup) Handle(route *Route) {
 	handlers := group.combineHandlers(route.handlers)
@@ -98,38 +94,39 @@ func (group *RouterGroup) Handle(route *Route) {
 }
 
 func (group *RouterGroup) POST(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("POST", path, handlers))
+	group.Handle(commonroute("POST", path, handlers))
 }
 
 func (group *RouterGroup) GET(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("GET", path, handlers))
+	group.Handle(commonroute("GET", path, handlers))
 }
 
 func (group *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("DELETE", path, handlers))
+	group.Handle(commonroute("DELETE", path, handlers))
 }
 
 func (group *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("PATCH", path, handlers))
+	group.Handle(commonroute("PATCH", path, handlers))
 }
 
 func (group *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("PUT", path, handlers))
+	group.Handle(commonroute("PUT", path, handlers))
 }
 
 func (group *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("OPTIONS", path, handlers))
+	group.Handle(commonroute("OPTIONS", path, handlers))
 }
 
 func (group *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
-	group.Handle(CommonRoute("HEAD", path, handlers))
+	group.Handle(commonroute("HEAD", path, handlers))
 }
 
+// Adds a Static route handled by the router, based on the group prefix.
 func (group *RouterGroup) Static(staticpath string) {
 	group.engine.AddStaticDir(staticpath)
 	staticpath = group.pathNoLeadingSlash(staticpath)
-	group.Handle(StaticRoute("GET", staticpath, []HandlerFunc{handleStatic}))
-	group.Handle(StaticRoute("HEAD", staticpath, []HandlerFunc{handleStatic}))
+	group.Handle(staticroute("GET", staticpath, []HandlerFunc{handleStatic}))
+	group.Handle(staticroute("HEAD", staticpath, []HandlerFunc{handleStatic}))
 }
 
 func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
@@ -141,14 +138,14 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 }
 
 // Creates a Route that is not a static route
-func CommonRoute(method string, path string, handlers []HandlerFunc) *Route {
+func commonroute(method string, path string, handlers []HandlerFunc) *Route {
 	return &Route{method: method,
 		path:     path,
 		handlers: handlers}
 }
 
 // Creates a Route for a static route
-func StaticRoute(method string, staticpath string, handlers []HandlerFunc) *Route {
+func staticroute(method string, staticpath string, handlers []HandlerFunc) *Route {
 	path := filepath.Join(staticpath, "/*filepath")
 	return &Route{static: true,
 		method:     method,

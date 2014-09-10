@@ -30,7 +30,7 @@ type (
 		Call(string, ...interface{}) (interface{}, error)
 	}
 
-	// Allows passing & setting data between handlers
+	// The request & response context that allows passing & setting data between handlers
 	Ctx struct {
 		rwmem responseWriter
 		rw    ResponseWriter
@@ -41,7 +41,7 @@ type (
 		CtxFunc
 	}
 
-	// request and response specific or dynamic Ctx data
+	// Specific or dynamic Ctx data from request and for response.
 	D struct {
 		index    int8
 		handlers []HandlerFunc
@@ -55,7 +55,7 @@ type (
 func (engine *Engine) newCtx() interface{} {
 	c := &Ctx{engine: engine}
 	c.rw = &c.rwmem
-	c.ctxfuncs = c.getCtxFunctions()
+	c.ctxfuncs = c.ctxFunctions()
 	return c
 }
 
@@ -78,10 +78,10 @@ func newD(handlers []HandlerFunc, req *http.Request, params httprouter.Params) *
 // A middleware can be used to collect all the errors and push them to a database
 // together, print a log, or append it in the HTTP response.
 func (d *D) Error(err error, meta interface{}) {
-	d.ErrorTyped(err, ErrorTypeExternal, meta)
+	d.errorTyped(err, ErrorTypeExternal, meta)
 }
 
-func (d *D) ErrorTyped(err error, typ uint32, meta interface{}) {
+func (d *D) errorTyped(err error, typ uint32, meta interface{}) {
 	d.Errors = append(d.Errors, errorMsg{
 		Err:  err.Error(),
 		Type: typ,
@@ -98,8 +98,7 @@ func (d *D) LastError() error {
 	}
 }
 
-// All env ctxfunctions available as reflect.Value(for use by *Ctx)
-func (c *Ctx) getCtxFunctions() map[string]reflect.Value {
+func (c *Ctx) ctxFunctions() map[string]reflect.Value {
 	m := make(map[string]reflect.Value)
 	for k, v := range c.engine.Env.ctxfunctions {
 		m[k] = valueFunc(v)
@@ -107,10 +106,12 @@ func (c *Ctx) getCtxFunctions() map[string]reflect.Value {
 	return m
 }
 
+// Calls a function with name in Ctx.ctxfuncs passing in the given args.
 func (c *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
 	return call(c.ctxfuncs[name], args...)
 }
 
+// Copies the CTx with handlers set to nil and index AbortIndex
 func (c *Ctx) Copy() *Ctx {
 	var cp Ctx = *c
 	cp.index = AbortIndex
@@ -139,7 +140,8 @@ func (c *Ctx) HttpException(code int) {
 	}
 }
 
-// Immediately end processing of *Ctx and return the code
+// Immediately ends processing of current Ctx and return the code, the same as
+// running c.HttpException, but less informative & not configurable.
 func (c *Ctx) Abort(code int) {
 	if code >= 0 {
 		c.rw.WriteHeader(code)
@@ -148,10 +150,10 @@ func (c *Ctx) Abort(code int) {
 }
 
 // Fail is the same as Abort plus an error message.
-// Calling `context.Fail(500, err)` is equivalent to:
+// Calling `c.Fail(500, err)` is equivalent to:
 // ```
 // c.Error(err, "Failed.")
-// c.HttpException(500)
+// c.Abort(500)
 // ```
 func (c *Ctx) Fail(code int, err error) {
 	c.Error(err, "Failed.")
@@ -187,6 +189,7 @@ func (c *Ctx) MustGetData(key string) interface{} {
 	return value
 }
 
+// WriteHeader writes the specified code and content type to the header.
 func (c *Ctx) WriteHeader(code int, contentType string) {
 	if len(contentType) > 0 {
 		c.rw.Header().Set("Content-Type", contentType)
@@ -196,7 +199,6 @@ func (c *Ctx) WriteHeader(code int, contentType string) {
 	}
 }
 
-// Returns a HTTP redirect to the specific location.
 func redirect(c *Ctx, code int, location string) error {
 	if code >= 300 && code <= 308 {
 		http.Redirect(c.rw, c.Request, location, code)
@@ -206,22 +208,24 @@ func redirect(c *Ctx, code int, location string) error {
 	}
 }
 
+// Returns a HTTP redirect to the specific location, with the specified code.
+// using the Ctx redirect function.
 func (c *Ctx) Redirect(code int, location string) {
 	c.Call("redirect", c, code, location)
 }
 
-// Writes some data into the body stream and updates the HTTP code.
 func servedata(c *Ctx, code int, contentType string, data []byte) error {
 	c.WriteHeader(code, contentType)
 	c.rw.Write(data)
 	return nil
 }
 
+// ServeData writes plain data into the body stream and updates the HTTP code,
+// using the Ctx servedata function.
 func (c *Ctx) ServeData(code int, contentType string, data []byte) {
 	c.Call("servedata", c, code, contentType, data)
 }
 
-// Serves a specified file
 func servefile(c *Ctx, f http.File) error {
 	fi, err := f.Stat()
 	if err == nil {
@@ -230,16 +234,17 @@ func servefile(c *Ctx, f http.File) error {
 	return err
 }
 
+// ServesFile delivers a specified file using the Ctx servefile function.
 func (c *Ctx) ServeFile(f http.File) {
 	c.Call("servefile", c, f)
 }
 
-// render & return HTML template
 func rendertemplate(c *Ctx, name string, data interface{}) error {
 	err := c.engine.Templator.Render(c.rw, name, data)
 	return err
 }
 
+// Rendertemplate renders an HTML template with the Ctx rendertemplate function
 func (c *Ctx) RenderTemplate(name string, data interface{}) {
 	c.Call("rendertemplate", c, name, data)
 }

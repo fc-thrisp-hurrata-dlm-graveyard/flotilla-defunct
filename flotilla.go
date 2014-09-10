@@ -74,19 +74,20 @@ func (engine *Engine) Extend(f Flotilla) {
 	engine.Env.MergeEnv(blueprint.Env)
 }
 
-// Middleware handlers for the engine
+// Middleware handlers for the engine.
 func (engine *Engine) Use(middlewares ...HandlerFunc) {
 	engine.RouterGroup.Use(middlewares...)
 }
 
-// Methods to ensure the engine satisfies interface Flotilla
+// Blueprint ensures the engine satisfies interface Flotilla by providing
+// essential information in the engine: Name, RouterGroups, and Env
 func (engine *Engine) Blueprint() *Blueprint {
 	return &Blueprint{Name: engine.Name,
 		Groups: engine.Groups(),
 		Env:    engine.Env}
 }
 
-// A slice of all RouterGroup instances attached to the engine
+// Groups provides an array of RouterGroup instances attached to the engine.
 func (engine *Engine) Groups() []*RouterGroup {
 	type IterC func(r []*RouterGroup, fn IterC)
 
@@ -106,7 +107,7 @@ func (engine *Engine) Groups() []*RouterGroup {
 	return rg
 }
 
-// A slice of Route, with all engine routes from all engine routergroups
+// An array of Route instances, with all engine routes from all engine routergroups.
 func (engine *Engine) Routes() []*Route {
 	var allroutes []*Route
 	for _, group := range engine.Groups() {
@@ -117,20 +118,19 @@ func (engine *Engine) Routes() []*Route {
 	return allroutes
 }
 
-// Merges a slice of RouterGroup instances into the engine
+// Merges an array of RouterGroup instances into the engine.
 func (engine *Engine) MergeRouterGroups(groups []*RouterGroup) {
 	for _, x := range groups {
 		if group, ok := engine.existingGroup(x.prefix); ok {
 			group.Use(x.Handlers...)
 			engine.MergeRoutes(group, x.routes)
 		} else {
-			newgroup := engine.RouterGroup.NewGroup(x.prefix, x.Handlers...)
+			newgroup := engine.RouterGroup.New(x.prefix, x.Handlers...)
 			engine.MergeRoutes(newgroup, x.routes)
 		}
 	}
 }
 
-// Returns group & boolean group existence by the given prefix from engine routergroups
 func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
 	for _, g := range engine.Groups() {
 		if g.prefix == prefix {
@@ -140,8 +140,6 @@ func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
 	return nil, false
 }
 
-// Returns boolean existence of a route in relation to engine routes, based on
-// visiblepath of route
 func (engine *Engine) existingRoute(route *Route) bool {
 	for _, r := range engine.Routes() {
 		if route.visiblepath == r.visiblepath {
@@ -151,7 +149,7 @@ func (engine *Engine) existingRoute(route *Route) bool {
 	return false
 }
 
-// Merges the given group with the given routes using existence of route in engine
+// Merges the given group with the given routes based on route existence.
 func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
 	for _, route := range routes {
 		if route.static && !engine.existingRoute(route) {
@@ -163,7 +161,7 @@ func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
 	}
 }
 
-func (engine *Engine) Init() {
+func (engine *Engine) init() {
 	engine.parseFlags()
 	engine.Env.SessionInit()
 }
@@ -174,7 +172,7 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (engine *Engine) Run(addr string) {
-	engine.Init()
+	engine.init()
 	if err := http.ListenAndServe(addr, engine); err != nil {
 		panic(err)
 	}

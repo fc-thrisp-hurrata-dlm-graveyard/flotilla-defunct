@@ -38,12 +38,14 @@ background-color: #ffffff;
 )
 
 type (
+	// Status code, message, and handlers for a http exception.
 	HttpException struct {
 		statuscode int
 		message    string
 		handlers   []HandlerFunc
 	}
 
+	// A map of HttpException instances, keyed by status code
 	HttpExceptions map[int]*HttpException
 )
 
@@ -105,7 +107,7 @@ func (hs HttpExceptions) add(h *HttpException) {
 	hs[h.statuscode] = h
 }
 
-// A handler for httprouter NotFound handler
+// A handler for engine.router NotFound handler
 func (engine *Engine) handler404(w http.ResponseWriter, req *http.Request) {
 	e := engine.HttpExceptions[404]
 	c := engine.getCtx(w, req, nil, engine.combineHandlers(e.handlers))
@@ -113,14 +115,14 @@ func (engine *Engine) handler404(w http.ResponseWriter, req *http.Request) {
 	engine.cache.Put(c)
 }
 
-// A handler for httprouter Panic handler
+// A handler for engine.router Panic handler
 func (engine *Engine) handler500(w http.ResponseWriter, req *http.Request, err interface{}) {
 	e := engine.HttpExceptions[500]
 	e.updatehandlers(func(c *Ctx) {
 		stack := stack(3)
-		log.Printf("\n---------------------\nInternal Server Error\n---------------------\nerr: %s\n---------------------\n%s\n---------------------\n", err, stack)
+		log.Printf("\n---------------------\nInternal Server Error\n---------------------\n%s\n---------------------\n%s\n---------------------\n", err, stack)
 		switch engine.Env.Mode {
-		case devmode, testmode:
+		case devmode:
 			servePanic := fmt.Sprintf(panicHtml, err, err, stack)
 			c.ServeData(500, "text/html", []byte(servePanic))
 		}
@@ -130,6 +132,8 @@ func (engine *Engine) handler500(w http.ResponseWriter, req *http.Request, err i
 	engine.cache.Put(c)
 }
 
+// ExceptionHandler updates an existing HttpException, or if non-existent, creates
+// a new one, with the provided integer status code, message, and HandlerFuncs
 func (engine *Engine) ExceptionHandler(i int, message string, handlers ...HandlerFunc) {
 	if _, ok := engine.HttpExceptions[i]; !ok {
 		engine.HttpExceptions.add(newhttpexception(i, ""))
@@ -141,7 +145,9 @@ func (engine *Engine) ExceptionHandler(i int, message string, handlers ...Handle
 	e.updatehandlers(handlers...)
 }
 
-func (engine *Engine) UpdateExceptionHandler(i int, handlers ...HandlerFunc) {
+// UseExceptionHandler adds the provided HandlerFuncs to the given integer
+// HttpException in engine.HttpExceptions.
+func (engine *Engine) UseExceptionHandler(i int, handlers ...HandlerFunc) {
 	if e, ok := engine.HttpExceptions[i]; ok {
 		e.updatehandlers(handlers...)
 	}
