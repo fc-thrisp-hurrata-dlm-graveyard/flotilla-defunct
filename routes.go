@@ -21,14 +21,13 @@ type (
 
 	// A RouterGroup is associated with a prefix and an array of handlers
 	RouterGroup struct {
-		*httperrors
 		Handlers []HandlerFunc
 		prefix   string
 		parent   *RouterGroup
 		children []*RouterGroup
 		routes   []*Route
-		// finalNoRoute []HandlerFunc
-		// noRoute      []HandlerFunc
+		//finalNoRoute []HandlerFunc
+		//noRoute      []HandlerFunc
 		engine *Engine
 	}
 )
@@ -62,8 +61,6 @@ func (group *RouterGroup) NewGroup(component string, handlers ...HandlerFunc) *R
 	}
 
 	group.children = append(group.children, newroutergroup)
-
-	group.httperrors = newhttperrors(group)
 
 	return newroutergroup
 }
@@ -133,12 +130,6 @@ func (group *RouterGroup) Static(staticpath string) {
 	staticpath = group.pathNoLeadingSlash(staticpath)
 	group.Handle(StaticRoute("GET", staticpath, []HandlerFunc{handleStatic}))
 	group.Handle(StaticRoute("HEAD", staticpath, []HandlerFunc{handleStatic}))
-}
-
-// Adds handlers for NoRoute
-func (group *RouterGroup) NoRoute(handlers ...HandlerFunc) {
-	//group.noRoute = handlers
-	//group.finalNoRoute = group.combineHandlers(group.noRoute)
 }
 
 func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
