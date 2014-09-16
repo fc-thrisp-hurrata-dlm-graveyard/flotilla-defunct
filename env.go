@@ -26,7 +26,8 @@ var (
 )
 
 type (
-	// The engine environment
+	// The engine environment containing configuration variables & their store
+	// as well as other information/data structures relevant to the engine.
 	Env struct {
 		Mode int
 		Store
@@ -60,7 +61,7 @@ func (env *Env) MergeEnv(me *Env) {
 	env.AddCtxFuncs(me.ctxfunctions)
 }
 
-// Merges an Store instance with the Env's Store
+// Merges a Store instance with the Env's Store, without replacement.
 func (env *Env) MergeStore(s Store) {
 	for k, v := range s {
 		if _, ok := env.Store[k]; !ok {
@@ -69,7 +70,14 @@ func (env *Env) MergeStore(s Store) {
 	}
 }
 
-// Sets the running mode for the engine env by a string
+func (env *Env) MergeFlotilla(name string, f Flotilla) {
+	if env.flotilla == nil {
+		env.flotilla = make(map[string]Flotilla)
+	}
+	env.flotilla[name] = f
+}
+
+// Sets the running mode for the engine env by a string.
 func (env *Env) SetMode(value string) {
 	switch value {
 	case "development":
@@ -86,7 +94,7 @@ func (env *Env) SetMode(value string) {
 // A string array of static dirs set in env.Store["staticdirectories"]
 func (env *Env) StaticDirs() []string {
 	if static, ok := env.Store["staticdirectories"]; ok {
-		if ret, err := static.getList(); err == nil {
+		if ret, err := static.List(); err == nil {
 			return ret
 		}
 	}
@@ -111,7 +119,7 @@ func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
 }
 
-// Adds cross-handler functions
+// Adds cross-handler functions used by the Ctx.
 func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
 	for k, v := range fns {
 		env.ctxfunctions[k] = v

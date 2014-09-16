@@ -7,6 +7,11 @@ import (
 )
 
 const (
+	exceptionHtml = `<!DOCTYPE HTML>
+<title>%d %s</title>
+<h1>%s</h1>
+<p>%s</p>
+`
 	panicHtml = `<html>
 <head><title>Flotilla Page Error: %s</title>
 <style type="text/css">
@@ -40,9 +45,9 @@ background-color: #ffffff;
 type (
 	// Status code, message, and handlers for a http exception.
 	HttpException struct {
-		statuscode int
-		message    string
-		handlers   []HandlerFunc
+		code     int
+		message  string
+		handlers []HandlerFunc
 	}
 
 	// A map of HttpException instances, keyed by status code
@@ -51,35 +56,42 @@ type (
 
 func defaulthttpexceptions() HttpExceptions {
 	httpexceptions := make(HttpExceptions)
-	httpexceptions.add(newhttpexception(400, "Bad Request"))
-	httpexceptions.add(newhttpexception(401, "Unauthorized"))
-	httpexceptions.add(newhttpexception(403, "Forbidden"))
-	httpexceptions.add(newhttpexception(404, "Page Not Found"))
-	httpexceptions.add(newhttpexception(405, "Method Not Allowed"))
-	httpexceptions.add(newhttpexception(500, "Internal Server Error"))
-	httpexceptions.add(newhttpexception(502, "Bad Gateway"))
-	httpexceptions.add(newhttpexception(503, "Service Unavailable"))
-	httpexceptions.add(newhttpexception(504, "Gateway Timeout"))
+	httpexceptions.add(newhttpexception(400, "The browser (or proxy) sent a request that this server could not understand."))
+	httpexceptions.add(newhttpexception(401, "The server could not verify that you are authorized to access the URL requested.\nYou either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required."))
+	httpexceptions.add(newhttpexception(403, "You do not have the permission to access the requested resource.\nIt is either read-protected or not readable by the server."))
+	httpexceptions.add(newhttpexception(404, "The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again"))
+	httpexceptions.add(newhttpexception(405, "The method is not allowed for the requested URL."))
+	httpexceptions.add(newhttpexception(418, "This server is a teapot, not a coffee machine"))
+	httpexceptions.add(newhttpexception(500, "The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application."))
+	httpexceptions.add(newhttpexception(502, "The proxy server received an invalid response from an upstream server."))
+	httpexceptions.add(newhttpexception(503, "The server is temporarily unable to service your request due to maintenance downtime or capacity problems. Please try again later."))
+	httpexceptions.add(newhttpexception(504, "The connection to an upstream server timed out."))
+	httpexceptions.add(newhttpexception(505, "The server does not support the HTTP protocol version used in the request"))
 	return httpexceptions
 }
 
-func newhttpexception(statuscode int, message string) *HttpException {
-	n := &HttpException{statuscode: statuscode, message: message}
+func newhttpexception(code int, message string) *HttpException {
+	n := &HttpException{code: code, message: message}
 	n.handlers = append(n.handlers, n.defaultexceptionpre(), n.defaultexceptionpost())
 	return n
 }
 
+func (h *HttpException) name() string {
+	return http.StatusText(h.code)
+}
+
 func (h *HttpException) defaultexceptionpre() HandlerFunc {
 	return func(c *Ctx) {
-		c.rw.WriteHeader(h.statuscode)
+		c.rw.WriteHeader(h.code)
 	}
 }
 
 func (h *HttpException) defaultexceptionpost() HandlerFunc {
 	return func(c *Ctx) {
 		if !c.rw.Written() {
-			if c.rw.Status() == h.statuscode {
-				c.ServeData(h.statuscode, "text/plain", h.format())
+			if c.rw.Status() == h.code {
+				c.rw.Header().Set("Content-Type", "text/html")
+				c.rw.Write(h.format())
 			} else {
 				c.rw.WriteHeaderNow()
 			}
@@ -88,7 +100,7 @@ func (h *HttpException) defaultexceptionpost() HandlerFunc {
 }
 
 func (h *HttpException) format() []byte {
-	return []byte(fmt.Sprintf("%d: %s", h.statuscode, h.message))
+	return []byte(fmt.Sprintf(exceptionHtml, h.code, h.name(), h.name(), h.message))
 }
 
 func (h *HttpException) updatehandlers(handlers ...HandlerFunc) {
@@ -104,7 +116,7 @@ func (h *HttpException) updatehandlers(handlers ...HandlerFunc) {
 }
 
 func (hs HttpExceptions) add(h *HttpException) {
-	hs[h.statuscode] = h
+	hs[h.code] = h
 }
 
 // A handler for engine.router NotFound handler
@@ -123,8 +135,8 @@ func (engine *Engine) handler500(w http.ResponseWriter, req *http.Request, err i
 		log.Printf("\n---------------------\nInternal Server Error\n---------------------\n%s\n---------------------\n%s\n---------------------\n", err, stack)
 		switch engine.Env.Mode {
 		case devmode:
-			servePanic := fmt.Sprintf(panicHtml, err, err, stack)
-			c.ServeData(500, "text/html", []byte(servePanic))
+			c.rw.Header().Set("Content-Type", "text/html")
+			c.rw.Write([]byte(fmt.Sprintf(panicHtml, err, err, stack)))
 		}
 	})
 	c := engine.getCtx(w, req, nil, engine.combineHandlers(e.handlers))

@@ -2,7 +2,6 @@ package flotilla
 
 import (
 	"fmt"
-	"path/filepath"
 	"reflect"
 )
 
@@ -19,24 +18,24 @@ func existsIn(s string, l []string) bool {
 	return false
 }
 
-func dirAdd(dir string, envDirs []string) []string {
-	adddir := dirAbs(dir)
-	if dirAppendable(adddir, envDirs) {
-		envDirs = append(envDirs, adddir)
+func dirAdd(dir string, dirs []string) []string {
+	//adddir := dirAbs(dir)
+	if dirAppendable(dir, dirs) {
+		dirs = append(dirs, dir)
 	}
-	return envDirs
+	return dirs
 }
 
-func dirAbs(dir string) string {
-	if filepath.IsAbs(dir) {
-		return dir
-	} else {
-		return filepath.Join(workingPath, dir)
-	}
-}
+//func dirAbs(dir string) string {
+//	if filepath.IsAbs(dir) {
+//		return dir
+//	} else {
+//		return filepath.Join(workingPath, dir)
+//	}
+//}
 
-func dirAppendable(dir string, envDirs []string) bool {
-	for _, d := range envDirs {
+func dirAppendable(dir string, dirs []string) bool {
+	for _, d := range dirs {
 		if d == dir {
 			return false
 		}

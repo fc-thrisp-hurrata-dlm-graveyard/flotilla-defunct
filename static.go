@@ -39,6 +39,6 @@ func handleStatic(c *Ctx) {
 		exists = engineAssetFile(requested, c)
 	}
 	if !exists {
-		c.Abort(400)
+		c.Abort(404)
 	}
 }

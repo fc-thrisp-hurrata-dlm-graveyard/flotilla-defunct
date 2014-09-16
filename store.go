@@ -132,28 +132,28 @@ func (s Store) adddefault(section, key, value string) {
 	s[s.newkey(section, key)] = &StoreItem{value: value, defaultvalue: true}
 }
 
-func (si StoreItem) getBool() (bool, error) {
+func (si StoreItem) Bool() (bool, error) {
 	if value, ok := boolString[strings.ToLower(si.value)]; ok {
 		return value, nil
 	}
 	return false, newError("could not return Bool value from StoreItem value")
 }
 
-func (si *StoreItem) getFloat() (value float64, err error) {
+func (si *StoreItem) Float() (value float64, err error) {
 	if value, err := strconv.ParseFloat(si.value, 64); err == nil {
 		return value, nil
 	}
 	return 0.0, newError("could not return Float value from StoreItem value")
 }
 
-func (si *StoreItem) getInt() (value int, err error) {
+func (si *StoreItem) Int() (value int, err error) {
 	if value, err := strconv.Atoi(si.value); err == nil {
 		return value, nil
 	}
 	return 0, newError("could not return Int value from StoreItem value")
 }
 
-func (si *StoreItem) getList() (value []string, err error) {
+func (si *StoreItem) List() (value []string, err error) {
 	return strings.Split(si.value, ","), nil
 }
 
@@ -162,9 +162,10 @@ func (si *StoreItem) update(s string) {
 }
 
 func (si *StoreItem) updateList(li ...string) {
-	if list, err := si.getList(); err == nil {
+	if list, err := si.List(); err == nil {
 		for _, item := range li {
-			list = append(list, item)
+			//list = append(list, item)
+			list = dirAdd(item, list)
 		}
 		si.value = strings.Join(list, ",")
 	}

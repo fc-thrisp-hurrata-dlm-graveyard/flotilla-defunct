@@ -21,6 +21,7 @@ var (
 		"servedata":      servedata,
 		"servefile":      servefile,
 		"rendertemplate": rendertemplate,
+		"urlfor":         urlfor,
 	}
 )
 
@@ -111,7 +112,7 @@ func (c *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
 	return call(c.ctxfuncs[name], args...)
 }
 
-// Copies the CTx with handlers set to nil and index AbortIndex
+// Copies the Ctx with handlers set to nil and index AbortIndex
 func (c *Ctx) Copy() *Ctx {
 	var cp Ctx = *c
 	cp.index = AbortIndex
@@ -156,7 +157,7 @@ func (c *Ctx) Abort(code int) {
 // c.Abort(500)
 // ```
 func (c *Ctx) Fail(code int, err error) {
-	c.Error(err, "Failed.")
+	c.Error(err, err.Error())
 	c.Abort(code)
 }
 
@@ -214,16 +215,16 @@ func (c *Ctx) Redirect(code int, location string) {
 	c.Call("redirect", c, code, location)
 }
 
-func servedata(c *Ctx, code int, contentType string, data []byte) error {
-	c.WriteHeader(code, contentType)
+func servedata(c *Ctx, code int, data []byte) error {
+	c.WriteHeader(code, "text/plain")
 	c.rw.Write(data)
 	return nil
 }
 
 // ServeData writes plain data into the body stream and updates the HTTP code,
 // using the Ctx servedata function.
-func (c *Ctx) ServeData(code int, contentType string, data []byte) {
-	c.Call("servedata", c, code, contentType, data)
+func (c *Ctx) ServeData(code int, data []byte) {
+	c.Call("servedata", c, code, data)
 }
 
 func servefile(c *Ctx, f http.File) error {
@@ -247,4 +248,33 @@ func rendertemplate(c *Ctx, name string, data interface{}) error {
 // Rendertemplate renders an HTML template with the Ctx rendertemplate function
 func (c *Ctx) RenderTemplate(name string, data interface{}) {
 	c.Call("rendertemplate", c, name, data)
+}
+
+func urlfor(c *Ctx, route string, external bool, params []string) (string, error) {
+	if r, ok := c.engine.Routes()[route]; ok {
+		route, _ := r.Url(params...)
+		if route != nil {
+			if external {
+				route.Host = c.Request.Host
+			}
+			return route.String(), nil
+		}
+	}
+	return "", newError("unable to get url for route %s with params %s", route, params)
+}
+
+func (c *Ctx) UrlRelative(route string, params ...string) string {
+	ret, err := c.Call("urlfor", c, route, false, params)
+	if err != nil {
+		return err.Error()
+	}
+	return ret.(string)
+}
+
+func (c *Ctx) UrlExternal(route string, params ...string) string {
+	ret, err := c.Call("urlfor", c, route, true, params)
+	if err != nil {
+		return err.Error()
+	}
+	return ret.(string)
 }

@@ -47,7 +47,7 @@ func New(name string) *Engine {
 		Env:    BaseEnv(),
 		router: httprouter.New(),
 	}
-	engine.RouterGroup = &RouterGroup{prefix: "/", engine: engine}
+	engine.RouterGroup = NewRouterGroup("/", engine)
 	engine.router.NotFound = engine.handler404
 	engine.router.PanicHandler = engine.handler500
 	engine.cache.New = engine.newCtx
@@ -59,19 +59,16 @@ func New(name string) *Engine {
 func Basic() *Engine {
 	engine := New("flotilla")
 	engine.Use(Logger())
-	engine.Static("static")
+	engine.STATIC("static")
 	return engine
 }
 
 // Extends an engine with Flotilla interface
 func (engine *Engine) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
-	if engine.Env.flotilla == nil {
-		engine.Env.flotilla = make(map[string]Flotilla)
-	}
-	engine.Env.flotilla[blueprint.Name] = f
+	engine.MergeFlotilla(blueprint.Name, f)
 	engine.MergeRouterGroups(blueprint.Groups)
-	engine.Env.MergeEnv(blueprint.Env)
+	engine.MergeEnv(blueprint.Env)
 }
 
 // Middleware handlers for the engine.
@@ -108,11 +105,15 @@ func (engine *Engine) Groups() []*RouterGroup {
 }
 
 // An array of Route instances, with all engine routes from all engine routergroups.
-func (engine *Engine) Routes() []*Route {
-	var allroutes []*Route
+func (engine *Engine) Routes() map[string]*Route {
+	allroutes := make(map[string]*Route)
 	for _, group := range engine.Groups() {
 		for _, route := range group.routes {
-			allroutes = append(allroutes, route)
+			if route.Name != "" {
+				allroutes[route.Name] = route
+			} else {
+				allroutes[route.Named()] = route
+			}
 		}
 	}
 	return allroutes
@@ -142,7 +143,7 @@ func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
 
 func (engine *Engine) existingRoute(route *Route) bool {
 	for _, r := range engine.Routes() {
-		if route.visiblepath == r.visiblepath {
+		if route.path == r.path {
 			return true
 		}
 	}
@@ -150,10 +151,10 @@ func (engine *Engine) existingRoute(route *Route) bool {
 }
 
 // Merges the given group with the given routes based on route existence.
-func (engine *Engine) MergeRoutes(group *RouterGroup, routes []*Route) {
+func (engine *Engine) MergeRoutes(group *RouterGroup, routes map[string]*Route) {
 	for _, route := range routes {
 		if route.static && !engine.existingRoute(route) {
-			group.Static(route.staticpath)
+			group.STATIC(route.path)
 		}
 		if !route.static && !engine.existingRoute(route) {
 			group.Handle(route)
