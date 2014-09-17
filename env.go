@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	devmode  = iota
-	prodmode = iota
-	testmode = iota
+	devmode = iota
+	prodmode
+	testmode
 )
 
 var (
@@ -39,12 +39,16 @@ type (
 	}
 )
 
+func (e *Env) defaults() {
+	e.Store.adddefault("secret", "key", "-")
+}
+
 func BaseEnv() *Env {
 	e := &Env{Store: make(Store)}
 	e.Templator = NewTemplator(e)
 	e.ctxfunctions = make(map[string]interface{})
 	e.AddCtxFuncs(builtinctxfuncs)
-	e.Store.adddefault("secret", "key", "defaultsecretkeypleasechangethis")
+	e.defaults()
 	return e
 }
 
@@ -93,7 +97,7 @@ func (env *Env) SetMode(value string) {
 
 // A string array of static dirs set in env.Store["staticdirectories"]
 func (env *Env) StaticDirs() []string {
-	if static, ok := env.Store["staticdirectories"]; ok {
+	if static, ok := env.Store["STATIC_DIRECTORIES"]; ok {
 		if ret, err := static.List(); err == nil {
 			return ret
 		}
@@ -103,10 +107,10 @@ func (env *Env) StaticDirs() []string {
 
 // Adds a static directory to be searched when a static route is accessed.
 func (env *Env) AddStaticDir(dirs ...string) {
-	if _, ok := env.Store["staticdirectories"]; !ok {
-		env.Store.add("", "staticdirectories", "")
+	if _, ok := env.Store["STATIC_DIRECTORIES"]; !ok {
+		env.Store.add("static", "directories", "")
 	}
-	env.Store["staticdirectories"].updateList(dirs...)
+	env.Store["STATIC_DIRECTORIES"].updateList(dirs...)
 }
 
 // Listing of templator template directories
@@ -133,7 +137,7 @@ func (env *Env) parseFlags() {
 }
 
 func (env *Env) defaultsessionconfig() string {
-	secret := env.Store["secret_key"].value
+	secret := env.Store["SECRET_KEY"].value
 	return fmt.Sprintf(`{"cookieName":"flotillasessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"flotillasessionid\",\"securityKey\":\"%s\"}"}`, secret)
 }
 

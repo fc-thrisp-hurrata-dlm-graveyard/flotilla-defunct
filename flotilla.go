@@ -71,11 +71,6 @@ func (engine *Engine) Extend(f Flotilla) {
 	engine.MergeEnv(blueprint.Env)
 }
 
-// Middleware handlers for the engine.
-func (engine *Engine) Use(middlewares ...HandlerFunc) {
-	engine.RouterGroup.Use(middlewares...)
-}
-
 // Blueprint ensures the engine satisfies interface Flotilla by providing
 // essential information in the engine: Name, RouterGroups, and Env
 func (engine *Engine) Blueprint() *Blueprint {

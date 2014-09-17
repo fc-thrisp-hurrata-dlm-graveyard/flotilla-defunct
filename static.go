@@ -40,5 +40,7 @@ func handleStatic(c *Ctx) {
 	}
 	if !exists {
 		c.Abort(404)
+	} else {
+		c.rw.WriteHeaderNow()
 	}
 }

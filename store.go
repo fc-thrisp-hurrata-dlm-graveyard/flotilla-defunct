@@ -121,7 +121,7 @@ func (s Store) newkey(section string, key string) string {
 	if len(section) != 0 {
 		key = fmt.Sprintf("%s_%s", section, strings.ToLower(key))
 	}
-	return strings.ToLower(key)
+	return strings.ToUpper(key)
 }
 
 func (s Store) add(section, key, value string) {
@@ -164,7 +164,6 @@ func (si *StoreItem) update(s string) {
 func (si *StoreItem) updateList(li ...string) {
 	if list, err := si.List(); err == nil {
 		for _, item := range li {
-			//list = append(list, item)
 			list = dirAdd(item, list)
 		}
 		si.value = strings.Join(list, ",")

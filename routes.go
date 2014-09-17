@@ -12,6 +12,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+var (
+	regParam = regexp.MustCompile(`:[^/#?()\.\\]+|\(\?P<[a-zA-Z0-9]+>.*\)`)
+	regSplat = regexp.MustCompile(`\*[^/#?()\.\\]+|\(\?P<[a-zA-Z0-9]+>.*\)`)
+)
+
 type (
 	// Information about a route as a unit outside of the router for use & reuse.
 	Route struct {
@@ -23,13 +28,16 @@ type (
 		handlers []HandlerFunc
 	}
 
+	// A a map of Route keyed by a string
+	Routes map[string]*Route
+
 	// A RouterGroup is associated with a prefix and an array of handlers.
 	RouterGroup struct {
 		Handlers []HandlerFunc
 		prefix   string
 		parent   *RouterGroup
 		children []*RouterGroup
-		routes   map[string]*Route
+		routes   Routes
 		engine   *Engine
 	}
 )
@@ -53,29 +61,45 @@ func (r *Route) Named() string {
 	name = append(name, strings.ToLower(r.method))
 	for index, value := range name {
 		if exists := strings.Index(value, "*"); exists != -1 {
-			name[index] = "f"
+			name[index] = "s"
 		}
 		if exists := strings.Index(value, ":"); exists != -1 {
 			name[index] = "p"
 		}
 	}
-	return strings.Join(name, "\\")
+	return strings.Join(name, `\`)
 }
 
+// Takes string parameters and applies them the Route. First to any :style params,
+// then *splat params. If any params are left over(not the case with a *splat),
+// and the route method is GET, a query string of key=value is appended to the
+// end of the url with arbitrary assigned keys(e.g. value1=param) where no key
+// is provided
+//
+// e.g.
+// r1 := NewRoute("GET", /my/:mysterious/path, false, [AHandlerFunc])
+// r2 := NewRoute("GET", /my/*path, false, [AHandlerFunc])
+// u1, _ := r1.Url("hello", "world=are" "you=there", "sayhi")
+// u2, _ := r2.Url("hello", "world", "are" "you", "there")
+// fmt.Printf("url1: %s\n", u1)
+//
+//	/my/hello/path?world=are&you=there&value3=sayhi
+//
+// fmt.Printf("url2: %s\n", u2)
+//
+//	/my/hello/world/are/you/there
 func (r *Route) Url(params ...string) (*url.URL, error) {
 	paramCount := len(params)
-	regP := regexp.MustCompile(`:[^/#?()\.\\]+|\(\?P<[a-zA-Z0-9]+>.*\)`)
-	regS := regexp.MustCompile(`\*[^/#?()\.\\]+|\(\?P<[a-zA-Z0-9]+>.*\)`)
 	i := 0
-	rurl := regP.ReplaceAllStringFunc(r.path, func(m string) string {
-		var val interface{}
+	rurl := regParam.ReplaceAllStringFunc(r.path, func(m string) string {
+		var val string
 		if i < paramCount {
 			val = params[i]
 		}
 		i += 1
-		return fmt.Sprintf(`%v`, val)
+		return fmt.Sprintf(`%s`, val)
 	})
-	rurl = regS.ReplaceAllStringFunc(rurl, func(m string) string {
+	rurl = regSplat.ReplaceAllStringFunc(rurl, func(m string) string {
 		splat := params[i:(len(params))]
 		i += len(splat)
 		return fmt.Sprintf(strings.Join(splat, "/"))
@@ -140,7 +164,7 @@ func (group *RouterGroup) pathDropFilepathSplat(path string) string {
 func NewRouterGroup(prefix string, engine *Engine) *RouterGroup {
 	return &RouterGroup{prefix: prefix,
 		engine: engine,
-		routes: make(map[string]*Route),
+		routes: make(Routes),
 	}
 }
 
@@ -157,13 +181,34 @@ func (group *RouterGroup) New(component string, handlers ...HandlerFunc) *Router
 	return newroutergroup
 }
 
-// Adds any number of HandlerFunc to the RouterGroup.
+// Adds any number of HandlerFunc to the RouterGroup as middleware.
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
 		if !group.handlerExists(handler) {
 			group.Handlers = append(group.Handlers, handler)
 		}
 	}
+}
+
+// Adds any number of HandlerFunc to the RouterGroup as middleware when you
+// must control the position, use with caution.
+func (group *RouterGroup) UseAt(index int, middlewares ...HandlerFunc) {
+	if index > len(group.Handlers) {
+		group.Use(middlewares...)
+		return
+	}
+
+	var newh []HandlerFunc
+
+	for _, handler := range middlewares {
+		if !group.handlerExists(handler) {
+			newh = append(newh, handler)
+		}
+	}
+
+	before := group.Handlers[:index]
+	after := append(newh, group.Handlers[index:]...)
+	group.Handlers = append(before, after...)
 }
 
 // Adds a Route to the group routes map, using the Route.Name if provided or
@@ -185,9 +230,7 @@ func (group *RouterGroup) Handle(route *Route) {
 	group.AddRoute(route)
 	group.engine.router.Handle(route.method, route.path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		c := group.engine.getCtx(w, req, params, handlers)
-		//fmt.Printf("\nPRE HOOK\n")
 		c.Next()
-		//fmt.Printf("\nPOST HOOK\n")
 		group.engine.cache.Put(c)
 	})
 }
@@ -223,7 +266,5 @@ func (group *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
 // Adds a Static route handled by the router, based on the group prefix.
 func (group *RouterGroup) STATIC(path string) {
 	group.engine.AddStaticDir(group.pathDropFilepathSplat(path))
-	//path = group.pathNoLeadingSlash(path)
 	group.Handle(NewRoute("GET", path, true, []HandlerFunc{handleStatic}))
-	//group.Handle(staticroute("HEAD", staticpath, []HandlerFunc{handleStatic}))
 }
