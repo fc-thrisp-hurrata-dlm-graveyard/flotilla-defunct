@@ -3,7 +3,7 @@
   <channel>
       <title>Recent Content on  </title>
       <generator uri="https://hugo.spf13.com">Hugo</generator>
-    <link>http://thrisp.github.io/flotilla/index.xml/</link>
+    <link>http://localhost:1313/flotilla/index.xml/</link>
     
     
     
@@ -11,51 +11,51 @@
     
     <item>
       <title></title>
-      <link>http://thrisp.github.io/flotilla/docs/0.0.1/installation/</link>
+      <link>http://localhost:1313/flotilla/installation/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/installation/</guid>
+      <guid>http://localhost:1313/flotilla/installation/</guid>
       <description>&lt;p&gt;installation&lt;/p&gt;
 </description>
     </item>
     
     <item>
       <title></title>
-      <link>http://thrisp.github.io/flotilla/docs/0.0.1/</link>
+      <link>http://localhost:1313/flotilla/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/</guid>
-      <description>&lt;p&gt;0.0.1 doc index&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>http://thrisp.github.io/flotilla/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/</guid>
+      <guid>http://localhost:1313/flotilla/</guid>
       <description>&lt;p&gt;FLOTILLA - INDEX PAGE&lt;/p&gt;
 </description>
     </item>
     
     <item>
       <title></title>
-      <link>http://thrisp.github.io/flotilla/docs/0.0.1/quickstart/</link>
+      <link>http://localhost:1313/flotilla/foreword/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/quickstart/</guid>
-      <description>&lt;p&gt;quickstart&lt;/p&gt;
+      <guid>http://localhost:1313/flotilla/foreword/</guid>
+      <description>&lt;p&gt;foreword&lt;/p&gt;
 </description>
     </item>
     
     <item>
       <title></title>
-      <link>http://thrisp.github.io/flotilla/docs/0.0.1/tutorial/</link>
+      <link>http://localhost:1313/flotilla/tutorial/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/docs/0.0.1/tutorial/</guid>
+      <guid>http://localhost:1313/flotilla/tutorial/</guid>
       <description>&lt;p&gt;tutorial&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://localhost:1313/flotilla/quickstart/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://localhost:1313/flotilla/quickstart/</guid>
+      <description>&lt;p&gt;quickstart&lt;/p&gt;
 </description>
     </item>
     
