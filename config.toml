@@ -1,1 +1,2 @@
-baseurl = "http://thrisp.github.io/flotilla"
+baseurl = "http://localhost:1313/flotilla"
+# baseurl = "http://thrisp.github.io/flotilla"

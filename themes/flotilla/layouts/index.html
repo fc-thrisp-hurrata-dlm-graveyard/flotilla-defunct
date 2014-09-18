@@ -1,2 +1,10 @@
-index
-{{ .Data }}
+{{ template "theme/partials/head.html" . }}
+{{ template "theme/partials/sidebar.html" }}
+<html>
+    <body>
+        <img src="?/img/flotilla-logo.png"></img>
+    index
+    {{ .Data }}
+    {{ template "theme/partials/footer.html" }}
+    </body>
+</html>
