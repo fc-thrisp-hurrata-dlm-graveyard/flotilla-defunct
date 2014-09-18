@@ -1,10 +1,12 @@
 {{ template "theme/partials/head.html" . }}
-{{ template "theme/partials/sidebar.html" }}
 <html>
     <body>
-        <img src="?/img/flotilla-logo.png"></img>
-    index
-    {{ .Data }}
-    {{ template "theme/partials/footer.html" }}
+        <div class="container">
+            {{ template "theme/partials/logo.html" . }}
+            {{ range where .Data.Pages "Title" "flotilla-index"}}
+                {{ .Content}}<br>
+            {{ end }}
+            {{ template "theme/partials/footer.html" }}
+        </div>
     </body>
 </html>

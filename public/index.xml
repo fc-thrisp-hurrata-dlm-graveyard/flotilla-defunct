@@ -3,59 +3,66 @@
   <channel>
       <title>Recent Content on  </title>
       <generator uri="https://hugo.spf13.com">Hugo</generator>
-    <link>http://localhost:1313/flotilla/index.xml/</link>
+    <link>http://thrisp.github.io/flotilla/index.xml/</link>
     
     
     
     <updated>Tue, 01 Jan 2008 00:00:00 UTC</updated>
     
     <item>
-      <title></title>
-      <link>http://localhost:1313/flotilla/installation/</link>
+      <title>flotilla-extensions</title>
+      <link>http://thrisp.github.io/flotilla/extensions/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://localhost:1313/flotilla/installation/</guid>
-      <description>&lt;p&gt;installation&lt;/p&gt;
+      <guid>http://thrisp.github.io/flotilla/extensions/</guid>
+      <description>
+
+&lt;h1 id=&#34;toc_0&#34;&gt;Extensions&lt;/h1&gt;
+
+&lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
 </description>
     </item>
     
     <item>
-      <title></title>
-      <link>http://localhost:1313/flotilla/</link>
+      <title>flotilla-installation</title>
+      <link>http://thrisp.github.io/flotilla/installation/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://localhost:1313/flotilla/</guid>
-      <description>&lt;p&gt;FLOTILLA - INDEX PAGE&lt;/p&gt;
+      <guid>http://thrisp.github.io/flotilla/installation/</guid>
+      <description>
+
+&lt;h1 id=&#34;toc_0&#34;&gt;Installation&lt;/h1&gt;
+
+&lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
 </description>
     </item>
     
     <item>
-      <title></title>
-      <link>http://localhost:1313/flotilla/foreword/</link>
+      <title>flotilla-index</title>
+      <link>http://thrisp.github.io/flotilla/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://localhost:1313/flotilla/foreword/</guid>
-      <description>&lt;p&gt;foreword&lt;/p&gt;
+      <guid>http://thrisp.github.io/flotilla/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt; // &lt;a href=&#34;/flotilla/quickstart&#34;&gt;quickstart&lt;/a&gt; // &lt;a href=&#34;/flotilla/extensions&#34;&gt;extensions&lt;/a&gt; // &lt;a href=&#34;/flotilla/community&#34;&gt;community&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
+&lt;/blockquote&gt;
 </description>
     </item>
     
     <item>
-      <title></title>
-      <link>http://localhost:1313/flotilla/tutorial/</link>
+      <title>flotilla-quickstart</title>
+      <link>http://thrisp.github.io/flotilla/quickstart/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
       
-      <guid>http://localhost:1313/flotilla/tutorial/</guid>
-      <description>&lt;p&gt;tutorial&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>http://localhost:1313/flotilla/quickstart/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://localhost:1313/flotilla/quickstart/</guid>
-      <description>&lt;p&gt;quickstart&lt;/p&gt;
+      <guid>http://thrisp.github.io/flotilla/quickstart/</guid>
+      <description>
+
+&lt;h1 id=&#34;toc_0&#34;&gt;Quickstart&lt;/h1&gt;
+
+&lt;p&gt;Ready? This page provides an introduction to Flotilla, assuming you have Flotilla installed.
+If you do not, head over to the &lt;a href=&#34;/flotilla/installation&#34;&gt;Installation&lt;/a&gt; section.&lt;/p&gt;
 </description>
     </item>
     

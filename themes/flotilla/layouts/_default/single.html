@@ -1,1 +1,12 @@
-single
+{{ template "theme/partials/head.html" . }}
+<html>
+    <body>
+        <div class="container">
+            {{ template "theme/partials/header.html" }}
+            {{ template "theme/partials/sidebar.html" }}
+            using layout page single.html<br>
+            {{ .Content }}<br>
+            {{ template "theme/partials/footer.html" }}
+        </div>
+    </body>
+</html>
