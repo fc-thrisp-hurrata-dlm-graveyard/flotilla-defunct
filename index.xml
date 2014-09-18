@@ -10,6 +10,49 @@
     <updated>Tue, 01 Jan 2008 00:00:00 UTC</updated>
     
     <item>
+      <title>flotilla-community</title>
+      <link>http://thrisp.github.io/flotilla/community/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/community/</guid>
+      <description>
+
+&lt;h1 id=&#34;toc_0&#34;&gt;Community&lt;/h1&gt;
+
+&lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>flotilla-quickstart</title>
+      <link>http://thrisp.github.io/flotilla/quickstart/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/quickstart/</guid>
+      <description>
+
+&lt;h1 id=&#34;toc_0&#34;&gt;Quickstart&lt;/h1&gt;
+
+&lt;p&gt;Ready? This page provides an introduction to Flotilla, assuming you have Flotilla installed.
+If you do not, head over to the &lt;a href=&#34;/flotilla/installation&#34;&gt;Installation&lt;/a&gt; section.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>flotilla-index</title>
+      <link>http://thrisp.github.io/flotilla/</link>
+      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt; // &lt;a href=&#34;/flotilla/quickstart&#34;&gt;quickstart&lt;/a&gt; // &lt;a href=&#34;/flotilla/extensions&#34;&gt;extensions&lt;/a&gt; // &lt;a href=&#34;/flotilla/community&#34;&gt;community&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+    </item>
+    
+    <item>
       <title>flotilla-extensions</title>
       <link>http://thrisp.github.io/flotilla/extensions/</link>
       <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
@@ -34,35 +77,6 @@
 &lt;h1 id=&#34;toc_0&#34;&gt;Installation&lt;/h1&gt;
 
 &lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>flotilla-index</title>
-      <link>http://thrisp.github.io/flotilla/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt; // &lt;a href=&#34;/flotilla/quickstart&#34;&gt;quickstart&lt;/a&gt; // &lt;a href=&#34;/flotilla/extensions&#34;&gt;extensions&lt;/a&gt; // &lt;a href=&#34;/flotilla/community&#34;&gt;community&lt;/a&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
-&lt;/blockquote&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>flotilla-quickstart</title>
-      <link>http://thrisp.github.io/flotilla/quickstart/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/quickstart/</guid>
-      <description>
-
-&lt;h1 id=&#34;toc_0&#34;&gt;Quickstart&lt;/h1&gt;
-
-&lt;p&gt;Ready? This page provides an introduction to Flotilla, assuming you have Flotilla installed.
-If you do not, head over to the &lt;a href=&#34;/flotilla/installation&#34;&gt;Installation&lt;/a&gt; section.&lt;/p&gt;
 </description>
     </item>
     

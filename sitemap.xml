@@ -8,12 +8,12 @@
   </url>
   
   <url>
-    <loc>http://thrisp.github.io/flotilla/extensions/</loc>
+    <loc>http://thrisp.github.io/flotilla/community/</loc>
     <lastmod>2008-01-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://thrisp.github.io/flotilla/installation/</loc>
+    <loc>http://thrisp.github.io/flotilla/quickstart/</loc>
     <lastmod>2008-01-01T00:00:00+00:00</lastmod>
   </url>
   
@@ -23,7 +23,12 @@
   </url>
   
   <url>
-    <loc>http://thrisp.github.io/flotilla/quickstart/</loc>
+    <loc>http://thrisp.github.io/flotilla/extensions/</loc>
+    <lastmod>2008-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://thrisp.github.io/flotilla/installation/</loc>
     <lastmod>2008-01-01T00:00:00+00:00</lastmod>
   </url>
   
