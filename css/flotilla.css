@@ -1,0 +1,25 @@
+.container { width: 620px; margin: 0 auto; margin-top: 2em; color: #333; font-family: "PT Sans", sans-serif; }
+strong { color: #000; }
+h1 { margin-bottom: 12px; }
+h2 { margin-bottom: 6px; }
+td.code { width: 100%; }
+pre {
+    font-family: consolas,monospace;
+    font-size: 85%;
+    line-height: 1.5em;
+    padding: .5em 1em; 
+    border-radius: 5px;
+    background-color: #eee;
+    text-shadow: 0 1px 0 white;
+    overflow-x: auto;
+}
+code {
+    font-family: consolas,monospace;
+    font-size: 85%;
+    color: #000;           
+    font-weight: bold;
+}
+
+#fl-title{}
+#fl-logo{}
+.fl-sidebar
