@@ -3,80 +3,39 @@
   <channel>
       <title>Recent Content on  </title>
       <generator uri="https://hugo.spf13.com">Hugo</generator>
-    <link>http://thrisp.github.io/flotilla/index.xml/</link>
+    <link>http://localhost:1313/flotilla/index.xml/</link>
     
     
     
-    <updated>Tue, 01 Jan 2008 00:00:00 UTC</updated>
-    
-    <item>
-      <title>flotilla-community</title>
-      <link>http://thrisp.github.io/flotilla/community/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/community/</guid>
-      <description>
-
-&lt;h1 id=&#34;toc_0&#34;&gt;Community&lt;/h1&gt;
-
-&lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>flotilla-quickstart</title>
-      <link>http://thrisp.github.io/flotilla/quickstart/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/quickstart/</guid>
-      <description>
-
-&lt;h1 id=&#34;toc_0&#34;&gt;Quickstart&lt;/h1&gt;
-
-&lt;p&gt;Ready? This page provides an introduction to Flotilla, assuming you have Flotilla installed.
-If you do not, head over to the &lt;a href=&#34;/flotilla/installation&#34;&gt;Installation&lt;/a&gt; section.&lt;/p&gt;
-</description>
-    </item>
+    <updated>Mon, 01 Jan 0001 00:00:00 UTC</updated>
     
     <item>
       <title>flotilla-index</title>
-      <link>http://thrisp.github.io/flotilla/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
+      <link>http://localhost:1313/flotilla/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt; // &lt;a href=&#34;/flotilla/quickstart&#34;&gt;quickstart&lt;/a&gt; // &lt;a href=&#34;/flotilla/extensions&#34;&gt;extensions&lt;/a&gt; // &lt;a href=&#34;/flotilla/community&#34;&gt;community&lt;/a&gt;&lt;/p&gt;
+      <guid>http://localhost:1313/flotilla/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt; // &lt;a href=&#34;/flotilla/quickstart&#34;&gt;quickstart&lt;/a&gt; // &lt;a href=&#34;/flotilla/extensions&#34;&gt;extensions&lt;/a&gt; // &lt;a href=&#34;/flotilla/community&#34;&gt;community&lt;/a&gt;&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
 &lt;/blockquote&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>flotilla-extensions</title>
-      <link>http://thrisp.github.io/flotilla/extensions/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/extensions/</guid>
-      <description>
-
-&lt;h1 id=&#34;toc_0&#34;&gt;Extensions&lt;/h1&gt;
-
-&lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>flotilla-installation</title>
-      <link>http://thrisp.github.io/flotilla/installation/</link>
-      <pubDate>Tue, 01 Jan 2008 00:00:00 UTC</pubDate>
-      
-      <guid>http://thrisp.github.io/flotilla/installation/</guid>
-      <description>
 
 &lt;h1 id=&#34;toc_0&#34;&gt;Installation&lt;/h1&gt;
 
-&lt;p&gt;&lt;em&gt;coming soon&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Flotilla currently has 2 dependencies: &lt;a href=&#34;https://github.com/thrisp/jingo/&#34;&gt;jingo&lt;/a&gt; &amp;amp; &lt;a href=&#34;https://github.com/julienschmidt/httprouter&#34;&gt;httprouter&lt;/a&gt;. After installing both, you can install with &lt;code&gt;go get github.com/thrisp/flotilla&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h1 id=&#34;toc_1&#34;&gt;Quickstart&lt;/h1&gt;
+
+&lt;h1 id=&#34;toc_2&#34;&gt;Extensions&lt;/h1&gt;
+
+&lt;p&gt;One of the primary goals of creating Flotilla is large pool of extensions, middleware, and packages that that promote code reuse and wasted effort recreating everything from nothing whenever you want to do something requiring a web framework in Go. Examples for creating extension can be found &lt;a href=&#34;https://github.com/thrisp/flotilla_skeleton&#34;&gt;here&lt;/a&gt;, as well your imagination in reading the Flotilla source code.&lt;/p&gt;
+
+&lt;h1 id=&#34;toc_3&#34;&gt;Community&lt;/h1&gt;
+
+&lt;p&gt;You can find a start at &lt;a href=&#34;http://reddit.com/r/flotillaaa&#34;&gt;/r/flotilla&lt;/a&gt; on reddit.&lt;/p&gt;
 </description>
     </item>
     

@@ -1,8 +1,19 @@
 .container { width: 620px; margin: 0 auto; margin-top: 2em; color: #333; font-family: "PT Sans", sans-serif; }
+
+a img {
+    border: none;
+}
+
+a {color: #1b5e73; text-decoration: none; border-bottom: 1px dotted #2e768d;}
+a:hover {color: #0a323f;}
+a.reference em {font-style: normal;}
+
 strong { color: #000; }
+
 h1 { margin-bottom: 12px; }
+
 h2 { margin-bottom: 6px; }
-td.code { width: 100%; }
+
 pre {
     font-family: consolas,monospace;
     font-size: 85%;
@@ -13,12 +24,15 @@ pre {
     text-shadow: 0 1px 0 white;
     overflow-x: auto;
 }
+
 code {
     font-family: consolas,monospace;
     font-size: 85%;
     color: #000;           
     font-weight: bold;
 }
+
+td.code { width: 100%; }
 
 #fl-title{}
 #fl-logo{}
