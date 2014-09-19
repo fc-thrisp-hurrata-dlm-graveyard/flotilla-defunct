@@ -28,7 +28,7 @@ type (
 		handlers []HandlerFunc
 	}
 
-	// A a map of Route keyed by a string
+	// A map of Route instances keyed by a string
 	Routes map[string]*Route
 
 	// A RouterGroup is associated with a prefix and an array of handlers.
@@ -60,10 +60,10 @@ func (r *Route) Named() string {
 	name := strings.Split(r.path, "/")
 	name = append(name, strings.ToLower(r.method))
 	for index, value := range name {
-		if exists := strings.Index(value, "*"); exists != -1 {
+		if regSplat.MatchString(value) {
 			name[index] = "s"
 		}
-		if exists := strings.Index(value, ":"); exists != -1 {
+		if regParam.MatchString(value) {
 			name[index] = "p"
 		}
 	}

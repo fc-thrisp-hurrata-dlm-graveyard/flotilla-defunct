@@ -9,6 +9,10 @@ import (
 	"github.com/thrisp/jingo"
 )
 
+var (
+	builtintplfuncs = map[string]interface{}{}
+)
+
 type (
 	// An interface attached to an env as a templating base
 	Templator interface {
@@ -44,6 +48,12 @@ func (t *templator) ListTemplateDirs() []string {
 func (t *templator) UpdateTemplateDirs(dirs ...string) {
 	for _, dir := range dirs {
 		t.TemplateDirs = dirAdd(dir, t.TemplateDirs)
+	}
+}
+
+func (t *templator) UpdateTemplateFuncs(funcs map[string]interface{}) {
+	for k, v := range funcs {
+		t.FuncMap[k] = v
 	}
 }
 

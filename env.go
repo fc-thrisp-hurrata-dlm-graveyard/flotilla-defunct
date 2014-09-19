@@ -26,6 +26,8 @@ var (
 )
 
 type (
+	envmap map[string]interface{}
+
 	// The engine environment containing configuration variables & their store
 	// as well as other information/data structures relevant to the engine.
 	Env struct {
@@ -35,7 +37,8 @@ type (
 		Assets
 		Templator
 		flotilla     map[string]Flotilla
-		ctxfunctions map[string]interface{}
+		ctxfunctions envmap
+		tplfunctions envmap
 	}
 )
 
@@ -46,8 +49,10 @@ func (e *Env) defaults() {
 func BaseEnv() *Env {
 	e := &Env{Store: make(Store)}
 	e.Templator = NewTemplator(e)
-	e.ctxfunctions = make(map[string]interface{})
+	e.ctxfunctions = make(envmap)
 	e.AddCtxFuncs(builtinctxfuncs)
+	e.tplfunctions = make(envmap)
+	e.AddTplFuncs(builtintplfuncs)
 	e.defaults()
 	return e
 }
@@ -123,8 +128,15 @@ func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
 }
 
+// Adds template functions used by the default Templator.
+func (env *Env) AddTplFuncs(fns envmap) {
+	for k, v := range fns {
+		env.tplfunctions[k] = v
+	}
+}
+
 // Adds cross-handler functions used by the Ctx.
-func (env *Env) AddCtxFuncs(fns map[string]interface{}) {
+func (env *Env) AddCtxFuncs(fns envmap) {
 	for k, v := range fns {
 		env.ctxfunctions[k] = v
 	}

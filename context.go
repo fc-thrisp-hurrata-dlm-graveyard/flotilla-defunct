@@ -33,83 +33,92 @@ type (
 
 	// The request & response context that allows passing & setting data between handlers
 	Ctx struct {
-		rwmem responseWriter
-		rw    ResponseWriter
-		*D
-		ctxfuncs map[string]reflect.Value
-		engine   *Engine
-		session  session.SessionStore
-		CtxFunc
-	}
-
-	// Specific or dynamic Ctx data from request and for response.
-	D struct {
 		index    int8
 		handlers []HandlerFunc
+		rwmem    responseWriter
+		rw       ResponseWriter
 		Request  *http.Request
-		Params   httprouter.Params
-		data     map[string]interface{}
+		engine   *Engine
+		Session  session.SessionStore
 		Errors   errorMsgs
+		CtxData  ctxdata
+		CtxFunc  ctxfuncs
+	}
+
+	// A map of functions used in Ctx
+	ctxfuncs map[string]reflect.Value
+
+	// A stash for data in the Ctx; http.Params and user set data currently.
+	ctxdata map[string]interface{}
+
+	// Data sent to the template, data supplied to the rendertemplate function
+	// is set as Data
+	tdata struct {
+		Data    interface{}
+		Request *http.Request
+		Session session.SessionStore
+		CtxData ctxdata
 	}
 )
 
 func (engine *Engine) newCtx() interface{} {
 	c := &Ctx{engine: engine}
 	c.rw = &c.rwmem
-	c.ctxfuncs = c.ctxFunctions()
+	c.CtxFunc = c.ctxFunctions()
 	return c
 }
 
 func (engine *Engine) getCtx(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Ctx {
 	c := engine.cache.Get().(*Ctx)
 	c.rwmem.reset(w)
-	c.D = newD(handlers, req, params)
-	c.session = engine.SessionManager.SessionStart(w, req)
-	defer c.session.SessionRelease(w)
+	c.index = -1
+	c.handlers = handlers
+	c.Request = req
+	c.CtxData = make(ctxdata)
+	for _, p := range params {
+		c.CtxData[p.Key] = p.Value
+	}
+	c.Session = engine.SessionManager.SessionStart(w, req)
+	defer c.Session.SessionRelease(w)
 	return c
-}
-
-func newD(handlers []HandlerFunc, req *http.Request, params httprouter.Params) *D {
-	d := &D{-1, handlers, req, params, nil, nil}
-	return d
 }
 
 // Attaches an error that is pushed to a list of errors. It's a good idea
 // to call Error for each error that occurred during the resolution of a request.
 // A middleware can be used to collect all the errors and push them to a database
 // together, print a log, or append it in the HTTP response.
-func (d *D) Error(err error, meta interface{}) {
-	d.errorTyped(err, ErrorTypeExternal, meta)
+func (c *Ctx) Error(err error, meta interface{}) {
+	c.errorTyped(err, ErrorTypeExternal, meta)
 }
 
-func (d *D) errorTyped(err error, typ uint32, meta interface{}) {
-	d.Errors = append(d.Errors, errorMsg{
+func (c *Ctx) errorTyped(err error, typ uint32, meta interface{}) {
+	c.Errors = append(c.Errors, errorMsg{
 		Err:  err.Error(),
 		Type: typ,
 		Meta: meta,
 	})
 }
 
-func (d *D) LastError() error {
-	s := len(d.Errors)
+func (c *Ctx) LastError() error {
+	s := len(c.Errors)
 	if s > 0 {
-		return errors.New(d.Errors[s-1].Err)
+		return errors.New(c.Errors[s-1].Err)
 	} else {
 		return nil
 	}
 }
 
-func (c *Ctx) ctxFunctions() map[string]reflect.Value {
-	m := make(map[string]reflect.Value)
+func (c *Ctx) ctxFunctions() ctxfuncs {
+	m := make(ctxfuncs)
 	for k, v := range c.engine.Env.ctxfunctions {
 		m[k] = valueFunc(v)
 	}
 	return m
 }
 
-// Calls a function with name in Ctx.ctxfuncs passing in the given args.
+// Calls a function with name in Ctx.CtxFuncs passing in the given args.
 func (c *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
-	return call(c.ctxfuncs[name], args...)
+	return call(c.CtxFunc[name], args...)
 }
 
 // Copies the Ctx with handlers set to nil and index AbortIndex
@@ -164,19 +173,14 @@ func (c *Ctx) Fail(code int, err error) {
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
 func (c *Ctx) SetData(key string, item interface{}) {
-	if c.data == nil {
-		c.data = make(map[string]interface{})
-	}
-	c.data[key] = item
+	c.CtxData[key] = item
 }
 
 // Get returns the value for the given key or an error if nonexistent.
 func (c *Ctx) GetData(key string) (interface{}, error) {
-	if c.data != nil {
-		item, ok := c.data[key]
-		if ok {
-			return item, nil
-		}
+	item, ok := c.CtxData[key]
+	if ok {
+		return item, nil
 	}
 	return nil, newError("Key %s does not exist.", key)
 }
@@ -240,8 +244,13 @@ func (c *Ctx) ServeFile(f http.File) {
 	c.Call("servefile", c, f)
 }
 
+func templatedata(c *Ctx, data interface{}) *tdata {
+	return &tdata{data, c.Request, c.Session, c.CtxData}
+}
+
 func rendertemplate(c *Ctx, name string, data interface{}) error {
-	err := c.engine.Templator.Render(c.rw, name, data)
+	td := templatedata(c, data)
+	err := c.engine.Templator.Render(c.rw, name, td)
 	return err
 }
 
