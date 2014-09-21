@@ -70,11 +70,11 @@ func (r *Route) Named() string {
 	return strings.Join(name, `\`)
 }
 
-// Takes string parameters and applies them the Route. First to any :style params,
-// then *splat params. If any params are left over(not the case with a *splat),
-// and the route method is GET, a query string of key=value is appended to the
-// end of the url with arbitrary assigned keys(e.g. value1=param) where no key
-// is provided
+// Takes string parameters and applies them to a Route. First to any :parameter
+// params, then *splat params. If any params are left over(not the case with a
+// *splat), and the route method is GET, a query string of key=value is appended
+// to the end of the url with arbitrary assigned keys(e.g. value1=param) where
+// no key is provided
 //
 // e.g.
 // r1 := NewRoute("GET", /my/:mysterious/path, false, [AHandlerFunc])

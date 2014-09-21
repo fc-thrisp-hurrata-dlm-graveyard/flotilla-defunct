@@ -11,8 +11,9 @@ import (
 type (
 	HandlerFunc func(*Ctx)
 
-	// The base of running a Flotilla instance is an Engine with a Name, an Env
-	// with information specific to running the engine, and a chain of RouterGroups
+	// The base of running a Flotilla instance is an Engine struct with a Name,
+	// an Env with information specific to running the engine, and a chain of
+	// RouterGroups
 	Engine struct {
 		Name string
 		*Env
@@ -22,7 +23,8 @@ type (
 		HttpExceptions
 	}
 
-	// Essential information about an engine for export to another engine
+	// A Blueprint struct is essential information about an engine for export
+	// to another engine
 	Blueprint struct {
 		Name   string
 		Prefix string
@@ -30,7 +32,7 @@ type (
 		Env    *Env
 	}
 
-	// Engine extension interface
+	// The Flotilla interface returns a Blueprint struct.
 	Flotilla interface {
 		Blueprint() *Blueprint
 	}
@@ -41,7 +43,7 @@ func Empty() *Engine {
 	return &Engine{}
 }
 
-// Returns a new engine
+// Returns a new engine, with the minimum configuration.
 func New(name string) *Engine {
 	engine := &Engine{Name: name,
 		Env:    BaseEnv(),
@@ -55,7 +57,7 @@ func New(name string) *Engine {
 	return engine
 }
 
-// Returns a basic engine instance with sensible defaults
+// Returns a new engine instance with sensible defaults
 func Basic() *Engine {
 	engine := New("flotilla")
 	engine.Use(Logger())
@@ -63,7 +65,8 @@ func Basic() *Engine {
 	return engine
 }
 
-// Extends an engine with Flotilla interface
+// Extend takes anytthing satisfying the Flotilla interface, and integrates it
+// with the current Engine
 func (engine *Engine) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
 	engine.MergeFlotilla(blueprint.Name, f)
@@ -72,7 +75,7 @@ func (engine *Engine) Extend(f Flotilla) {
 }
 
 // Blueprint ensures the engine satisfies interface Flotilla by providing
-// essential information in the engine: Name, RouterGroups, and Env
+// essential information in the engine in a struct: Name, RouterGroups, and Env
 func (engine *Engine) Blueprint() *Blueprint {
 	return &Blueprint{Name: engine.Name,
 		Groups: engine.Groups(),
@@ -99,7 +102,8 @@ func (engine *Engine) Groups() []*RouterGroup {
 	return rg
 }
 
-// An array of Route instances, with all engine routes from all engine routergroups.
+// Routes returns an array of Route instances, with all engine routes from all
+// engine routergroups.
 func (engine *Engine) Routes() map[string]*Route {
 	allroutes := make(map[string]*Route)
 	for _, group := range engine.Groups() {

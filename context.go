@@ -31,7 +31,8 @@ type (
 		Call(string, ...interface{}) (interface{}, error)
 	}
 
-	// The request & response context that allows passing & setting data between handlers
+	// The request & response context that allows passing & setting data
+	// between handlers
 	Ctx struct {
 		index    int8
 		handlers []HandlerFunc
@@ -48,11 +49,12 @@ type (
 	// A map of functions used in Ctx
 	ctxfuncs map[string]reflect.Value
 
-	// A stash for data in the Ctx; http.Params and user set data currently.
+	// A map as a stash for data in the Ctx. Currently http.Params go here, as
+	// well as data set with Ctx.Set().
 	ctxdata map[string]interface{}
 
-	// Data sent to the template, data supplied to the rendertemplate function
-	// is set as Data
+	// Sent to and accessible within the template, data supplied by the
+	// rendertemplate function is set here as Data
 	tdata struct {
 		Data    interface{}
 		Request *http.Request
@@ -83,6 +85,14 @@ func (engine *Engine) getCtx(w http.ResponseWriter, req *http.Request, params ht
 	return c
 }
 
+func (c *Ctx) ctxFunctions() ctxfuncs {
+	m := make(ctxfuncs)
+	for k, v := range c.engine.Env.ctxfunctions {
+		m[k] = valueFunc(v)
+	}
+	return m
+}
+
 // Attaches an error that is pushed to a list of errors. It's a good idea
 // to call Error for each error that occurred during the resolution of a request.
 // A middleware can be used to collect all the errors and push them to a database
@@ -99,6 +109,7 @@ func (c *Ctx) errorTyped(err error, typ uint32, meta interface{}) {
 	})
 }
 
+// Returns the last error for the Ctx.
 func (c *Ctx) LastError() error {
 	s := len(c.Errors)
 	if s > 0 {
@@ -106,14 +117,6 @@ func (c *Ctx) LastError() error {
 	} else {
 		return nil
 	}
-}
-
-func (c *Ctx) ctxFunctions() ctxfuncs {
-	m := make(ctxfuncs)
-	for k, v := range c.engine.Env.ctxfunctions {
-		m[k] = valueFunc(v)
-	}
-	return m
 }
 
 // Calls a function with name in Ctx.CtxFuncs passing in the given args.
@@ -172,12 +175,12 @@ func (c *Ctx) Fail(code int, err error) {
 
 // Sets a new pair key/value just for the specified context.
 // It also lazy initializes the hashmap.
-func (c *Ctx) SetData(key string, item interface{}) {
+func (c *Ctx) Set(key string, item interface{}) {
 	c.CtxData[key] = item
 }
 
 // Get returns the value for the given key or an error if nonexistent.
-func (c *Ctx) GetData(key string) (interface{}, error) {
+func (c *Ctx) Get(key string) (interface{}, error) {
 	item, ok := c.CtxData[key]
 	if ok {
 		return item, nil
@@ -186,8 +189,8 @@ func (c *Ctx) GetData(key string) (interface{}, error) {
 }
 
 // MustGet returns the value for the given key or panics if nonexistent.
-func (c *Ctx) MustGetData(key string) interface{} {
-	value, err := c.GetData(key)
+func (c *Ctx) MustGet(key string) interface{} {
+	value, err := c.Get(key)
 	if err != nil || value == nil {
 		log.Panicf("Key %s doesn't exist", key)
 	}
@@ -254,7 +257,8 @@ func rendertemplate(c *Ctx, name string, data interface{}) error {
 	return err
 }
 
-// Rendertemplate renders an HTML template with the Ctx rendertemplate function
+// RenderTemplate renders an HTML template response with the Ctx rendertemplate
+// function.
 func (c *Ctx) RenderTemplate(name string, data interface{}) {
 	c.Call("rendertemplate", c, name, data)
 }
@@ -272,6 +276,8 @@ func urlfor(c *Ctx, route string, external bool, params []string) (string, error
 	return "", newError("unable to get url for route %s with params %s", route, params)
 }
 
+// Provides a relative url for the route specified using the parameters specified,
+// using the Ctx urlfor function.
 func (c *Ctx) UrlRelative(route string, params ...string) string {
 	ret, err := c.Call("urlfor", c, route, false, params)
 	if err != nil {
@@ -280,6 +286,8 @@ func (c *Ctx) UrlRelative(route string, params ...string) string {
 	return ret.(string)
 }
 
+// Provides a full, external url for the route specified using the given parameters,
+// using the Ctx urlfor function.
 func (c *Ctx) UrlExternal(route string, params ...string) string {
 	ret, err := c.Call("urlfor", c, route, true, params)
 	if err != nil {
