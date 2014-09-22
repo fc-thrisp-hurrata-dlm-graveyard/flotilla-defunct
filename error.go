@@ -28,10 +28,7 @@ type (
 )
 
 func newError(format string, parameters ...interface{}) error {
-	return &FlotillaError{
-		format:     format,
-		parameters: parameters,
-	}
+	return &FlotillaError{format, parameters}
 }
 
 func (e *FlotillaError) Error() string {
