@@ -5,8 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	//github.com/thrisp/flotilla/session
-	"lcl/flotilla/session"
+	"github.com/thrisp/flotilla/session"
 
 	flag "gopkg.in/alecthomas/kingpin.v1"
 )

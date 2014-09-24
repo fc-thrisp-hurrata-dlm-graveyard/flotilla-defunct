@@ -1,12 +1,13 @@
 package flotilla
 
 import (
-	"lcl/engine"
-	"lcl/flotilla/session"
 	"log"
 	"math"
 	"net/http"
 	"reflect"
+
+	"github.com/flotilla/session"
+	"github.com/thrisp/engine"
 )
 
 const (

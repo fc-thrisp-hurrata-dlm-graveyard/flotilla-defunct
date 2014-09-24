@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"lcl/engine"
 	"strings"
 	"sync"
+
+	"github.com/thrisp/engine"
 )
 
 var (
