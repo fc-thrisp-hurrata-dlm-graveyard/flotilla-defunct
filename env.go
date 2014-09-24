@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/thrisp/flotilla/session"
+	"lcl/flotilla/session"
 
 	flag "gopkg.in/alecthomas/kingpin.v1"
 )
@@ -165,19 +165,8 @@ func (env *Env) SessionInit() {
 			panic(fmt.Sprintf("Problem with default session manager: %s", err))
 		}
 	}
-	fmt.Printf("%+v\n", env.SessionManager)
 	go env.SessionManager.GC()
 }
-
-// Slice of flotilla interfaces of the current engine, starting with calling engine
-//func (engine *Engine) Flotilla() []Flotilla {
-//	var ret []Flotilla
-//	ret = append(ret, engine)
-//	for _, e := range engine.Env.flotilla {
-//		ret = append(ret, e)
-//	}
-//	return ret
-//}
 
 func init() {
 	workingPath, _ = os.Getwd()

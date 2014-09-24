@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/flotilla/session"
-	"github.com/thrisp/engine"
+	"lcl/engine"
+	"lcl/flotilla/session"
 )
 
 const (
@@ -127,8 +127,8 @@ func (r *R) HttpException(code int) {
 	r.Ctx.Exception(code)
 }
 
-// Immediately ends processing of current Ctx and return the code, the same as
-// running c.HttpException, but less informative & not configurable.
+// Immediately ends processing of current R and return the code, the same as
+// running r.HttpException, but less informative & not configurable.
 func (r *R) Abort(code int) {
 	r.Ctx.Abort(code)
 }
@@ -218,7 +218,7 @@ func rendertemplate(r *R, name string, data interface{}) error {
 	return err
 }
 
-// RenderTemplate renders an HTML template response with the Ctx rendertemplate
+// RenderTemplate renders an HTML template response with the R rendertemplate
 // function.
 func (r *R) RenderTemplate(name string, data interface{}) {
 	r.Call("rendertemplate", r, name, data)
@@ -238,7 +238,7 @@ func urlfor(r *R, route string, external bool, params []string) (string, error) 
 }
 
 // Provides a relative url for the route specified using the parameters specified,
-// using the Ctx urlfor function.
+// using the R urlfor function.
 func (r *R) UrlRelative(route string, params ...string) string {
 	ret, err := r.Call("urlfor", r, route, false, params)
 	if err != nil {
@@ -248,7 +248,7 @@ func (r *R) UrlRelative(route string, params ...string) string {
 }
 
 // Provides a full, external url for the route specified using the given parameters,
-// using the Ctx urlfor function.
+// using the R urlfor function.
 func (r *R) UrlExternal(route string, params ...string) string {
 	ret, err := r.Call("urlfor", r, route, true, params)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/thrisp/engine"
+	"lcl/engine"
 )
 
 var (
@@ -166,6 +166,7 @@ func (rg *RouterGroup) pathNoLeadingSlash(path string) string {
 	return strings.TrimLeft(strings.Join([]string{rg.prefix, path}, "/"), "/")
 }
 
+// NewRouterGroup attaches a new RouterGroup to the App with the prefix.
 func NewRouterGroup(prefix string, app *App) *RouterGroup {
 	return &RouterGroup{prefix: prefix,
 		app:    app,
@@ -174,7 +175,7 @@ func NewRouterGroup(prefix string, app *App) *RouterGroup {
 	}
 }
 
-// Creates a new router group.
+// New Creates a new child router group with the base component string.
 func (rg *RouterGroup) New(component string, handlers ...HandlerFunc) *RouterGroup {
 	prefix := rg.pathFor(component)
 
@@ -197,8 +198,8 @@ func (rg *RouterGroup) Use(middlewares ...HandlerFunc) {
 	}
 }
 
-// Adds any number of HandlerFunc to the RouterGroup as middleware when you
-// must control the position in relation to other middleware, use with caution.
+// UseAt adds any number of HandlerFunc to the RouterGroup as middleware when you
+// must control the position in relation to other middleware.
 func (rg *RouterGroup) UseAt(index int, middlewares ...HandlerFunc) {
 	if index > len(rg.Handlers) {
 		rg.Use(middlewares...)
@@ -218,8 +219,6 @@ func (rg *RouterGroup) UseAt(index int, middlewares ...HandlerFunc) {
 	rg.Handlers = append(before, after...)
 }
 
-// Adds a Route to the group routes map, using the Route.Name if provided or
-// the default route name if not.
 func (rg *RouterGroup) addRoute(r *Route) {
 	if r.Name != "" {
 		rg.routes[r.Name] = r
@@ -228,7 +227,7 @@ func (rg *RouterGroup) addRoute(r *Route) {
 	}
 }
 
-// Handle registers a new request handle and middlewares with the given path and
+// Handle registers new handlers and/or middlewares with the given path and
 // method. For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used.
 func (rg *RouterGroup) Handle(route *Route) {
