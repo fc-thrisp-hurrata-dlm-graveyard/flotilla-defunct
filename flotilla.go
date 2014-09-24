@@ -1,26 +1,21 @@
 package flotilla
 
 import (
+	"lcl/engine"
 	"net/http"
-
-	"sync"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 type (
-	HandlerFunc func(*Ctx)
+	HandlerFunc func(*R)
 
 	// The base of running a Flotilla instance is an Engine struct with a Name,
 	// an Env with information specific to running the engine, and a chain of
 	// RouterGroups
-	Engine struct {
-		Name string
+	App struct {
+		engine *engine.Engine
+		Name   string
 		*Env
 		*RouterGroup
-		cache  sync.Pool
-		router *httprouter.Router
-		HttpExceptions
 	}
 
 	// A Blueprint struct is essential information about an engine for export
@@ -38,75 +33,70 @@ type (
 	}
 )
 
-// Returns an empty engine instance
-func Empty() *Engine {
-	return &Engine{}
+// Returns an empty App instance
+func Empty() *App {
+	return &App{}
 }
 
 // Returns a new engine, with the minimum configuration.
-func New(name string) *Engine {
-	engine := &Engine{Name: name,
-		Env:    BaseEnv(),
-		router: httprouter.New(),
-	}
-	engine.RouterGroup = NewRouterGroup("/", engine)
-	engine.router.NotFound = engine.handler404
-	engine.router.PanicHandler = engine.handler500
-	engine.cache.New = engine.newCtx
-	engine.HttpExceptions = defaulthttpexceptions()
-	return engine
+func New(name string) *App {
+	app := Empty()
+	app.engine = engine.New()
+	app.Env = BaseEnv()
+	app.RouterGroup = NewRouterGroup("/", app)
+	//engine.router.NotFound = app.flotilla404
+	//engine.router.PanicHandler = app.flotilla500
+	return app
 }
 
 // Returns a new engine instance with sensible defaults
-func Basic() *Engine {
-	engine := New("flotilla")
-	engine.Use(Logger())
-	engine.STATIC("static")
-	return engine
+func Basic() *App {
+	app := New("flotilla")
+	app.Use(Logger())
+	app.STATIC("static")
+	return app
 }
 
 // Extend takes anytthing satisfying the Flotilla interface, and integrates it
 // with the current Engine
-func (engine *Engine) Extend(f Flotilla) {
+func (app *App) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
-	engine.MergeFlotilla(blueprint.Name, f)
-	engine.MergeRouterGroups(blueprint.Groups)
-	engine.MergeEnv(blueprint.Env)
+	app.MergeFlotilla(blueprint.Name, f)
+	app.MergeRouterGroups(blueprint.Groups)
+	app.MergeEnv(blueprint.Env)
 }
 
 // Blueprint ensures the engine satisfies interface Flotilla by providing
 // essential information in the engine in a struct: Name, RouterGroups, and Env
-func (engine *Engine) Blueprint() *Blueprint {
-	return &Blueprint{Name: engine.Name,
-		Groups: engine.Groups(),
-		Env:    engine.Env}
+func (app *App) Blueprint() *Blueprint {
+	return &Blueprint{Name: app.Name,
+		Groups: app.Groups(),
+		Env:    app.Env}
 }
 
-// Groups provides an array of RouterGroup instances attached to the engine.
-func (engine *Engine) Groups() []*RouterGroup {
-	type IterC func(r []*RouterGroup, fn IterC)
+// Groups provides a flat array of RouterGroup instances attached to the App.
+func (app *App) Groups() (groups RouterGroups) {
+	type IterC func(r RouterGroups, fn IterC)
 
-	var rg []*RouterGroup
+	groups = append(groups, app.RouterGroup)
 
-	rg = append(rg, engine.RouterGroup)
-
-	iter := func(r []*RouterGroup, fn IterC) {
+	iter := func(r RouterGroups, fn IterC) {
 		for _, x := range r {
-			rg = append(rg, x)
+			groups = append(groups, x)
 			fn(x.children, fn)
 		}
 	}
 
-	iter(engine.children, iter)
+	iter(app.children, iter)
 
-	return rg
+	return groups
 }
 
 // Routes returns an array of Route instances, with all engine routes from all
 // engine routergroups.
-func (engine *Engine) Routes() map[string]*Route {
-	allroutes := make(map[string]*Route)
-	for _, group := range engine.Groups() {
+func (app *App) Routes() Routes {
+	allroutes := make(Routes)
+	for _, group := range app.Groups() {
 		for _, route := range group.routes {
 			if route.Name != "" {
 				allroutes[route.Name] = route
@@ -119,20 +109,20 @@ func (engine *Engine) Routes() map[string]*Route {
 }
 
 // Merges an array of RouterGroup instances into the engine.
-func (engine *Engine) MergeRouterGroups(groups []*RouterGroup) {
+func (app *App) MergeRouterGroups(groups RouterGroups) {
 	for _, x := range groups {
-		if group, ok := engine.existingGroup(x.prefix); ok {
+		if group, ok := app.existingGroup(x.prefix); ok {
 			group.Use(x.Handlers...)
-			engine.MergeRoutes(group, x.routes)
+			app.MergeRoutes(group, x.routes)
 		} else {
-			newgroup := engine.RouterGroup.New(x.prefix, x.Handlers...)
-			engine.MergeRoutes(newgroup, x.routes)
+			newgroup := app.RouterGroup.New(x.prefix, x.Handlers...)
+			app.MergeRoutes(newgroup, x.routes)
 		}
 	}
 }
 
-func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
-	for _, g := range engine.Groups() {
+func (app *App) existingGroup(prefix string) (*RouterGroup, bool) {
+	for _, g := range app.Groups() {
 		if g.prefix == prefix {
 			return g, true
 		}
@@ -140,8 +130,8 @@ func (engine *Engine) existingGroup(prefix string) (*RouterGroup, bool) {
 	return nil, false
 }
 
-func (engine *Engine) existingRoute(route *Route) bool {
-	for _, r := range engine.Routes() {
+func (app *App) existingRoute(route *Route) bool {
+	for _, r := range app.Routes() {
 		if route.path == r.path {
 			return true
 		}
@@ -150,30 +140,30 @@ func (engine *Engine) existingRoute(route *Route) bool {
 }
 
 // Merges the given group with the given routes based on route existence.
-func (engine *Engine) MergeRoutes(group *RouterGroup, routes map[string]*Route) {
+func (app *App) MergeRoutes(group *RouterGroup, routes Routes) {
 	for _, route := range routes {
-		if route.static && !engine.existingRoute(route) {
+		if route.static && !app.existingRoute(route) {
 			group.STATIC(route.path)
 		}
-		if !route.static && !engine.existingRoute(route) {
+		if !route.static && !app.existingRoute(route) {
 			group.Handle(route)
 		}
 	}
 }
 
-func (engine *Engine) init() {
-	engine.parseFlags()
-	engine.Env.SessionInit()
+func (app *App) init() {
+	app.parseFlags()
+	app.Env.SessionInit()
 }
 
-// ServeHTTP makes the router implement the http.Handler interface.
-func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	engine.router.ServeHTTP(w, req)
+// ServeHTTP implements the http.Handler interface for the App.
+func (app *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	app.engine.ServeHTTP(w, req)
 }
 
-func (engine *Engine) Run(addr string) {
-	engine.init()
-	if err := http.ListenAndServe(addr, engine); err != nil {
+func (app *App) Run(addr string) {
+	app.init()
+	if err := http.ListenAndServe(addr, app); err != nil {
 		panic(err)
 	}
 }

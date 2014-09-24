@@ -126,7 +126,7 @@ func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error 
 }
 
 // Get SessionStore in cooke.
-// decode cooke string to map and put into SessionStore with sid.
+// decode cookie string to map and put into SessionStore with sid.
 func (pder *CookieProvider) SessionRead(sid string) (SessionStore, error) {
 	maps, _ := decodeCookie(pder.block,
 		pder.config.SecurityKey,

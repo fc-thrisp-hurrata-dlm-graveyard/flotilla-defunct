@@ -3,6 +3,7 @@ package flotilla
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 var (
@@ -137,4 +138,21 @@ func call(fn reflect.Value, args ...interface{}) (interface{}, error) {
 		return result[0].Interface(), result[1].Interface().(error)
 	}
 	return result[0].Interface(), nil
+}
+
+func pathDropFilepathSplat(path string) string {
+	if fp := strings.Split(path, "/"); fp[len(fp)-1] == "*filepath" {
+		return strings.Join(fp[0:len(fp)-1], "/")
+	}
+	return path
+}
+
+// ThirdEye is a middleware to introspect the app var in the R, inaccessible
+// to external packages.
+func ThirdEye(r *R) {
+	var rts []string
+	for _, route := range r.app.Routes() {
+		rts = append(rts, fmt.Sprintf("%+v\n", route))
+	}
+	fmt.Printf("---ThirdEye\n{App: %+v,\nGroups: %+v,\nRoutes: %+v,\nEnv: %+v,\nStore: %+v,\nTemplator: %+v,\nStaticDirs: %+v}\n---ThirdEye\n", r.app, r.app.Groups(), rts, r.app.Env, r.app.Env.Store, r.app.Env.Templator, r.app.Env.StaticDirs())
 }

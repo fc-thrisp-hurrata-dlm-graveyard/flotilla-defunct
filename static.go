@@ -5,42 +5,41 @@ import (
 	"path/filepath"
 )
 
-func engineStaticFile(requested string, c *Ctx) (exists bool) {
+func engineStaticFile(requested string, r *R) (exists bool) {
 	exists = false
-	for _, dir := range c.engine.StaticDirs() {
+	for _, dir := range r.app.StaticDirs() {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) (err error) {
 			if filepath.Base(path) == requested {
 				f, _ := os.Open(path)
-				c.ServeFile(f)
+				r.ServeFile(f)
 				exists = true
 			}
 			return err
 		})
-
 	}
 	return exists
 }
 
-func engineAssetFile(requested string, c *Ctx) (exists bool) {
+func engineAssetFile(requested string, r *R) (exists bool) {
 	exists = false
-	f, err := c.engine.Assets.Get(requested)
+	f, err := r.app.Assets.Get(requested)
 	if err == nil {
-		c.ServeFile(f)
+		r.ServeFile(f)
 		exists = true
 	}
 	return exists
 }
 
-func handleStatic(c *Ctx) {
+func handleStatic(r *R) {
 	var exists bool = false
-	requested := filepath.Base(c.Request.URL.Path)
-	exists = engineStaticFile(requested, c)
+	requested := filepath.Base(r.Request.URL.Path)
+	exists = engineStaticFile(requested, r)
 	if !exists {
-		exists = engineAssetFile(requested, c)
+		exists = engineAssetFile(requested, r)
 	}
 	if !exists {
-		c.Abort(404)
+		r.Abort(404)
 	} else {
-		c.rw.WriteHeaderNow()
+		r.rw.WriteHeaderNow()
 	}
 }

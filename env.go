@@ -86,7 +86,7 @@ func (env *Env) MergeFlotilla(name string, f Flotilla) {
 	env.flotilla[name] = f
 }
 
-// Sets the running mode for the engine env by a string.
+// Sets the running mode for the App env by a string.
 func (env *Env) SetMode(value string) {
 	switch value {
 	case "development":
@@ -150,7 +150,7 @@ func (env *Env) parseFlags() {
 
 func (env *Env) defaultsessionconfig() string {
 	secret := env.Store["SECRET_KEY"].value
-	return fmt.Sprintf(`{"cookieName":"flotillasessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"flotillasessionid\",\"securityKey\":\"%s\"}"}`, secret)
+	return fmt.Sprintf(`{"cookieName":"flotillasessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"maxage\": 9000,\"cookieName\":\"flotillasessionid\",\"securityKey\":\"%s\"}"}`, secret)
 }
 
 func (env *Env) defaultsessionmanager() (*session.Manager, error) {
@@ -166,6 +166,7 @@ func (env *Env) SessionInit() {
 			panic(fmt.Sprintf("Problem with default session manager: %s", err))
 		}
 	}
+	fmt.Printf("%+v\n", env.SessionManager)
 	go env.SessionManager.GC()
 }
 

@@ -20,14 +20,14 @@ var (
 func Logger() HandlerFunc {
 	stdlogger := log.New(os.Stdout, "", 0)
 
-	return func(c *Ctx) {
+	return func(r *R) {
 		// Start timer
 		start := time.Now()
 
 		// Process request
-		c.Next()
+		r.Next()
 
-		req := c.Request
+		req := r.Request
 
 		// save the IP of the requester
 		requester := req.Header.Get("X-Real-IP")
@@ -43,7 +43,7 @@ func Logger() HandlerFunc {
 		}
 
 		var color string
-		code := c.rw.Status()
+		code := r.rw.Status()
 		switch {
 		case code >= 200 && code <= 299:
 			color = green
@@ -55,7 +55,7 @@ func Logger() HandlerFunc {
 			color = red
 		}
 		var methodColor string
-		method := c.Request.Method
+		method := r.Request.Method
 		switch {
 		case method == "GET":
 			methodColor = blue
@@ -74,14 +74,14 @@ func Logger() HandlerFunc {
 		}
 		end := time.Now()
 		latency := end.Sub(start)
-		stdlogger.Printf("[FLOTILLA] %v |%s %3d %s| %12v | %s |%s  %s %-7s %s\n%s",
+		stdlogger.Printf("[FLOTILLA] %v |%s %3d %s| %12v | %s |%s  %s %-7s %s %s",
 			end.Format("2006/01/02 - 15:04:05"),
 			color, code, reset,
 			latency,
 			requester,
 			methodColor, reset, method,
-			c.Request.URL.Path,
-			c.Errors.String(),
+			r.Request.URL.Path,
+			r.Ctx.Errors.String(),
 		)
 	}
 }

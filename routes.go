@@ -2,14 +2,13 @@ package flotilla
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"regexp"
 
+	"lcl/engine"
 	"strings"
-
-	"github.com/julienschmidt/httprouter"
+	"sync"
 )
 
 var (
@@ -18,29 +17,41 @@ var (
 )
 
 type (
-	// Information about a route as a unit outside of the router for use & reuse.
+	// Data about a route for use & reuse within App.
 	Route struct {
-		Name     string
-		static   bool
-		method   string
-		base     string
-		path     string
-		handlers []HandlerFunc
+		cache       sync.Pool
+		routergroup *RouterGroup
+		static      bool
+		method      string
+		base        string
+		path        string
+		handlers    []HandlerFunc
+		Name        string
 	}
 
-	// A map of Route instances keyed by a string
+	// A map of Route instances keyed by a string.
 	Routes map[string]*Route
 
-	// A RouterGroup is associated with a prefix and an array of handlers.
+	// A RouterGroup is data about gathering any number routes around a prefix
+	// and an array of group specific handlers.
 	RouterGroup struct {
-		Handlers []HandlerFunc
-		prefix   string
-		parent   *RouterGroup
+		app    *App
+		prefix string
+		//parent   *RouterGroup
 		children []*RouterGroup
 		routes   Routes
-		engine   *Engine
+		group    *engine.Group
+		Handlers []HandlerFunc
 	}
+
+	RouterGroups []*RouterGroup
 )
+
+func (r *Route) handle(c *engine.Ctx) {
+	rq := r.getR(c)
+	rq.Next()
+	r.putR(rq)
+}
 
 func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *Route {
 	r := &Route{method: method, static: static, handlers: handlers}
@@ -124,16 +135,16 @@ func (r *Route) Url(params ...string) (*url.URL, error) {
 	return u, nil
 }
 
-func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	s := len(group.Handlers) + len(handlers)
+func (rg *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
+	s := len(rg.Handlers) + len(handlers)
 	h := make([]HandlerFunc, 0, s)
-	h = append(h, group.Handlers...)
+	h = append(h, rg.Handlers...)
 	h = append(h, handlers...)
 	return h
 }
 
-func (group *RouterGroup) handlerExists(outside HandlerFunc) bool {
-	for _, inside := range group.Handlers {
+func (rg *RouterGroup) handlerExists(outside HandlerFunc) bool {
+	for _, inside := range rg.Handlers {
 		if funcEqual(inside, outside) {
 			return true
 		}
@@ -141,8 +152,8 @@ func (group *RouterGroup) handlerExists(outside HandlerFunc) bool {
 	return false
 }
 
-func (group *RouterGroup) pathFor(path string) string {
-	joined := filepath.Join(group.prefix, path)
+func (rg *RouterGroup) pathFor(path string) string {
+	joined := filepath.Join(rg.prefix, path)
 	// Append a '/' if the last component had one, but only if it's not there already
 	if len(path) > 0 && path[len(path)-1] == '/' && joined[len(joined)-1] != '/' {
 		return joined + "/"
@@ -150,121 +161,115 @@ func (group *RouterGroup) pathFor(path string) string {
 	return joined
 }
 
-func (group *RouterGroup) pathNoLeadingSlash(path string) string {
-	return strings.TrimLeft(strings.Join([]string{group.prefix, path}, "/"), "/")
+func (rg *RouterGroup) pathNoLeadingSlash(path string) string {
+	return strings.TrimLeft(strings.Join([]string{rg.prefix, path}, "/"), "/")
 }
 
-func (group *RouterGroup) pathDropFilepathSplat(path string) string {
-	if fp := strings.Split(path, "/"); fp[len(fp)-1] == "*filepath" {
-		return strings.Join(fp[0:len(fp)-1], "/")
-	}
-	return path
-}
-
-func NewRouterGroup(prefix string, engine *Engine) *RouterGroup {
+func NewRouterGroup(prefix string, app *App) *RouterGroup {
 	return &RouterGroup{prefix: prefix,
-		engine: engine,
+		app:    app,
+		group:  app.engine.Group.New(prefix),
 		routes: make(Routes),
 	}
 }
 
 // Creates a new router group.
-func (group *RouterGroup) New(component string, handlers ...HandlerFunc) *RouterGroup {
-	prefix := group.pathFor(component)
+func (rg *RouterGroup) New(component string, handlers ...HandlerFunc) *RouterGroup {
+	prefix := rg.pathFor(component)
 
-	newroutergroup := NewRouterGroup(prefix, group.engine)
-	newroutergroup.parent = group
-	newroutergroup.Handlers = group.combineHandlers(handlers)
+	newrg := NewRouterGroup(prefix, rg.app)
+	//newrg.parent = rg
+	newrg.Handlers = rg.combineHandlers(handlers)
 
-	group.children = append(group.children, newroutergroup)
+	rg.children = append(rg.children, newrg)
 
-	return newroutergroup
+	return newrg
 }
 
-// Adds any number of HandlerFunc to the RouterGroup as middleware.
-func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
+// Use adds any number of HandlerFunc to the RouterGroup which will be run before
+// route handlers for all Route attached to the RouterGroup.
+func (rg *RouterGroup) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
-		if !group.handlerExists(handler) {
-			group.Handlers = append(group.Handlers, handler)
+		if !rg.handlerExists(handler) {
+			rg.Handlers = append(rg.Handlers, handler)
 		}
 	}
 }
 
 // Adds any number of HandlerFunc to the RouterGroup as middleware when you
-// must control the position, use with caution.
-func (group *RouterGroup) UseAt(index int, middlewares ...HandlerFunc) {
-	if index > len(group.Handlers) {
-		group.Use(middlewares...)
+// must control the position in relation to other middleware, use with caution.
+func (rg *RouterGroup) UseAt(index int, middlewares ...HandlerFunc) {
+	if index > len(rg.Handlers) {
+		rg.Use(middlewares...)
 		return
 	}
 
 	var newh []HandlerFunc
 
 	for _, handler := range middlewares {
-		if !group.handlerExists(handler) {
+		if !rg.handlerExists(handler) {
 			newh = append(newh, handler)
 		}
 	}
 
-	before := group.Handlers[:index]
-	after := append(newh, group.Handlers[index:]...)
-	group.Handlers = append(before, after...)
+	before := rg.Handlers[:index]
+	after := append(newh, rg.Handlers[index:]...)
+	rg.Handlers = append(before, after...)
 }
 
 // Adds a Route to the group routes map, using the Route.Name if provided or
 // the default route name if not.
-func (group *RouterGroup) AddRoute(r *Route) {
+func (rg *RouterGroup) addRoute(r *Route) {
 	if r.Name != "" {
-		group.routes[r.Name] = r
+		rg.routes[r.Name] = r
 	} else {
-		group.routes[r.Named()] = r
+		rg.routes[r.Named()] = r
 	}
 }
 
 // Handle registers a new request handle and middlewares with the given path and
 // method. For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used.
-func (group *RouterGroup) Handle(route *Route) {
-	handlers := group.combineHandlers(route.handlers)
-	route.path = group.pathFor(route.base)
-	group.AddRoute(route)
-	group.engine.router.Handle(route.method, route.path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		c := group.engine.getCtx(w, req, params, handlers)
-		c.Next()
-		group.engine.cache.Put(c)
-	})
+func (rg *RouterGroup) Handle(route *Route) {
+	// finalize Route with RouterGroup specific information
+	route.routergroup = rg
+	route.handlers = rg.combineHandlers(route.handlers)
+	route.path = rg.pathFor(route.base)
+	route.cache.New = route.newR
+	rg.addRoute(route)
+	rg.group.Handle(route.base, route.method, route.handle)
 }
 
-func (group *RouterGroup) POST(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("POST", path, false, handlers))
+func (rg *RouterGroup) POST(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("POST", path, false, handlers))
 }
 
-func (group *RouterGroup) GET(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("GET", path, false, handlers))
+func (rg *RouterGroup) GET(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("GET", path, false, handlers))
 }
 
-func (group *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("DELETE", path, false, handlers))
+func (rg *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("DELETE", path, false, handlers))
 }
 
-func (group *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("PATCH", path, false, handlers))
+func (rg *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("PATCH", path, false, handlers))
 }
 
-func (group *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("PUT", path, false, handlers))
+func (rg *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("PUT", path, false, handlers))
 }
 
-func (group *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("OPTIONS", path, false, handlers))
+func (rg *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("OPTIONS", path, false, handlers))
 }
 
-func (group *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
-	group.Handle(NewRoute("HEAD", path, false, handlers))
+func (rg *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
+	rg.Handle(NewRoute("HEAD", path, false, handlers))
 }
 
 // Adds a Static route handled by the router, based on the group prefix.
-func (group *RouterGroup) STATIC(path string) {
-	group.engine.AddStaticDir(group.pathDropFilepathSplat(path))
-	group.Handle(NewRoute("GET", path, true, []HandlerFunc{handleStatic}))
+func (rg *RouterGroup) STATIC(path string) {
+	rg.app.AddStaticDir(pathDropFilepathSplat(path))
+	rg.Handle(NewRoute("GET", path, true, []HandlerFunc{handleStatic}))
 }
