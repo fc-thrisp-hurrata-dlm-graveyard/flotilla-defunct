@@ -110,8 +110,8 @@ func init() {
 }
 
 func main() {
-    c := Build()
-    go c.Run(&quot;:8080&quot;)
+    fl := Build()
+    go fl.Run(&quot;:8080&quot;)
     &lt;-quit
 }
 </code></pre>

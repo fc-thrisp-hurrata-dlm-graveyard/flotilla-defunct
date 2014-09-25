@@ -71,8 +71,8 @@ main.go
     }
 
     func main() {
-        c := Build()
-        go c.Run(":8080")
+        fl := Build()
+        go fl.Run(":8080")
         <-quit
     }
 
