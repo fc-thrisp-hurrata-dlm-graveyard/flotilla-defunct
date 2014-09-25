@@ -9,11 +9,11 @@ title = "flotilla-index"
 
 Flotilla has several dependencies:
 
-- [jingo](https://github.com/thrisp/jingo/) *templating*
+- [jingo](http://github.com/thrisp/jingo/) *templating*
 
-- [engine](https://github.com/thrisp/engine) *net/http wrappers*
+- [engine](http://github.com/thrisp/engine) *net/http wrappers*
 
-- [kingpin](gopkg.in/alecthomas/kingpin.v1)  *flag parsing*
+- [kingpin](http://gopkg.in/alecthomas/kingpin.v1)  *flag parsing*
 
 After installing, you can install with `go get github.com/thrisp/flotilla`.
 
