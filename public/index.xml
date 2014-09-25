@@ -3,7 +3,7 @@
   <channel>
       <title>Recent Content on  </title>
       <generator uri="https://hugo.spf13.com">Hugo</generator>
-    <link>http://thrisp.github.io/flotilla/index.xml/</link>
+    <link>http://localhost:1313/flotilla/index.xml/</link>
     
     
     
@@ -11,13 +11,28 @@
     
     <item>
       <title>flotilla-index</title>
-      <link>http://thrisp.github.io/flotilla/</link>
+      <link>http://localhost:1313/flotilla/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/</guid>
+      <guid>http://localhost:1313/flotilla/</guid>
       <description>
 
-&lt;div class=fl-hmenu&gt;[overview](/flotilla) // [quickstart](#quickstart) // [extensions](#extensions) // [community](#community)&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt;&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;//&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;#quickstart&#34;&gt;quickstart&lt;/a&gt;&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;//&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;#extensions&#34;&gt;extensions&lt;/a&gt;&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;//&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;#community&#34;&gt;community&lt;/a&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;

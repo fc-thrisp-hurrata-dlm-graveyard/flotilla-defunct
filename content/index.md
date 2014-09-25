@@ -1,7 +1,9 @@
 +++
 title = "flotilla-index"
 +++
-<div class=fl-hmenu>[overview](/flotilla) // [quickstart](#quickstart) // [extensions](#extensions) // [community](#community)</div>
+
+| [overview](/flotilla) | // | [quickstart](#quickstart) | // | [extensions](#extensions) | // | [community](#community) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 
 > Flotilla is a basic and extensible web framework for the Go language.
 
