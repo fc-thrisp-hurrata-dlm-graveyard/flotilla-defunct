@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title> Flotilla </title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
     <link href='http://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
     <link href="http://localhost:1313/flotilla/css/flotilla.css" rel="stylesheet">
     
@@ -22,25 +23,89 @@
             
                 
 
-<p><a href="/flotilla">overview</a> // <a href="/flotilla/quickstart">quickstart</a> // <a href="/flotilla/extensions">extensions</a> // <a href="/flotilla/community">community</a></p>
+<p><a href="/flotilla">overview</a> // <a href="#quickstart">quickstart</a> // <a href="#extensions">extensions</a> // <a href="#community">community</a></p>
 
 <blockquote>
 <p>Flotilla is a basic and extensible web framework for the Go language.</p>
 </blockquote>
 
-<h1 id="toc_0">Installation</h1>
+<h1 id="toc_0">Installation<a name="installation"></a></h1>
 
-<p>Flotilla currently has 2 dependencies: <a href="https://github.com/thrisp/jingo/">jingo</a> &amp; <a href="https://github.com/julienschmidt/httprouter">httprouter</a>. After installing both, you can install with <code>go get github.com/thrisp/flotilla</code>.</p>
+<p>Flotilla has several dependencies:</p>
 
-<h1 id="toc_1">Quickstart</h1>
+<ul>
+<li><p><a href="https://github.com/thrisp/jingo/">jingo</a> <em>templating</em></p></li>
 
-<h1 id="toc_2">Extensions</h1>
+<li><p><a href="https://github.com/thrisp/engine">engine</a> <em>net/http wrappers</em></p></li>
 
-<p>One of the primary goals of creating Flotilla is large pool of extensions, middleware, and packages that that promote code reuse and wasted effort recreating everything from nothing whenever you want to do something requiring a web framework in Go. Examples for creating extension can be found <a href="https://github.com/thrisp/flotilla_skeleton">here</a>, as well your imagination in reading the Flotilla source code.</p>
+<li><p><a href="gopkg.in/alecthomas/kingpin.v1">kingpin</a>  <em>flag parsing</em></p></li>
+</ul>
 
-<h1 id="toc_3">Community</h1>
+<p>After installing, you can install with <code>go get github.com/thrisp/flotilla</code>.</p>
 
-<p>You can find a start at <a href="http://reddit.com/r/flotillaaa">/r/flotilla</a> on reddit.</p>
+<h1 id="toc_1">Quickstart<a name="quickstart"></a></h1>
+
+<p>main.go</p>
+
+<p>package main</p>
+
+<pre><code>import (
+    &quot;math/rand&quot;
+    &quot;os&quot;
+    &quot;os/signal&quot;
+
+    &quot;github.com/thrisp/flotilla&quot;
+)
+
+var lucky = []rune(&quot;1234567890&quot;)
+
+func randSeq(n int) string {
+    b := make([]rune, n)
+    for i := range b {
+        b[i] = letters[rand.Intn(len(lucky))]
+    }
+    return string(b)
+}
+
+func Display(f *flotilla.R) {
+    f.ServeData(200, fmt.Sprintf(&quot;Your lucky number is: %s&quot;, randSeq(20)))
+}
+
+func Build() (e *flotilla.App) {
+    e = flotilla.Basic()
+    e.Use(flotilla.ThirdEye)
+    e.GET(&quot;/quick/:start&quot;, Display)
+    return e
+}
+
+var quit = make(chan bool)
+
+func init() {
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    go func() {
+        for _ = range c {
+            quit &lt;- true
+        }
+    }()
+}
+
+func main() {
+    c := Build()
+    go c.Run(&quot;:8080&quot;)
+    &lt;-quit
+}
+</code></pre>
+
+<p>go run main.go &amp; visit: <a href="http://localhost:8080/quick/hello">http://localhost:8080/quick/hello</a></p>
+
+<h1 id="toc_2">Extensions<a name="extensions"></a></h1>
+
+<p>One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the wasted effort of recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found <a href="https://github.com/thrisp/flotilla_skeleton">here</a>, as well your imagination in reading the Flotilla source code.</p>
+
+<h1 id="toc_3">Community<a name="community"></a></h1>
+
+<p>Flotilla is a new package and you participation &amp; input is welcome. You can find a start for discussion at <a href="http://reddit.com/r/flotillaaa">/r/flotilla</a> on reddit.</p>
 <br>
             
             <footer>

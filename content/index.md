@@ -1,21 +1,81 @@
 +++
 title = "flotilla-index"
 +++
-
-[overview](/flotilla) // [quickstart](/flotilla/quickstart) // [extensions](/flotilla/extensions) // [community](/flotilla/community)
+[overview](/flotilla) // [quickstart](#quickstart) // [extensions](#extensions) // [community](#community)
 
 > Flotilla is a basic and extensible web framework for the Go language.
 
-# Installation
+# Installation<a name="installation"></a>
 
-Flotilla currently has 2 dependencies: [jingo](https://github.com/thrisp/jingo/) & [httprouter](https://github.com/julienschmidt/httprouter). After installing both, you can install with `go get github.com/thrisp/flotilla`.
+Flotilla has several dependencies:
 
-# Quickstart
+- [jingo](https://github.com/thrisp/jingo/) *templating*
 
+- [engine](https://github.com/thrisp/engine) *net/http wrappers*
 
-# Extensions
-One of the primary goals of creating Flotilla is large pool of extensions, middleware, and packages that that promote code reuse and the wasted effort of recreating everything from nothing whenever you want to do something requiring a web framework in Go. There are no standard extensions as of right now, but examples for creating extension can be found [here](https://github.com/thrisp/flotilla_skeleton), as well your imagination in reading the Flotilla source code. 
+- [kingpin](gopkg.in/alecthomas/kingpin.v1)  *flag parsing*
 
-# Community
+After installing, you can install with `go get github.com/thrisp/flotilla`.
 
-You can find a start at [/r/flotilla](http://reddit.com/r/flotillaaa) on reddit.
+# Quickstart<a name="quickstart"></a>
+
+main.go
+
+package main
+
+    import (
+        "math/rand"
+        "os"
+        "os/signal"
+
+        "github.com/thrisp/flotilla"
+    )
+
+    var lucky = []rune("1234567890")
+
+    func randSeq(n int) string {
+        b := make([]rune, n)
+        for i := range b {
+            b[i] = letters[rand.Intn(len(lucky))]
+        }
+        return string(b)
+    }
+
+    func Display(f *flotilla.R) {
+        f.ServeData(200, fmt.Sprintf("Your lucky number is: %s", randSeq(20)))
+    }
+
+    func Build() (e *flotilla.App) {
+        e = flotilla.Basic()
+        e.Use(flotilla.ThirdEye)
+        e.GET("/quick/:start", Display)
+        return e
+    }
+
+    var quit = make(chan bool)
+
+    func init() {
+        c := make(chan os.Signal, 1)
+        signal.Notify(c, os.Interrupt)
+        go func() {
+            for _ = range c {
+                quit <- true
+            }
+        }()
+    }
+
+    func main() {
+        c := Build()
+        go c.Run(":8080")
+        <-quit
+    }
+
+go run main.go & visit: http://localhost:8080/quick/hello
+
+# Extensions<a name="extensions"></a>
+
+One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the wasted effort of recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found [here](https://github.com/thrisp/flotilla_skeleton), as well your imagination in reading the Flotilla source code. 
+
+# Community<a name="community"></a>
+
+Flotilla is a new package and you participation & input is welcome. You can find a start for discussion at [/r/flotilla](http://reddit.com/r/flotillaaa) on reddit.
