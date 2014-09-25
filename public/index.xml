@@ -17,7 +17,7 @@
       <guid>http://thrisp.github.io/flotilla/</guid>
       <description>
 
-&lt;p&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt; // &lt;a href=&#34;#quickstart&#34;&gt;quickstart&lt;/a&gt; // &lt;a href=&#34;#extensions&#34;&gt;extensions&lt;/a&gt; // &lt;a href=&#34;#community&#34;&gt;community&lt;/a&gt;&lt;/p&gt;
+&lt;div class=fl-hmenu&gt;[overview](/flotilla) // [quickstart](#quickstart) // [extensions](#extensions) // [community](#community)&lt;/div&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
@@ -30,7 +30,7 @@
 &lt;ul&gt;
 &lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/jingo/&#34;&gt;jingo&lt;/a&gt; &lt;em&gt;templating&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
 
-&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/engine&#34;&gt;engine&lt;/a&gt; &lt;em&gt;net/http wrappers&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/engine&#34;&gt;engine&lt;/a&gt; &lt;em&gt;routing, net/http wrappers, basics&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
 
 &lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://gopkg.in/alecthomas/kingpin.v1&#34;&gt;kingpin&lt;/a&gt;  &lt;em&gt;flag parsing&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -41,9 +41,9 @@
 
 &lt;p&gt;main.go&lt;/p&gt;
 
-&lt;p&gt;package main&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;package main
 
-&lt;pre&gt;&lt;code&gt;import (
+import (
     &amp;quot;math/rand&amp;quot;
     &amp;quot;os&amp;quot;
     &amp;quot;os/signal&amp;quot;
@@ -91,7 +91,7 @@ func main() {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;go run main.go &amp;amp; visit: &lt;a href=&#34;http://localhost:8080/quick/hello&#34;&gt;http://localhost:8080/quick/hello&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;go run main.go &amp;amp; visit: &lt;a href=&#34;http://localhost:8080/quick/whatsmyluckynumber&#34;&gt;http://localhost:8080/quick/whatsmyluckynumber&lt;/a&gt;&lt;/p&gt;
 
 &lt;h1 id=&#34;toc_2&#34;&gt;Extensions&lt;a name=&#34;extensions&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
 
