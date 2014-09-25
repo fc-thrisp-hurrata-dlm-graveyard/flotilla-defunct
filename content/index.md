@@ -80,7 +80,7 @@ go run main.go & visit: http://localhost:8080/quick/whatsmyluckynumber
 
 # Extensions<a name="extensions"></a>
 
-One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the wasted effort of recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found [here](https://github.com/thrisp/flotilla_skeleton), as well your imagination in reading the Flotilla source code. 
+One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the prevention of wasted effort in recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found [here](https://github.com/thrisp/flotilla_skeleton), as well your imagination in reading the Flotilla source code. 
 
 # Community<a name="community"></a>
 

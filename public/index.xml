@@ -113,7 +113,7 @@ func main() {
 
 &lt;h1 id=&#34;toc_2&#34;&gt;Extensions&lt;a name=&#34;extensions&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
 
-&lt;p&gt;One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the wasted effort of recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found &lt;a href=&#34;https://github.com/thrisp/flotilla_skeleton&#34;&gt;here&lt;/a&gt;, as well your imagination in reading the Flotilla source code.&lt;/p&gt;
+&lt;p&gt;One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the prevention of wasted effort in recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found &lt;a href=&#34;https://github.com/thrisp/flotilla_skeleton&#34;&gt;here&lt;/a&gt;, as well your imagination in reading the Flotilla source code.&lt;/p&gt;
 
 &lt;h1 id=&#34;toc_3&#34;&gt;Community&lt;a name=&#34;community&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
 
