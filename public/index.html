@@ -16,7 +16,7 @@
         <div class="container">
             <div id=fl-content>
                 <div id=fl-logo>
-    <div id=fl-title><h1>Flotilla</h1></div>
+    <div id=fl-title>Flotilla</div>
     <div id=fl-img><img src="/flotilla/img/flotilla-logo1.png"></img></div>
     <div id=fl-tagline><h6>set your fleet afloat</h6></div>
 </div>
@@ -44,6 +44,8 @@
 <blockquote>
 <p>Flotilla is a basic and extensible web framework for the Go language.</p>
 </blockquote>
+
+<p>Flotilla is a new project, documentation, testing, and more to come soon.</p>
 
 <h1 id="toc_0">Installation<a name="installation"></a></h1>
 
@@ -78,13 +80,14 @@ var lucky = []rune(&quot;1234567890&quot;)
 func randSeq(n int) string {
     b := make([]rune, n)
     for i := range b {
-        b[i] = letters[rand.Intn(len(lucky))]
+        b[i] = lucky[rand.Intn(len(lucky))]
     }
     return string(b)
 }
 
 func Display(f *flotilla.R) {
-    f.ServeData(200, fmt.Sprintf(&quot;Your lucky number is: %s&quot;, randSeq(20)))
+    ret := fmt.Sprintf(&quot;Your lucky number is: %s&quot;, randSeq(20))
+    f.ServeData(200, []byte(ret))
 }
 
 func Build() (e *flotilla.App) {

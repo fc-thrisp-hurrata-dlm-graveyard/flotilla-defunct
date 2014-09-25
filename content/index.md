@@ -1,11 +1,14 @@
 +++
 title = "flotilla-index"
 +++
-
 | [overview](/flotilla) | // | [quickstart](#quickstart) | // | [extensions](#extensions) | // | [community](#community) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 
 > Flotilla is a basic and extensible web framework for the Go language.
+
+
+Flotilla is a new project, documentation, testing, and more to come soon.
+
 
 # Installation<a name="installation"></a>
 
@@ -38,13 +41,14 @@ main.go
     func randSeq(n int) string {
         b := make([]rune, n)
         for i := range b {
-            b[i] = letters[rand.Intn(len(lucky))]
+            b[i] = lucky[rand.Intn(len(lucky))]
         }
         return string(b)
     }
 
     func Display(f *flotilla.R) {
-        f.ServeData(200, fmt.Sprintf("Your lucky number is: %s", randSeq(20)))
+        ret := fmt.Sprintf("Your lucky number is: %s", randSeq(20))
+        f.ServeData(200, []byte(ret))
     }
 
     func Build() (e *flotilla.App) {

@@ -38,6 +38,8 @@
 &lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
 &lt;/blockquote&gt;
 
+&lt;p&gt;Flotilla is a new project, documentation, testing, and more to come soon.&lt;/p&gt;
+
 &lt;h1 id=&#34;toc_0&#34;&gt;Installation&lt;a name=&#34;installation&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
 
 &lt;p&gt;Flotilla has several dependencies:&lt;/p&gt;
@@ -71,13 +73,14 @@ var lucky = []rune(&amp;quot;1234567890&amp;quot;)
 func randSeq(n int) string {
     b := make([]rune, n)
     for i := range b {
-        b[i] = letters[rand.Intn(len(lucky))]
+        b[i] = lucky[rand.Intn(len(lucky))]
     }
     return string(b)
 }
 
 func Display(f *flotilla.R) {
-    f.ServeData(200, fmt.Sprintf(&amp;quot;Your lucky number is: %s&amp;quot;, randSeq(20)))
+    ret := fmt.Sprintf(&amp;quot;Your lucky number is: %s&amp;quot;, randSeq(20))
+    f.ServeData(200, []byte(ret))
 }
 
 func Build() (e *flotilla.App) {
