@@ -36,4 +36,5 @@ td.code { width: 100%; }
 
 #fl-title{}
 #fl-logo{}
-.fl-sidebar
+.fl-sidebar{}
+.fl-hmenu{margin-left: auto;margin-right: auto; width: 80%;}

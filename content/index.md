@@ -1,7 +1,7 @@
 +++
 title = "flotilla-index"
 +++
-[overview](/flotilla) // [quickstart](#quickstart) // [extensions](#extensions) // [community](#community)
+<div class=fl-hmenu>[overview](/flotilla) // [quickstart](#quickstart) // [extensions](#extensions) // [community](#community)</div>
 
 > Flotilla is a basic and extensible web framework for the Go language.
 
@@ -11,7 +11,7 @@ Flotilla has several dependencies:
 
 - [jingo](http://github.com/thrisp/jingo/) *templating*
 
-- [engine](http://github.com/thrisp/engine) *net/http wrappers*
+- [engine](http://github.com/thrisp/engine) *routing, net/http wrappers, basics*
 
 - [kingpin](http://gopkg.in/alecthomas/kingpin.v1)  *flag parsing*
 
@@ -21,7 +21,7 @@ After installing, you can install with `go get github.com/thrisp/flotilla`.
 
 main.go
 
-package main
+    package main
 
     import (
         "math/rand"
@@ -70,7 +70,7 @@ package main
         <-quit
     }
 
-go run main.go & visit: http://localhost:8080/quick/hello
+go run main.go & visit: http://localhost:8080/quick/whatsmyluckynumber
 
 # Extensions<a name="extensions"></a>
 
