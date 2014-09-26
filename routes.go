@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"lcl/engine"
+	"github.com/thrisp/engine"
 )
 
 var (

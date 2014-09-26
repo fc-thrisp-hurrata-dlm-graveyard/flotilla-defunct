@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"lcl/engine"
-	"lcl/flotilla/session"
+	"github.com/thrisp/engine"
+	"github.com/thrisp/flotilla/session"
 )
 
 const (

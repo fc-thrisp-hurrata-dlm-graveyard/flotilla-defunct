@@ -3,7 +3,7 @@ package flotilla
 import (
 	"net/http"
 
-	"lcl/engine"
+	"github.com/thrisp/engine"
 )
 
 type (
