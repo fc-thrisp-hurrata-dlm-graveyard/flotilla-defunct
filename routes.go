@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"lcl/engine"
+	"github.com/thrisp/engine"
 	"strings"
 	"sync"
 )

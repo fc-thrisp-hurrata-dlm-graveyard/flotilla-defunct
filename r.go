@@ -1,8 +1,8 @@
 package flotilla
 
 import (
-	"lcl/engine"
-	"lcl/flotilla/session"
+	"github.com/thrisp/engine"
+	"github.com/thrisp/flotilla/session"
 	"log"
 	"math"
 	"net/http"
