@@ -1,5 +1,5 @@
 +++
-title = "Welcome: Flotilla, An Extensible Go Webframework"
+title = "flotilla-index"
 +++
 | [overview](/flotilla) | // | [quickstart](#quickstart) | // | [extensions](#extensions) | // | [community](#community) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
