@@ -35,9 +35,8 @@ type (
 	// A RouterGroup is data about gathering any number routes around a prefix
 	// and an array of group specific handlers.
 	RouterGroup struct {
-		app    *App
-		prefix string
-		//parent   *RouterGroup
+		app      *App
+		prefix   string
 		children []*RouterGroup
 		routes   Routes
 		group    *engine.Group
@@ -57,7 +56,7 @@ func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *
 	r := &Route{method: method, static: static, handlers: handlers}
 	if static {
 		if fp := strings.Split(path, "/"); fp[len(fp)-1] != "*filepath" {
-			r.base = filepath.Join(path, "/*filepath")
+			r.base = filepath.ToSlash(filepath.Join(path, "/*filepath"))
 		} else {
 			r.base = path
 		}
@@ -153,7 +152,7 @@ func (rg *RouterGroup) handlerExists(outside HandlerFunc) bool {
 }
 
 func (rg *RouterGroup) pathFor(path string) string {
-	joined := filepath.Join(rg.prefix, path)
+	joined := filepath.ToSlash(filepath.Join(rg.prefix, path))
 	// Append a '/' if the last component had one, but only if it's not there already
 	if len(path) > 0 && path[len(path)-1] == '/' && joined[len(joined)-1] != '/' {
 		return joined + "/"
@@ -179,7 +178,6 @@ func (rg *RouterGroup) New(component string, handlers ...HandlerFunc) *RouterGro
 	prefix := rg.pathFor(component)
 
 	newrg := NewRouterGroup(prefix, rg.app)
-	//newrg.parent = rg
 	newrg.Handlers = rg.combineHandlers(handlers)
 
 	rg.children = append(rg.children, newrg)

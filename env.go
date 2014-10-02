@@ -42,6 +42,7 @@ type (
 )
 
 func (e *Env) defaults() {
+	//e.Store.adddefault("upload", "size", "20000000") // in bytes
 	e.Store.adddefault("secret", "key", "-")
 }
 

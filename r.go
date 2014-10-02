@@ -123,8 +123,8 @@ func (r *R) Next() {
 }
 
 // Calls an HttpException if available otherwise calls Abort
-func (r *R) HttpException(code int) {
-	r.Ctx.Exception(code)
+func (r *R) HttpStatus(code int) {
+	r.Ctx.Status(code)
 }
 
 // Immediately ends processing of current R and return the code, the same as
