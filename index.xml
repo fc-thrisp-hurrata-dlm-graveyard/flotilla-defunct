@@ -3,18 +3,18 @@
   <channel>
       <title>Recent Content on  </title>
       <generator uri="https://hugo.spf13.com">Hugo</generator>
-    <link>http://thrisp.github.io/flotilla/index.xml/</link>
+    <link>http://localhost:1313/flotilla/index.xml/</link>
     
     
     
     <updated>Mon, 01 Jan 0001 00:00:00 UTC</updated>
     
     <item>
-      <title>flotilla-index</title>
-      <link>http://thrisp.github.io/flotilla/</link>
+      <title>Welcome: Flotilla, An Extensible Go Webframework</title>
+      <link>http://localhost:1313/flotilla/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 UTC</pubDate>
       
-      <guid>http://thrisp.github.io/flotilla/</guid>
+      <guid>http://localhost:1313/flotilla/</guid>
       <description>
 
 &lt;table&gt;
@@ -47,7 +47,7 @@
 &lt;ul&gt;
 &lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/jingo/&#34;&gt;jingo&lt;/a&gt; &lt;em&gt;templating&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
 
-&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/engine&#34;&gt;engine&lt;/a&gt; &lt;em&gt;routing, net/http wrappers, basics&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/engine&#34;&gt;engine&lt;/a&gt; &lt;em&gt;routing, multiplexing, net/http basics &amp;amp; interface&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
 
 &lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://gopkg.in/alecthomas/kingpin.v1&#34;&gt;kingpin&lt;/a&gt;  &lt;em&gt;flag parsing&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -117,7 +117,7 @@ func main() {
 
 &lt;h1 id=&#34;toc_3&#34;&gt;Community&lt;a name=&#34;community&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
 
-&lt;p&gt;Flotilla is a new package and you participation &amp;amp; input is welcome. You can find a start for discussion at &lt;a href=&#34;http://reddit.com/r/flotillaaa&#34;&gt;/r/flotilla&lt;/a&gt; on reddit.&lt;/p&gt;
+&lt;p&gt;Found a bug? Have a good idea for improving Flotilla?  Your participation and input is welcome. Visit the &lt;a href=&#34;https://github.com/thrisp/flotilla&#34;&gt;Github page&lt;/a&gt; to review code, fork &amp;amp; explore, or file an issue. If you&amp;rsquo;re interested in chatting with fellow developers, visit the IRC channel at #flotilla on irc.freenode.net. Helpful links and discussion can be found at &lt;a href=&#34;http://reddit.com/r/flotillaaa&#34;&gt;/r/flotilla&lt;/a&gt; on &lt;a href=&#34;http://reddit.com&#34;&gt;reddit&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     
