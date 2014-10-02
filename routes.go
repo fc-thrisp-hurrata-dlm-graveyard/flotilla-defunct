@@ -41,34 +41,35 @@ type (
 		routes   Routes
 		group    *engine.Group
 		Handlers []HandlerFunc
+		//HttpStatuses
 	}
 
 	RouterGroups []*RouterGroup
 )
 
-func (r *Route) handle(c *engine.Ctx) {
-	rq := r.getR(c)
+func (rt *Route) handle(c *engine.Ctx) {
+	rq := rt.getR(c)
 	rq.Next()
-	r.putR(rq)
+	rt.putR(rq)
 }
 
 func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *Route {
-	r := &Route{method: method, static: static, handlers: handlers}
+	rt := &Route{method: method, static: static, handlers: handlers}
 	if static {
 		if fp := strings.Split(path, "/"); fp[len(fp)-1] != "*filepath" {
-			r.base = filepath.ToSlash(filepath.Join(path, "/*filepath"))
+			rt.base = filepath.ToSlash(filepath.Join(path, "/*filepath"))
 		} else {
-			r.base = path
+			rt.base = path
 		}
 	} else {
-		r.base = path
+		rt.base = path
 	}
-	return r
+	return rt
 }
 
-func (r *Route) Named() string {
-	name := strings.Split(r.path, "/")
-	name = append(name, strings.ToLower(r.method))
+func (rt *Route) Named() string {
+	name := strings.Split(rt.path, "/")
+	name = append(name, strings.ToLower(rt.method))
 	for index, value := range name {
 		if regSplat.MatchString(value) {
 			name[index] = "s"
@@ -98,10 +99,10 @@ func (r *Route) Named() string {
 // fmt.Printf("url2: %s\n", u2)
 //
 //	/my/hello/world/are/you/there
-func (r *Route) Url(params ...string) (*url.URL, error) {
+func (rt *Route) Url(params ...string) (*url.URL, error) {
 	paramCount := len(params)
 	i := 0
-	rurl := regParam.ReplaceAllStringFunc(r.path, func(m string) string {
+	rurl := regParam.ReplaceAllStringFunc(rt.path, func(m string) string {
 		var val string
 		if i < paramCount {
 			val = params[i]
@@ -118,7 +119,7 @@ func (r *Route) Url(params ...string) (*url.URL, error) {
 	if err != nil {
 		return nil, err
 	}
-	if i < len(params) && r.method == "GET" {
+	if i < len(params) && rt.method == "GET" {
 		providedquerystring := params[i:(len(params))]
 		var querystring []string
 		qsi := 0
@@ -170,6 +171,7 @@ func NewRouterGroup(prefix string, app *App) *RouterGroup {
 		app:    app,
 		group:  app.engine.Group.New(prefix),
 		routes: make(Routes),
+		//HttpStatuses: make(HttpStatuses),
 	}
 }
 

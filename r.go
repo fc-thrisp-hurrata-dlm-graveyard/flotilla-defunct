@@ -71,25 +71,25 @@ func (rt Route) newR() interface{} {
 }
 
 func (rt Route) getR(c *engine.Ctx) *R {
-	ctx := rt.cache.Get().(*R)
-	ctx.Request = c.Request
-	ctx.rw = c.RW
-	ctx.Ctx = c
+	r := rt.cache.Get().(*R)
+	r.Request = c.Request
+	r.rw = c.RW
+	r.Ctx = c
 	for _, p := range c.Params {
-		ctx.RData[p.Key] = p.Value
+		r.RData[p.Key] = p.Value
 	}
-	ctx.RSession = ctx.app.SessionManager.SessionStart(ctx.rw, ctx.Request)
-	//defer ctx.RSession.SessionRelease(ctx.rw)
-	return ctx
+	r.RSession = r.app.SessionManager.SessionStart(r.rw, r.Request)
+	// defer r.RSession.SessionRelease(r.rw)
+	return r
 }
 
-func (rt Route) putR(ctx *R) {
-	ctx.index = -1
-	ctx.RSession = nil
-	for k, _ := range ctx.RData {
-		delete(ctx.RData, k)
+func (rt Route) putR(r *R) {
+	r.index = -1
+	r.RSession = nil
+	for k, _ := range r.RData {
+		delete(r.RData, k)
 	}
-	rt.cache.Put(ctx)
+	rt.cache.Put(r)
 }
 
 func (r *R) ctxFunctions(e *Env) ctxfuncs {

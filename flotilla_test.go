@@ -2,13 +2,14 @@ package flotilla
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 
 	"testing"
 )
 
-func init() {}
+//func init() {}
 
 func PerformRequest(r http.Handler, method, path string) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
@@ -17,20 +18,24 @@ func PerformRequest(r http.Handler, method, path string) *httptest.ResponseRecor
 	return w
 }
 
-// TestSingleRouteOK tests that a route is correctly invoked.
+func methodNotMethod(method string) string {
+	methods := []string{"GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS", "HEAD"}
+	newmethod := methods[rand.Intn(len(methods))]
+	if newmethod == method {
+		methodNotMethod(newmethod)
+	}
+	return newmethod
+}
+
 func testRouteOK(method string, t *testing.T) {
-	// SETUP
 	passed := false
-	r := New(fmt.Sprintf("flotilla_test_testRouteOK_%s", method))
-	rt := CommonRoute(method, "/test", []HandlerFunc{func(c *Ctx) {
-		passed = true
-	}})
-	r.Handle(rt)
+	f := New("flotilla_testRouteOK")
+	r := NewRoute(method, "/test", false, []HandlerFunc{func(r *R) { passed = true }})
+	f.Handle(r)
+	f.Env.SessionInit()
 
-	// RUN
-	w := PerformRequest(r, method, "/test")
+	w := PerformRequest(f, method, "/test")
 
-	// TEST
 	if passed == false {
 		t.Errorf(method + " route handler was not invoked.")
 	}
@@ -39,7 +44,7 @@ func testRouteOK(method string, t *testing.T) {
 	}
 }
 
-func TestRouterGroupRouteOK(t *testing.T) {
+func TestRouteOK(t *testing.T) {
 	testRouteOK("POST", t)
 	testRouteOK("DELETE", t)
 	testRouteOK("PATCH", t)
@@ -48,25 +53,70 @@ func TestRouterGroupRouteOK(t *testing.T) {
 	testRouteOK("HEAD", t)
 }
 
-// tests that route is incorrectly invoked.
-func testRouteNotOK(method string, t *testing.T) {
-	// SETUP
+func testGroupOK(method string, t *testing.T) {
 	passed := false
-	r := New(fmt.Sprintf("flotilla_test_testRouteNotOK_%s", method))
-	rt := CommonRoute(method, "/test_2", []HandlerFunc{func(c *Ctx) {
-		passed = true
-	}})
-	r.Handle(rt)
+	f := New("flotilla_testGroupOK")
+	f.Handle(NewRoute(method, "/test_group", false, []HandlerFunc{func(r *R) { passed = true }}))
+	f.Env.SessionInit()
 
-	// RUN
-	w := PerformRequest(r, method, "/test")
+	w := PerformRequest(f, method, "/test_group")
 
-	// TEST
+	if passed == false {
+		t.Errorf(method + " group route handler was not invoked.")
+	}
+	if w.Code != http.StatusOK {
+		t.Errorf("Status code should be %v, was %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestGroupOK(t *testing.T) {
+	testRouteOK("POST", t)
+	testRouteOK("DELETE", t)
+	testRouteOK("PATCH", t)
+	testRouteOK("PUT", t)
+	testRouteOK("OPTIONS", t)
+	testRouteOK("HEAD", t)
+}
+
+func testSubGroupOK(method string, t *testing.T) {
+	passed := false
+	f := New("flotilla_testsubgroupOK")
+	g := f.New("/test_group")
+	g.Handle(NewRoute(method, "/test_group_subgroup", false, []HandlerFunc{func(r *R) { passed = true }}))
+	f.Env.SessionInit()
+
+	w := PerformRequest(f, method, "/test_group/test_group_subgroup")
+
+	if passed == false {
+		t.Errorf(method + " group route handler was not invoked.")
+	}
+	if w.Code != http.StatusOK {
+		t.Errorf("Status code should be %v, was %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestSubGroupOK(t *testing.T) {
+	testSubGroupOK("POST", t)
+	testSubGroupOK("DELETE", t)
+	testSubGroupOK("PATCH", t)
+	testSubGroupOK("PUT", t)
+	testSubGroupOK("OPTIONS", t)
+	testSubGroupOK("HEAD", t)
+}
+
+func testRouteNotOK(method string, t *testing.T) {
+	passed := false
+	f := New("flotilla_testroutenotok")
+	othermethod := methodNotMethod(method)
+	f.Handle(NewRoute(othermethod, "/test", false, []HandlerFunc{func(r *R) { passed = true }}))
+	f.Env.SessionInit()
+
+	w := PerformRequest(f, method, "/test")
+
 	if passed == true {
 		t.Errorf(method + " route handler was invoked, when it should not")
 	}
 	if w.Code != http.StatusNotFound {
-		// If this fails, it's because httprouter needs to be updated to at least f78f58a0db
 		t.Errorf("Status code should be %v, was %d. Location: %s", http.StatusNotFound, w.Code, w.HeaderMap.Get("Location"))
 	}
 }
@@ -78,43 +128,6 @@ func TestRouteNotOK(t *testing.T) {
 	testRouteNotOK("PUT", t)
 	testRouteNotOK("OPTIONS", t)
 	testRouteNotOK("HEAD", t)
-}
-
-func testRouteNotOK2(method string, t *testing.T) {
-	// SETUP
-	passed := false
-	r := New(fmt.Sprintf("flotilla_test_testRouteNotOK2_%s", method))
-	var methodRoute string
-	if method == "POST" {
-		methodRoute = "GET"
-	} else {
-		methodRoute = "POST"
-	}
-	rt := CommonRoute(methodRoute, "/test_2", []HandlerFunc{func(c *Ctx) {
-		passed = true
-	}})
-	r.Handle(rt)
-
-	// RUN
-	w := PerformRequest(r, method, "/test")
-
-	// TEST
-	if passed == true {
-		t.Errorf(method + " route handler was invoked, when it should not")
-	}
-	if w.Code != http.StatusNotFound {
-		// If this fails, it's because httprouter needs to be updated to at least f78f58a0db
-		t.Errorf("Status code should be %v, was %d. Location: %s", http.StatusNotFound, w.Code, w.HeaderMap.Get("Location"))
-	}
-}
-
-func TestRouteNotOK2(t *testing.T) {
-	testRouteNotOK2("POST", t)
-	testRouteNotOK2("DELETE", t)
-	testRouteNotOK2("PATCH", t)
-	testRouteNotOK2("PUT", t)
-	testRouteNotOK2("OPTIONS", t)
-	testRouteNotOK2("HEAD", t)
 }
 
 /*func TestHandleStaticFile(t *testing.T) {
@@ -212,21 +225,18 @@ func TestExtension(t *testing.T) {
 
 // Tests that an engine route is correctly extended
 func testExtensionRouteOK(method string, t *testing.T) {
-	// SETUP
 	passed := false
 	r := New(fmt.Sprintf("flotilla_test_testExtensionRouteOK_base_%s", method))
 	r1 := New(fmt.Sprintf("flotilla_test_testExtensionRouteOK_extension_%s", method))
-	rt := CommonRoute(method, "/extension_test", []HandlerFunc{func(c *Ctx) {
+	rt := NewRoute(method, "/extension_test", false, []HandlerFunc{func(r *R) {
 		passed = true
 	}})
 	r1.Handle(rt)
-
 	r.Extend(r1)
+	r.Env.SessionInit()
 
-	// RUN
 	w := PerformRequest(r, method, "/extension_test")
 
-	// TEST
 	if passed == false {
 		t.Errorf(method + " extended handler was not invoked.")
 	}
