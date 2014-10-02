@@ -4,7 +4,7 @@
         <div class="container">
             <div id=fl-content>
                 {{ template "theme/partials/logo.html" . }}
-                {{ range where .Data.Pages "Title" "flotilla-index"}}
+                {{ range where .Data.Pages "Title" "Welcome: Flotilla, An Extensible Go Webframework"}}
                     {{ .Content}}<br>
                 {{ end }}
                 {{ template "theme/partials/footer.html" }}
