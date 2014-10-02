@@ -1,5 +1,5 @@
 +++
-title = "flotilla-index"
+title = "Welcome: Flotilla, An Extensible Go Webframework"
 +++
 | [overview](/flotilla) | // | [quickstart](#quickstart) | // | [extensions](#extensions) | // | [community](#community) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -16,7 +16,7 @@ Flotilla has several dependencies:
 
 - [jingo](http://github.com/thrisp/jingo/) *templating*
 
-- [engine](http://github.com/thrisp/engine) *routing, net/http wrappers, basics*
+- [engine](http://github.com/thrisp/engine) *routing, multiplexing, net/http basics & interface*
 
 - [kingpin](http://gopkg.in/alecthomas/kingpin.v1)  *flag parsing*
 
@@ -84,4 +84,4 @@ One of the primary goals of creating Flotilla is a pool of extensions, middlewar
 
 # Community<a name="community"></a>
 
-Flotilla is a new package and you participation & input is welcome. You can find a start for discussion at [/r/flotilla](http://reddit.com/r/flotillaaa) on reddit.
+Found a bug? Have a good idea for improving Flotilla?  Your participation and input is welcome. Visit the [Github page](https://github.com/thrisp/flotilla) to review code, fork & explore, or file an issue. If you're interested in chatting with fellow developers, visit the IRC channel at #flotilla on irc.freenode.net. Helpful links and discussion can be found at [/r/flotilla](http://reddit.com/r/flotillaaa) on [reddit](http://reddit.com). 
