@@ -41,7 +41,7 @@ type (
 		routes   Routes
 		group    *engine.Group
 		Handlers []HandlerFunc
-		//HttpStatuses
+		HttpStatuses
 	}
 
 	RouterGroups []*RouterGroup
@@ -168,10 +168,10 @@ func (rg *RouterGroup) pathNoLeadingSlash(path string) string {
 // NewRouterGroup attaches a new RouterGroup to the App with the prefix.
 func NewRouterGroup(prefix string, app *App) *RouterGroup {
 	return &RouterGroup{prefix: prefix,
-		app:    app,
-		group:  app.engine.Group.New(prefix),
-		routes: make(Routes),
-		//HttpStatuses: make(HttpStatuses),
+		app:          app,
+		group:        app.engine.Group.New(prefix),
+		routes:       make(Routes),
+		HttpStatuses: make(HttpStatuses),
 	}
 }
 

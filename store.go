@@ -153,6 +153,13 @@ func (si *StoreItem) Int() (value int, err error) {
 	return 0, newError("could not return Int value from StoreItem value")
 }
 
+func (si *StoreItem) Int64() (value int64, err error) {
+	if value, err := strconv.ParseInt(si.value, 10, 64); err == nil {
+		return value, nil
+	}
+	return 0, newError("could not return Int64 value from StoreItem value")
+}
+
 func (si *StoreItem) List() (value []string, err error) {
 	return strings.Split(si.value, ","), nil
 }

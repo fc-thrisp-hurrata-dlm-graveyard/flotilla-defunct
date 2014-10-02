@@ -42,11 +42,9 @@ func Empty() *App {
 // Returns a new engine, with the minimum configuration.
 func New(name string) *App {
 	app := Empty()
-	app.engine = engine.New()
 	app.Env = BaseEnv()
+	app.defaultEngine()
 	app.RouterGroup = NewRouterGroup("/", app)
-	//engine.router.NotFound = app.flotilla404
-	//engine.router.PanicHandler = app.flotilla500
 	return app
 }
 
@@ -56,6 +54,14 @@ func Basic() *App {
 	app.Use(Logger())
 	app.STATIC("static")
 	return app
+}
+
+func (a *App) defaultEngine() {
+	e := engine.New()
+	e.SetNotFound(a.default404)
+	e.SetPanic(a.default500)
+	e.HTMLStatus = true
+	a.engine = e
 }
 
 // Extend takes anytthing satisfying the Flotilla interface, and integrates it
@@ -155,6 +161,10 @@ func (app *App) MergeRoutes(group *RouterGroup, routes Routes) {
 func (app *App) init() {
 	app.parseFlags()
 	app.Env.SessionInit()
+	// post app create engine configuration
+	if mm, err := app.Env.Store["upload_size"].Int64(); err == nil {
+		app.engine.MaxFormMemory = mm
+	}
 }
 
 // ServeHTTP implements the http.Handler interface for the App.

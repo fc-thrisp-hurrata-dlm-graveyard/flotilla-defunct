@@ -33,15 +33,16 @@ type (
 	// R is the primary context for passing & setting data between handlerfunc
 	// of a route, constructed from the *App and the app engine context data.
 	R struct {
-		index    int8
-		handlers []HandlerFunc
-		rw       ResponseWriter
-		Request  *http.Request
-		RSession session.SessionStore
-		RData    ctxdata
-		RFunc    ctxfuncs
-		app      *App
-		Ctx      *engine.Ctx
+		index      int8
+		handlers   []HandlerFunc
+		rw         ResponseWriter
+		Request    *http.Request
+		RSession   session.SessionStore
+		RData      ctxdata
+		RFunc      ctxfuncs
+		app        *App
+		httpstatus HttpStatuses
+		Ctx        *engine.Ctx
 	}
 
 	// A map as a stash for data in the R.
@@ -62,9 +63,10 @@ type (
 
 func (rt Route) newR() interface{} {
 	r := &R{index: -1,
-		handlers: rt.handlers,
-		app:      rt.routergroup.app,
-		RData:    make(ctxdata),
+		handlers:   rt.handlers,
+		app:        rt.routergroup.app,
+		httpstatus: rt.routergroup.HttpStatuses,
+		RData:      make(ctxdata),
 	}
 	r.RFunc = r.ctxFunctions(rt.routergroup.app.Env)
 	return r
@@ -122,9 +124,19 @@ func (r *R) Next() {
 	}
 }
 
-// Calls an HttpException if available otherwise calls Abort
-func (r *R) HttpStatus(code int) {
-	r.Ctx.Status(code)
+// Calls HandlerFunc from the router HttpStatuses attached to *R, if available
+// otherwise calls Ctx.Status with a fall through to Ctx.Abort in the Engine.
+func (r *R) Status(code int) {
+	//r.RSession.SessionRelease(r.rw)
+	if h, ok := r.httpstatus[code]; ok {
+		hi := -1
+		s := len(h)
+		for ; hi < s; hi++ {
+			h[hi](r)
+		}
+	} else {
+		r.Ctx.Status(code)
+	}
 }
 
 // Immediately ends processing of current R and return the code, the same as
@@ -183,6 +195,7 @@ func (r *R) Redirect(code int, location string) {
 }
 
 func servedata(r *R, code int, data []byte) error {
+	//r.RSession.SessionRelease(r.rw)
 	r.WriteHeader(code, "text/plain")
 	r.rw.Write(data)
 	return nil
@@ -213,7 +226,7 @@ func templatedata(r *R, data interface{}) *tdata {
 
 func rendertemplate(r *R, name string, data interface{}) error {
 	td := templatedata(r, data)
-	r.RSession.SessionRelease(r.rw)
+	r.RSession.SessionRelease(r.rw) // must done before any sort of write out, can't be deferred as in the originating session library
 	err := r.app.Templator.Render(r.rw, name, td)
 	return err
 }
