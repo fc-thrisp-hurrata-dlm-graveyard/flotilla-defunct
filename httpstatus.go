@@ -53,21 +53,24 @@ func format404() string {
 	return fmt.Sprintf(statusHtml, 404, txt, txt, "The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.")
 }
 
+func format500() string {
+	txt := http.StatusText(500)
+	return fmt.Sprintf(statusHtml, 500, txt, txt, "The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.")
+}
+
 func (a *App) default404(w http.ResponseWriter, req *http.Request) {
 	// Need an ad-hoc *R for template functions, etc.
-	r := &R{Request: req}
-	rw := &responseWriter{}
-	rw.reset(w)
-	r.rw = rw
-	r.RFunc = r.ctxFunctions(a.Env)
-	w.WriteHeader(404)
-	if handlers, ok := a.RouterGroup.HttpStatuses[404]; ok {
-		hi := -1
-		s := len(handlers)
-		for ; hi < s; hi++ {
-			handlers[hi](r)
+	r := a.tmpR(w, req)
+	r.rw.WriteHeader(404)
+	if handlers, ok := a.HttpStatuses[404]; ok {
+		lh := len(handlers)
+		for i := 0; i < lh; i++ {
+			handlers[i](r)
 		}
 	} else {
+		// We have no engine.Ctx at this point as this is passed down to the
+		// engine.router, before a ctx is made. Which works for the router,
+		// but is messy for Engine&Flotilla, i.e. works for now but could be better.
 		r.rw.Header().Set("Content-Type", "text/html")
 		r.rw.Write([]byte(format404()))
 	}
@@ -81,5 +84,8 @@ func (a *App) default500(w http.ResponseWriter, req *http.Request, err interface
 		servePanic := fmt.Sprintf(panicHtml, err, err, stack)
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(servePanic))
+	case prodmode:
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(format500()))
 	}
 }

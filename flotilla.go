@@ -7,16 +7,17 @@ import (
 )
 
 type (
+	// A HandlerFunc is any function taking a single parameter, *R
 	HandlerFunc func(*R)
 
 	// The base of running a Flotilla instance is an Engine struct with a Name,
 	// an Env with information specific to running the engine, and a chain of
-	// RouterGroups
+	// RouteGroups
 	App struct {
 		engine *engine.Engine
 		Name   string
 		*Env
-		*RouterGroup
+		*RouteGroup
 	}
 
 	// A Blueprint struct is essential information about an engine for export
@@ -24,7 +25,7 @@ type (
 	Blueprint struct {
 		Name   string
 		Prefix string
-		Groups []*RouterGroup
+		Groups []*RouteGroup
 		Env    *Env
 	}
 
@@ -43,8 +44,8 @@ func Empty() *App {
 func New(name string) *App {
 	app := Empty()
 	app.Env = BaseEnv()
-	app.defaultEngine()
-	app.RouterGroup = NewRouterGroup("/", app)
+	app.engine = app.defaultEngine()
+	app.RouteGroup = NewRouteGroup("/", app)
 	return app
 }
 
@@ -56,12 +57,12 @@ func Basic() *App {
 	return app
 }
 
-func (a *App) defaultEngine() {
+func (a *App) defaultEngine() *engine.Engine {
 	e := engine.New()
-	e.SetNotFound(a.default404)
-	e.SetPanic(a.default500)
+	e.NotFound(a.default404)
+	e.Panic(a.default500)
 	e.HTMLStatus = true
-	a.engine = e
+	return e
 }
 
 // Extend takes anytthing satisfying the Flotilla interface, and integrates it
@@ -69,25 +70,25 @@ func (a *App) defaultEngine() {
 func (app *App) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
 	app.MergeFlotilla(blueprint.Name, f)
-	app.MergeRouterGroups(blueprint.Groups)
+	app.MergeRouteGroups(blueprint.Groups)
 	app.MergeEnv(blueprint.Env)
 }
 
 // Blueprint ensures the engine satisfies interface Flotilla by providing
-// essential information in the engine in a struct: Name, RouterGroups, and Env
+// essential information in the engine in a struct: Name, RouteGroups, and Env
 func (app *App) Blueprint() *Blueprint {
 	return &Blueprint{Name: app.Name,
 		Groups: app.Groups(),
 		Env:    app.Env}
 }
 
-// Groups provides a flat array of RouterGroup instances attached to the App.
-func (app *App) Groups() (groups RouterGroups) {
-	type IterC func(r RouterGroups, fn IterC)
+// Groups provides a flat array of RouteGroup instances attached to the App.
+func (app *App) Groups() (groups RouteGroups) {
+	type IterC func(r RouteGroups, fn IterC)
 
-	groups = append(groups, app.RouterGroup)
+	groups = append(groups, app.RouteGroup)
 
-	iter := func(r RouterGroups, fn IterC) {
+	iter := func(r RouteGroups, fn IterC) {
 		for _, x := range r {
 			groups = append(groups, x)
 			fn(x.children, fn)
@@ -115,20 +116,20 @@ func (app *App) Routes() Routes {
 	return allroutes
 }
 
-// Merges an array of RouterGroup instances into the engine.
-func (app *App) MergeRouterGroups(groups RouterGroups) {
+// Merges an array of RouteGroup instances into the engine.
+func (app *App) MergeRouteGroups(groups RouteGroups) {
 	for _, x := range groups {
 		if group, ok := app.existingGroup(x.prefix); ok {
 			group.Use(x.Handlers...)
 			app.MergeRoutes(group, x.routes)
 		} else {
-			newgroup := app.RouterGroup.New(x.prefix, x.Handlers...)
+			newgroup := app.RouteGroup.New(x.prefix, x.Handlers...)
 			app.MergeRoutes(newgroup, x.routes)
 		}
 	}
 }
 
-func (app *App) existingGroup(prefix string) (*RouterGroup, bool) {
+func (app *App) existingGroup(prefix string) (*RouteGroup, bool) {
 	for _, g := range app.Groups() {
 		if g.prefix == prefix {
 			return g, true
@@ -147,7 +148,7 @@ func (app *App) existingRoute(route *Route) bool {
 }
 
 // Merges the given group with the given routes based on route existence.
-func (app *App) MergeRoutes(group *RouterGroup, routes Routes) {
+func (app *App) MergeRoutes(group *RouteGroup, routes Routes) {
 	for _, route := range routes {
 		if route.static && !app.existingRoute(route) {
 			group.STATIC(route.path)
@@ -161,8 +162,9 @@ func (app *App) MergeRoutes(group *RouterGroup, routes Routes) {
 func (app *App) init() {
 	app.parseFlags()
 	app.Env.SessionInit()
-	// post app create engine configuration
-	if mm, err := app.Env.Store["upload_size"].Int64(); err == nil {
+	// Send Flotilla configured items back down to the engine after all
+	// configuration (should have) has taken place.
+	if mm, err := app.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
 		app.engine.MaxFormMemory = mm
 	}
 }
