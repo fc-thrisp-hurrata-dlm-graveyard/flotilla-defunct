@@ -1,7 +1,6 @@
 package flotilla
 
 import (
-	"fmt"
 	"log"
 	"math"
 	"net/http"
@@ -145,7 +144,6 @@ func (r *R) Next() {
 // Calls HandlerFunc from a group HttpStatuses attached to *R, if available
 // otherwise calls Ctx.Status with a fall through to Ctx.Abort in the Engine.
 func (r *R) Status(code int) {
-	fmt.Printf("%+v\n", r)
 	if handlers, ok := r.httpstatus[code]; ok {
 		s := len(handlers)
 		for i := 0; i < s; i++ {

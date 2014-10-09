@@ -59,8 +59,6 @@ func Basic() *App {
 
 func (a *App) defaultEngine() *engine.Engine {
 	e := engine.New()
-	e.NotFound(a.default404)
-	e.Panic(a.default500)
 	e.HTMLStatus = true
 	return e
 }
@@ -167,6 +165,7 @@ func (app *App) init() {
 	if mm, err := app.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
 		app.engine.MaxFormMemory = mm
 	}
+	// engine panic on by mode
 }
 
 // ServeHTTP implements the http.Handler interface for the App.

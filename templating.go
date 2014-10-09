@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/thrisp/jingo"
+	"github.com/thrisp/djinn"
 )
 
 var (
@@ -23,7 +23,7 @@ type (
 
 	// The default Flotilla templator
 	templator struct {
-		*jingo.Jingo
+		*djinn.Djinn
 		TemplateDirs []string
 	}
 
@@ -35,7 +35,7 @@ type (
 )
 
 func NewTemplator(e *Env) *templator {
-	j := &templator{Jingo: jingo.NewJingo()}
+	j := &templator{Djinn: djinn.New()}
 	j.UpdateTemplateDirs(workingTemplates)
 	j.AddLoaders(NewLoader(e))
 	return j
@@ -59,7 +59,7 @@ func (t *templator) UpdateTemplateFuncs(funcs map[string]interface{}) {
 
 func NewLoader(e *Env) *Loader {
 	fl := &Loader{env: e}
-	fl.FileExtensions = append(fl.FileExtensions, ".html", ".jingo")
+	fl.FileExtensions = append(fl.FileExtensions, ".html", ".dji")
 	return fl
 }
 
