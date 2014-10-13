@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+      <title>Recent Content on  </title>
+      <generator uri="https://hugo.spf13.com">Hugo</generator>
+    <link>http://thrisp.github.io/flotilla/index.xml/</link>
+    
+    
+    
+    <updated>Mon, 01 Jan 0001 00:00:00 UTC</updated>
+    
+    <item>
+      <title>flotilla-index</title>
+      <link>http://thrisp.github.io/flotilla/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 UTC</pubDate>
+      
+      <guid>http://thrisp.github.io/flotilla/</guid>
+      <description>
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;/flotilla&#34;&gt;overview&lt;/a&gt;&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;//&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;#quickstart&#34;&gt;quickstart&lt;/a&gt;&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;//&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;#extensions&#34;&gt;extensions&lt;/a&gt;&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;//&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;&lt;a href=&#34;#community&#34;&gt;community&lt;/a&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Flotilla is a basic and extensible web framework for the Go language.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Flotilla is a new project, documentation, testing, and more to come soon.&lt;/p&gt;
+
+&lt;h1 id=&#34;toc_0&#34;&gt;Installation&lt;a name=&#34;installation&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
+
+&lt;p&gt;Flotilla has several dependencies:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/jingo/&#34;&gt;jingo&lt;/a&gt; &lt;em&gt;templating&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://github.com/thrisp/engine&#34;&gt;engine&lt;/a&gt; &lt;em&gt;routing, multiplexing, net/http basics &amp;amp; interface&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;After installing, you can install with &lt;code&gt;go get github.com/thrisp/flotilla&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h1 id=&#34;toc_1&#34;&gt;Quickstart&lt;a name=&#34;quickstart&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
+
+&lt;p&gt;main.go&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package main
+
+import (
+    &amp;quot;math/rand&amp;quot;
+    &amp;quot;os&amp;quot;
+    &amp;quot;os/signal&amp;quot;
+
+    &amp;quot;github.com/thrisp/flotilla&amp;quot;
+)
+
+var lucky = []rune(&amp;quot;1234567890&amp;quot;)
+
+func randSeq(n int) string {
+    b := make([]rune, n)
+    for i := range b {
+        b[i] = lucky[rand.Intn(len(lucky))]
+    }
+    return string(b)
+}
+
+func Display(f *flotilla.R) {
+    ret := fmt.Sprintf(&amp;quot;Your lucky number is: %s&amp;quot;, randSeq(20))
+    f.ServeData(200, []byte(ret))
+}
+
+func Build() (e *flotilla.App) {
+    e = flotilla.Basic()
+    e.Use(flotilla.ThirdEye)
+    e.GET(&amp;quot;/quick/:start&amp;quot;, Display)
+    return e
+}
+
+var quit = make(chan bool)
+
+func init() {
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    go func() {
+        for _ = range c {
+            quit &amp;lt;- true
+        }
+    }()
+}
+
+func main() {
+    fl := Build()
+    go fl.Run(&amp;quot;:8080&amp;quot;)
+    &amp;lt;-quit
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;go run main.go &amp;amp; visit: &lt;a href=&#34;http://localhost:8080/quick/whatsmyluckynumber&#34;&gt;http://localhost:8080/quick/whatsmyluckynumber&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;toc_2&#34;&gt;Extensions&lt;a name=&#34;extensions&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
+
+&lt;p&gt;One of the primary goals of creating Flotilla is a pool of extensions, middleware, and packages that that promote code reuse and the prevention of wasted effort in recreating everything from net/http whenever you want to do something requiring a web framework in Go(unless thats your thing). There are no standard extensions as of right now, but examples for creating extension can be found &lt;a href=&#34;https://github.com/thrisp/flotilla_skeleton&#34;&gt;here&lt;/a&gt;, as well your imagination in reading the Flotilla source code.&lt;/p&gt;
+
+&lt;h1 id=&#34;toc_3&#34;&gt;Community&lt;a name=&#34;community&#34;&gt;&lt;/a&gt;&lt;/h1&gt;
+
+&lt;p&gt;Found a bug? Have a good idea for improving Flotilla?  Your participation and input is welcome. Visit the &lt;a href=&#34;https://github.com/thrisp/flotilla&#34;&gt;Github page&lt;/a&gt; to review code, fork &amp;amp; explore, or file an issue. If you&amp;rsquo;re interested in chatting with fellow developers, visit the IRC channel at #flotilla on irc.freenode.net. Helpful links and discussion can be found at &lt;a href=&#34;http://reddit.com/r/flotillaaa&#34;&gt;/r/flotilla&lt;/a&gt; on &lt;a href=&#34;http://reddit.com&#34;&gt;reddit&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
