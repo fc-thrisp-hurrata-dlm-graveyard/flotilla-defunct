@@ -158,7 +158,7 @@ func (app *App) MergeRoutes(group *RouteGroup, routes Routes) {
 }
 
 func (app *App) init() {
-	app.parseFlags()
+	//app.parseFlags()
 	app.Env.SessionInit()
 	// Send Flotilla configured items back down to the engine after all
 	// configuration (should have) has taken place.
