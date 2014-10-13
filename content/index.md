@@ -18,8 +18,6 @@ Flotilla has several dependencies:
 
 - [engine](http://github.com/thrisp/engine) *routing, multiplexing, net/http basics & interface*
 
-- [kingpin](http://gopkg.in/alecthomas/kingpin.v1)  *flag parsing*
-
 After installing, you can install with `go get github.com/thrisp/flotilla`.
 
 # Quickstart<a name="quickstart"></a>
