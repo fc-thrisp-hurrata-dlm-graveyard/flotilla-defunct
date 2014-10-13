@@ -1,13 +1,13 @@
-{{ template "theme/partials/head.html" . }}
+{{ partial "head.html" . }}
 <html>
     <body>
         <div class="container">
             <div id=fl-content>
-                {{ template "theme/partials/logo.html" . }}
+                {{ partial "logo.html" . }}
                 {{ range where .Data.Pages "Title" "flotilla-index"}}
                     {{ .Content}}<br>
                 {{ end }}
-                {{ template "theme/partials/footer.html" }}
+                {{ partial "footer.html" }}
             </div>
         </div>
     </body>

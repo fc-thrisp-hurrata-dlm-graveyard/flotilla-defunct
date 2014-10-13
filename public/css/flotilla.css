@@ -1,0 +1,55 @@
+/*
+ http://www.colourlovers.com/palette/177020/Amsterdam_Acid
+ C7FF00 199,255,0 green
+ 0069FF 0,105,255 blue
+ FF3B2F 255,59,47 red
+ 494E54 73,78,84
+ ADB39B 173,179,155
+ */
+
+.container { width: 620px; margin: 0 auto; margin-top: 2em; color: #333; font-family: "PT Sans", sans-serif; }
+
+a img {
+    border: none;
+}
+
+a {color: #0069FF; text-decoration: none;}
+a:hover {color: #FF3B2F; border-bottom: 1px dotted #0069FF;}
+a.reference em {font-style: normal;}
+
+strong { color: #000; }
+
+h1 { margin-bottom: 12px; }
+
+h2 { margin-bottom: 6px; }
+
+pre {
+    font-family: consolas,monospace;
+    font-size: 85%;
+    line-height: 1.5em;
+    padding: .5em 1em; 
+    border-radius: 5px;
+    background-color: rgba(173,179,155, 0.25);
+    text-shadow: 0 1px 0 white;
+    overflow-x: auto;
+}
+
+code {
+    font-family: consolas,monospace;
+    font-size: 85%;
+    color: #000;           
+    font-weight: bold;
+}
+
+td.code { width: 100%; }
+
+#fl-logo{margin-left: auto; margin-right: auto; width: 100%;}
+#fl-title{font-size:5em; font-weight: 900; float: left; width: 67%;}
+#fl-img{width: 32%; float: right;}
+#fl-img img{width: 200px;}
+#fl-tagline{}
+
+#fl-content{}
+#fl-content > table{margin-left: auto; margin-right: auto; width: 100%;}
+
+.fl-sidebar{}
