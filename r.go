@@ -25,6 +25,8 @@ var (
 )
 
 type (
+	HttpStatuses map[int][]HandlerFunc
+
 	// Use cross-handler context functions by name and argument
 	RFunc interface {
 		Call(string, ...interface{}) (interface{}, error)
@@ -90,7 +92,6 @@ func (rt Route) getR(c *engine.Ctx) *R {
 		r.RData[p.Key] = p.Value
 	}
 	r.start()
-	//r.RSession = r.app.SessionManager.SessionStart(r.rw, r.Request)
 	return r
 }
 

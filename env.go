@@ -43,9 +43,10 @@ type (
 
 func (e *Env) defaults() {
 	e.Store.adddefault("upload", "size", "10000000") // bytes
-	e.Store.adddefault("secret", "key", "-")
+	e.Store.adddefault("secret", "key", "-")         // weak default value
 }
 
+// BaseEnv produces a base environment useful to new app instances.
 func BaseEnv() *Env {
 	e := &Env{Store: make(Store)}
 	e.Templator = NewTemplator(e)
@@ -57,7 +58,7 @@ func BaseEnv() *Env {
 	return e
 }
 
-// Merges an env instance with the calling env
+// Merges an outside env instance with the existing app.Env
 func (env *Env) MergeEnv(me *Env) {
 	env.MergeStore(me.Store)
 	for _, fs := range me.Assets {
@@ -70,7 +71,7 @@ func (env *Env) MergeEnv(me *Env) {
 	env.AddCtxFuncs(me.ctxfunctions)
 }
 
-// Merges a Store instance with the Env's Store, without replacement.
+// MergeStore merges a Store instance with the Env's Store, without replacement.
 func (env *Env) MergeStore(s Store) {
 	for k, v := range s {
 		if _, ok := env.Store[k]; !ok {
@@ -79,6 +80,7 @@ func (env *Env) MergeStore(s Store) {
 	}
 }
 
+// MergeFlotilla adds Flotilla to the Env
 func (env *Env) MergeFlotilla(name string, f Flotilla) {
 	if env.flotilla == nil {
 		env.flotilla = make(map[string]Flotilla)
@@ -86,7 +88,7 @@ func (env *Env) MergeFlotilla(name string, f Flotilla) {
 	env.flotilla[name] = f
 }
 
-// Sets the running mode for the App env by a string.
+// SetMode sets the running mode for the App env by a string.
 func (env *Env) SetMode(value string) {
 	switch value {
 	case "development":
@@ -110,7 +112,7 @@ func (env *Env) StaticDirs() []string {
 	return []string{}
 }
 
-// Adds a static directory to be searched when a static route is accessed.
+// AddStaticDir adds a static directory to be searched when a static route is accessed.
 func (env *Env) AddStaticDir(dirs ...string) {
 	if _, ok := env.Store["STATIC_DIRECTORIES"]; !ok {
 		env.Store.add("static", "directories", "")
@@ -118,35 +120,30 @@ func (env *Env) AddStaticDir(dirs ...string) {
 	env.Store["STATIC_DIRECTORIES"].updateList(dirs...)
 }
 
-// Listing of templator template directories
+// TemplateDirs produces a listing of templator template directories.
 func (env *Env) TemplateDirs() []string {
 	return env.Templator.ListTemplateDirs()
 }
 
-// Adds a templates directory to the templator
+// AddTemplatesDir adds a templates directory to the templator
 func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
 }
 
-// Adds template functions used by the default Templator.
+// AddTplFuncs adds template functions used by the default Templator.
 func (env *Env) AddTplFuncs(fns envmap) {
 	for k, v := range fns {
 		env.tplfunctions[k] = v
 	}
 }
 
-// Adds cross-handler functions used by the Ctx.
+// AddCtxFuncs stores cross-handler functions in the Env as intermediate staging
+// for later use by R context.
 func (env *Env) AddCtxFuncs(fns envmap) {
 	for k, v := range fns {
 		env.ctxfunctions[k] = v
 	}
 }
-
-//func (env *Env) parseFlags() {
-//	flagMode := flag.Flag("mode", "Run Flotilla app in mode: development, production or testing").Short('m').Default("development").String()
-//	flag.Parse()
-//	env.SetMode(*flagMode)
-//}
 
 func (env *Env) defaultsessionconfig() string {
 	secret := env.Store["SECRET_KEY"].value
@@ -157,6 +154,8 @@ func (env *Env) defaultsessionmanager() (*session.Manager, error) {
 	return session.NewManager("cookie", env.defaultsessionconfig())
 }
 
+// SessionInit initializes the session using the SessionManager, or default if
+// no session manage is specified.
 func (env *Env) SessionInit() {
 	if env.SessionManager == nil {
 		sm, err := env.defaultsessionmanager()

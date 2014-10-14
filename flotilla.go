@@ -1,6 +1,7 @@
 package flotilla
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/thrisp/engine"
@@ -58,8 +59,10 @@ func Basic() *App {
 }
 
 func (a *App) defaultEngine() *engine.Engine {
-	e := engine.New()
-	e.HTMLStatus = true
+	e, err := engine.New(engine.HTMLStatus(true))
+	if err != nil {
+		panic(fmt.Sprintf("Engine could not be created properly: %s", err))
+	}
 	return e
 }
 
@@ -114,7 +117,7 @@ func (app *App) Routes() Routes {
 	return allroutes
 }
 
-// Merges an array of RouteGroup instances into the engine.
+// MergeRouteGroups merges an array of RouteGroup instances into the engine.
 func (app *App) MergeRouteGroups(groups RouteGroups) {
 	for _, x := range groups {
 		if group, ok := app.existingGroup(x.prefix); ok {
@@ -145,7 +148,7 @@ func (app *App) existingRoute(route *Route) bool {
 	return false
 }
 
-// Merges the given group with the given routes based on route existence.
+// MergeRoutes merges the given group with the given routes, by route existence.
 func (app *App) MergeRoutes(group *RouteGroup, routes Routes) {
 	for _, route := range routes {
 		if route.static && !app.existingRoute(route) {
@@ -158,12 +161,11 @@ func (app *App) MergeRoutes(group *RouteGroup, routes Routes) {
 }
 
 func (app *App) init() {
-	//app.parseFlags()
 	app.Env.SessionInit()
 	// Send Flotilla configured items back down to the engine after all
 	// configuration (should have) has taken place.
 	if mm, err := app.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
-		app.engine.MaxFormMemory = mm
+		app.engine.SetConf(engine.MaxFormMemory(mm))
 	}
 	// engine panic on by mode
 }

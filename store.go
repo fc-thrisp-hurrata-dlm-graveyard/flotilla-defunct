@@ -34,15 +34,19 @@ var (
 )
 
 type (
+	// A StoreItem contains a default string value and/or a string value.
 	StoreItem struct {
 		defaultvalue bool
 		value        string
 	}
 
+	// Store is a map of StoreItem managed by App.Env, used as a store of varied
+	// configuration items that might be represented with a default and/or explicitly
+	// set value.
 	Store map[string]*StoreItem
 )
 
-// Loads a text configuration file into the store
+// LoadConfFile loads a text configuration file into a Store.
 func (s Store) LoadConfFile(filename string) (err error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -54,7 +58,7 @@ func (s Store) LoadConfFile(filename string) (err error) {
 	return err
 }
 
-// Loads a text configuration file as byte into the store
+// LoadConfByte loads a text configuration file as byte into a Store.
 func (s Store) LoadConfByte(b []byte, name string) (err error) {
 	reader := bufio.NewReader(bytes.NewReader(b))
 	err = s.parse(reader, name)
