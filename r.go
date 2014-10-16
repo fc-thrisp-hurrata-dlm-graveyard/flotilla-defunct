@@ -60,12 +60,14 @@ type (
 	}
 )
 
+// An adhoc *R not based on a route.
 func (a *App) tmpR(w http.ResponseWriter, req *http.Request) *R {
-	r := &R{Request: req}
+	r := &R{app: a, Request: req}
 	rw := &responseWriter{}
 	rw.reset(w)
 	r.rw = rw
 	r.RFunc = r.ctxFunctions(a.Env)
+	r.start()
 	return r
 }
 
@@ -105,7 +107,9 @@ func (r *R) start() {
 }
 
 func (r *R) release() {
-	r.RSession.SessionRelease(r.rw)
+	if r.RSession != nil {
+		r.RSession.SessionRelease(r.rw)
+	}
 }
 
 func (r *R) ctxFunctions(e *Env) ctxfuncs {
