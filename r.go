@@ -25,8 +25,6 @@ var (
 )
 
 type (
-	HttpStatuses map[int][]HandlerFunc
-
 	// Use cross-handler context functions by name and argument
 	RFunc interface {
 		Call(string, ...interface{}) (interface{}, error)
@@ -35,16 +33,15 @@ type (
 	// R is the primary context for passing & setting data between handlerfunc
 	// of a route, constructed from the *App and the app engine context data.
 	R struct {
-		index      int8
-		handlers   []HandlerFunc
-		rw         ResponseWriter
-		Request    *http.Request
-		RSession   session.SessionStore
-		RData      ctxdata
-		RFunc      ctxfuncs
-		app        *App
-		httpstatus HttpStatuses
-		Ctx        *engine.Ctx
+		index    int8
+		handlers []HandlerFunc
+		rw       ResponseWriter
+		Request  *http.Request
+		RSession session.SessionStore
+		RData    ctxdata
+		RFunc    ctxfuncs
+		app      *App
+		Ctx      *engine.Ctx
 	}
 
 	// A map as a stash for data in the R.
@@ -74,10 +71,9 @@ func (a *App) tmpR(w http.ResponseWriter, req *http.Request) *R {
 
 func (rt Route) newR() interface{} {
 	r := &R{index: -1,
-		handlers:   rt.handlers,
-		app:        rt.routergroup.app,
-		httpstatus: rt.routergroup.HttpStatuses,
-		RData:      make(ctxdata),
+		handlers: rt.handlers,
+		app:      rt.routergroup.app,
+		RData:    make(ctxdata),
 	}
 	r.RFunc = r.ctxFunctions(rt.routergroup.app.Env)
 	return r
@@ -142,21 +138,13 @@ func (r *R) Next() {
 	}
 }
 
-// Calls HandlerFunc from a group HttpStatuses attached to *R, if available
-// otherwise calls Ctx.Status with a fall through to Ctx.Abort in the Engine.
+// Calls Ctx.Status in the Engine, with a fall through to Ctx.Abort.
 func (r *R) Status(code int) {
-	if handlers, ok := r.httpstatus[code]; ok {
-		s := len(handlers)
-		for i := 0; i < s; i++ {
-			handlers[i](r)
-		}
-	} else {
-		r.Ctx.Status(code)
-	}
+	r.Ctx.Status(code)
 }
 
 // Immediately ends processing of current R and return the code, the same as
-// running r.HttpException, but less informative & not configurable.
+// running *R.Status*(), but less informative & not configurable.
 func (r *R) Abort(code int) {
 	r.Ctx.Abort(code)
 }

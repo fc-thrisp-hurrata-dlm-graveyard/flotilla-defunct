@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/thrisp/flotilla/session"
-
-	//flag "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
@@ -25,10 +23,13 @@ var (
 )
 
 type (
+	// A function that takes an App pointer to configure the App.
+	Configuration func(*App) error
+
 	envmap map[string]interface{}
 
-	// The engine environment containing configuration variables & their store
-	// as well as other information/data structures relevant to the engine.
+	// The App environment containing configuration variables & their store
+	// as well as other information/data structures relevant to the app.
 	Env struct {
 		Mode int
 		Store
@@ -40,6 +41,16 @@ type (
 		tplfunctions envmap
 	}
 )
+
+// SetConf takes any number of Configuration functions and to run the app through.
+func (a *App) SetConf(configurations ...Configuration) error {
+	for _, conf := range configurations {
+		if err := conf(a); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (e *Env) defaults() {
 	e.Store.adddefault("upload", "size", "10000000") // bytes
@@ -86,6 +97,15 @@ func (env *Env) MergeFlotilla(name string, f Flotilla) {
 		env.flotilla = make(map[string]Flotilla)
 	}
 	env.flotilla[name] = f
+}
+
+// Mode takes a string for development, production, or testing to set the App mode.
+// Used in flotilla.New() or *App.SetConf()
+func Mode(mode string) Configuration {
+	return func(a *App) error {
+		a.SetMode(mode)
+		return nil
+	}
 }
 
 // SetMode sets the running mode for the App env by a string.

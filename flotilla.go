@@ -2,7 +2,9 @@ package flotilla
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/thrisp/engine"
 )
@@ -41,33 +43,34 @@ func Empty() *App {
 	return &App{}
 }
 
-// Returns a new engine, with the minimum configuration.
-func New(name string) *App {
+// Returns a new App, with minimum configuration.
+func New(name string, conf ...Configuration) *App {
 	app := Empty()
 	app.Env = BaseEnv()
+	err := app.SetConf(conf...)
 	app.engine = app.defaultEngine()
 	app.RouteGroup = NewRouteGroup("/", app)
-	return app
-}
-
-// Returns a new engine instance with sensible defaults
-func Basic() *App {
-	app := New("flotilla")
-	app.Use(Logger())
+	app.Name = name
 	app.STATIC("static")
+	if err != nil {
+		panic(fmt.Sprintf("[FLOTILLA] problem creating new *App: %s", err))
+	}
 	return app
 }
 
 func (a *App) defaultEngine() *engine.Engine {
 	e, err := engine.New(engine.HTMLStatus(true))
+	if a.Mode != prodmode {
+		e.SetConf(engine.Logger(log.New(os.Stdout, "[FLOTILLA]", 0)))
+	}
 	if err != nil {
-		panic(fmt.Sprintf("Engine could not be created properly: %s", err))
+		panic(fmt.Sprintf("[FLOTILLA] engine could not be created properly: %s", err))
 	}
 	return e
 }
 
-// Extend takes anytthing satisfying the Flotilla interface, and integrates it
-// with the current Engine
+// Extend takes anything satisfying the Flotilla interface, and integrates it
+// with the current Engine.
 func (app *App) Extend(f Flotilla) {
 	blueprint := f.Blueprint()
 	app.MergeFlotilla(blueprint.Name, f)
@@ -75,8 +78,8 @@ func (app *App) Extend(f Flotilla) {
 	app.MergeEnv(blueprint.Env)
 }
 
-// Blueprint ensures the engine satisfies interface Flotilla by providing
-// essential information in the engine in a struct: Name, RouteGroups, and Env
+// Blueprint ensures the App satisfies interface Flotilla by providing
+// essential information in a struct: Name, RouteGroups, and Env.
 func (app *App) Blueprint() *Blueprint {
 	return &Blueprint{Name: app.Name,
 		Groups: app.Groups(),
@@ -101,8 +104,8 @@ func (app *App) Groups() (groups RouteGroups) {
 	return groups
 }
 
-// Routes returns an array of Route instances, with all engine routes from all
-// engine routergroups.
+// Routes returns an array of Route instances, with all App routes from all
+// App routergroups.
 func (app *App) Routes() Routes {
 	allroutes := make(Routes)
 	for _, group := range app.Groups() {
@@ -117,7 +120,7 @@ func (app *App) Routes() Routes {
 	return allroutes
 }
 
-// MergeRouteGroups merges an array of RouteGroup instances into the engine.
+// MergeRouteGroups merges an array of RouteGroup instances into the App.
 func (app *App) MergeRouteGroups(groups RouteGroups) {
 	for _, x := range groups {
 		if group, ok := app.existingGroup(x.prefix); ok {
@@ -167,7 +170,9 @@ func (app *App) init() {
 	if mm, err := app.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
 		app.engine.SetConf(engine.MaxFormMemory(mm))
 	}
-	// engine panic on by mode
+	if app.Mode == prodmode {
+		app.engine.SetConf(engine.ServePanic(false))
+	}
 }
 
 // ServeHTTP implements the http.Handler interface for the App.

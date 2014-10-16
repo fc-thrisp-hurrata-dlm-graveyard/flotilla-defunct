@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-func engineStaticFile(requested string, r *R) (exists bool) {
+func appStaticFile(requested string, r *R) (exists bool) {
 	exists = false
 	for _, dir := range r.app.StaticDirs() {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) (err error) {
@@ -20,7 +20,7 @@ func engineStaticFile(requested string, r *R) (exists bool) {
 	return exists
 }
 
-func engineAssetFile(requested string, r *R) (exists bool) {
+func appAssetFile(requested string, r *R) (exists bool) {
 	exists = false
 	f, err := r.app.Assets.Get(requested)
 	if err == nil {
@@ -33,9 +33,9 @@ func engineAssetFile(requested string, r *R) (exists bool) {
 func handleStatic(r *R) {
 	var exists bool = false
 	requested := filepath.Base(r.Request.URL.Path)
-	exists = engineStaticFile(requested, r)
+	exists = appStaticFile(requested, r)
 	if !exists {
-		exists = engineAssetFile(requested, r)
+		exists = appAssetFile(requested, r)
 	}
 	if !exists {
 		r.Abort(404)
