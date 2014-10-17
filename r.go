@@ -35,7 +35,7 @@ type (
 	R struct {
 		index    int8
 		handlers []HandlerFunc
-		rw       ResponseWriter
+		rw       engine.ResponseWriter
 		Request  *http.Request
 		RSession session.SessionStore
 		RData    ctxdata
@@ -61,11 +61,9 @@ type (
 )
 
 // An adhoc *R, not based on a route.
-func (a *App) tmpR(w http.ResponseWriter, req *http.Request) *R {
+func (a *App) tmpR(w engine.ResponseWriter, req *http.Request) *R {
 	r := &R{app: a, Request: req}
-	rw := &responseWriter{}
-	rw.reset(w)
-	r.rw = rw
+	r.rw = w
 	r.RFunc = r.ctxFunctions(a.Env)
 	r.start()
 	return r
