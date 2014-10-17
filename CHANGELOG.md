@@ -1,6 +1,14 @@
 ##Changelog
 
-###Flotilla 0.0.3 (tbd) 
+###Flotilla 0.1.0 (10.17.2014)
+
+- semantic versioning
+- 'R' type for per-route handled context
+- reintegrate Djinn(formerly Jingo) templating
+- tighter interaction of Engine statuses & panics
+- simple configuration functions, removal of flags 
+- package-level errors
+- essential testing, bugfixes, and refactoring  
 
 
 ###Flotilla 0.0.2 (9.24.2014)
@@ -8,7 +16,7 @@
 - extend Ctx with cross handler functions
 - simple flag parsing for run mode (production, development, testing)
 - cookie based sessions as a default with capacity for adding different backends
-- folded router & some lower-level-but-not-in-net/http(such as httpexceptions)
+- folded router & some lower-level-but-not-in-net/http(such as http statuses)
   functions into another package: [Engine](https://github.com/thrisp/engine)
 - url formatting by route, i.e. creating urls by route name & parameters
 

@@ -87,12 +87,12 @@ func (app *App) Blueprint() *Blueprint {
 }
 
 // Groups provides a flat array of RouteGroup instances attached to the App.
-func (app *App) Groups() (groups RouteGroups) {
-	type IterC func(r RouteGroups, fn IterC)
+func (app *App) Groups() (groups []*RouteGroup) {
+	type IterC func(r []*RouteGroup, fn IterC)
 
 	groups = append(groups, app.RouteGroup)
 
-	iter := func(r RouteGroups, fn IterC) {
+	iter := func(r []*RouteGroup, fn IterC) {
 		for _, x := range r {
 			groups = append(groups, x)
 			fn(x.children, fn)
@@ -121,7 +121,7 @@ func (app *App) Routes() Routes {
 }
 
 // MergeRouteGroups merges an array of RouteGroup instances into the App.
-func (app *App) MergeRouteGroups(groups RouteGroups) {
+func (app *App) MergeRouteGroups(groups []*RouteGroup) {
 	for _, x := range groups {
 		if group, ok := app.existingGroup(x.prefix); ok {
 			group.Use(x.Handlers...)

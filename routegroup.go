@@ -18,8 +18,6 @@ type (
 		group    *engine.Group
 		Handlers []HandlerFunc
 	}
-
-	RouteGroups []*RouteGroup
 )
 
 func (rg *RouteGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {

@@ -60,7 +60,7 @@ type (
 	}
 )
 
-// An adhoc *R not based on a route.
+// An adhoc *R, not based on a route.
 func (a *App) tmpR(w http.ResponseWriter, req *http.Request) *R {
 	r := &R{app: a, Request: req}
 	rw := &responseWriter{}
