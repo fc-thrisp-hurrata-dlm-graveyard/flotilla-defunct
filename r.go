@@ -188,6 +188,7 @@ func (r *R) WriteHeader(code int, contentType string) {
 func redirect(r *R, code int, location string) error {
 	if code >= 300 && code <= 308 {
 		http.Redirect(r.rw, r.Request, location, code)
+		r.rw.WriteHeaderNow()
 		return nil
 	} else {
 		return newError("Cannot send a redirect with status code %d", code)
