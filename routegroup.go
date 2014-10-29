@@ -50,7 +50,8 @@ func (rg *RouteGroup) pathNoLeadingSlash(path string) string {
 	return strings.TrimLeft(strings.Join([]string{rg.prefix, path}, "/"), "/")
 }
 
-// NewRouteGroup attaches a new RouteGroup to the App with the prefix.
+// NewRouteGroup returns a new RouteGroup associated with the App, with the
+// provided string prefix.
 func NewRouteGroup(prefix string, app *App) *RouteGroup {
 	return &RouteGroup{prefix: prefix,
 		app:    app,
@@ -59,7 +60,7 @@ func NewRouteGroup(prefix string, app *App) *RouteGroup {
 	}
 }
 
-// New Creates a new child router group with the base component string.
+// New Creates a new child RouteGroup with the base component string & handlers.
 func (rg *RouteGroup) New(component string, handlers ...HandlerFunc) *RouteGroup {
 	prefix := rg.pathFor(component)
 

@@ -1,6 +1,12 @@
 ##Changelog
 
-###Flotilla 0.1.0 (10.17.2014)
+### Flotilla 0.1.1 (tbd)
+
+- flash messaging
+- tighter association between response writing & session closure
+
+
+### Flotilla 0.1.0 (10.17.2014)
 
 - semantic versioning
 - 'R' type for per-route handled context
@@ -11,7 +17,7 @@
 - essential testing, bugfixes, and refactoring  
 
 
-###Flotilla 0.0.2 (9.24.2014)
+### Flotilla 0.0.2 (9.24.2014)
 
 - extend Ctx with cross handler functions
 - simple flag parsing for run mode (production, development, testing)
@@ -21,7 +27,7 @@
 - url formatting by route, i.e. creating urls by route name & parameters
 
 
-###Flotilla 0.0.1 (8.20.2014)
+### Flotilla 0.0.1 (8.20.2014)
 
 - reforked, renamed as Flotilla
 - ini style configuration read into app environment
@@ -30,6 +36,6 @@
 - provisions for binary static or template Asset inclusion per engine
  
 
-###Fleet 0.0.0 (7.22.2014)
+### Fleet 0.0.0 (7.22.2014)
 
 - forked from https://github.com/gin-gonic/gin

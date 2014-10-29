@@ -88,7 +88,7 @@ func (s Store) parse(reader *bufio.Reader, filename string) (err error) {
 		}
 		section, err = s.parseLine(section, line)
 		if err != nil {
-			return newError("flotilla configuration parser: syntax error at '%s:%d'.", filename, lineno)
+			return newError("[FLOTILLA] configuration parser: syntax error at '%s:%d'.", filename, lineno)
 		}
 	}
 	return err

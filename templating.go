@@ -1,6 +1,7 @@
 package flotilla
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -10,7 +11,13 @@ import (
 )
 
 var (
-	builtintplfuncs = map[string]interface{}{}
+	builtintplfuncs = map[string]interface{}{
+		"Testfunc": func(s string) string {
+			fmt.Printf("template testfunc triggered\n")
+			return fmt.Sprintf("TESTFUNK TRIGGERED: %s", s)
+		},
+		//"getflashmessages": R.GetFlashMessages,
+	}
 )
 
 type (
@@ -37,7 +44,7 @@ type (
 func NewTemplator(e *Env) *templator {
 	j := &templator{Djinn: djinn.New()}
 	j.UpdateTemplateDirs(workingTemplates)
-	j.AddLoaders(NewLoader(e))
+	j.SetConf(djinn.Loaders(NewLoader(e)), djinn.TemplateFunctions(builtintplfuncs))
 	return j
 }
 

@@ -146,13 +146,3 @@ func pathDropFilepathSplat(path string) string {
 	}
 	return path
 }
-
-// ThirdEye is a middleware to introspect the app var in the R, inaccessible
-// to external packages.
-func ThirdEye(r *R) {
-	var rts []string
-	for _, route := range r.app.Routes() {
-		rts = append(rts, fmt.Sprintf("%+v\n", route))
-	}
-	fmt.Printf("---ThirdEye\n{App: %+v,\nGroups: %+v,\nRoutes: %+v,\nEnv: %+v,\nStore: %+v,\nTemplator: %+v,\nStaticDirs: %+v}\n---ThirdEye\n", r.app, r.app.Groups(), rts, r.app.Env, r.app.Env.Store, r.app.Env.Templator, r.app.Env.StaticDirs())
-}

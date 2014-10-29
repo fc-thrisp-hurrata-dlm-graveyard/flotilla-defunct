@@ -170,20 +170,19 @@ func (env *Env) defaultsessionconfig() string {
 	return fmt.Sprintf(`{"cookieName":"flotillasessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"maxage\": 9000,\"cookieName\":\"flotillasessionid\",\"securityKey\":\"%s\"}"}`, secret)
 }
 
-func (env *Env) defaultsessionmanager() (*session.Manager, error) {
-	return session.NewManager("cookie", env.defaultsessionconfig())
+func (env *Env) defaultsessionmanager() *session.Manager {
+	sm, err := session.NewManager("cookie", env.defaultsessionconfig())
+	if err != nil {
+		panic(fmt.Sprintf("Problem with [FLOTILLA] default session manager: %s", err))
+	}
+	return sm
 }
 
 // SessionInit initializes the session using the SessionManager, or default if
 // no session manage is specified.
 func (env *Env) SessionInit() {
 	if env.SessionManager == nil {
-		sm, err := env.defaultsessionmanager()
-		if err == nil {
-			env.SessionManager = sm
-		} else {
-			panic(fmt.Sprintf("Problem with default session manager: %s", err))
-		}
+		env.SessionManager = env.defaultsessionmanager()
 	}
 	go env.SessionManager.GC()
 }

@@ -16,20 +16,17 @@ const (
 
 var (
 	builtinctxfuncs = map[string]interface{}{
-		"redirect":       redirect,
-		"servedata":      servedata,
-		"servefile":      servefile,
-		"rendertemplate": rendertemplate,
-		"urlfor":         urlfor,
+		"redirect":         redirect,
+		"servedata":        servedata,
+		"servefile":        servefile,
+		"rendertemplate":   rendertemplate,
+		"urlfor":           urlfor,
+		"flash":            flash,
+		"getflashmessages": getflashmessages,
 	}
 )
 
 type (
-	// Use cross-handler context functions by name and argument
-	RFunc interface {
-		Call(string, ...interface{}) (interface{}, error)
-	}
-
 	// R is the primary context for passing & setting data between handlerfunc
 	// of a route, constructed from the *App and the app engine context data.
 	R struct {
@@ -40,7 +37,7 @@ type (
 		RSession session.SessionStore
 		RData    ctxdata
 		RFunc    ctxfuncs
-		app      *App
+		App      *App
 		Ctx      *engine.Ctx
 	}
 
@@ -62,7 +59,7 @@ type (
 
 // An adhoc *R, not based on a route.
 func (a *App) tmpR(w engine.ResponseWriter, req *http.Request) *R {
-	r := &R{app: a, Request: req}
+	r := &R{App: a, Request: req}
 	r.rw = w
 	r.RFunc = r.ctxFunctions(a.Env)
 	r.start()
@@ -72,7 +69,7 @@ func (a *App) tmpR(w engine.ResponseWriter, req *http.Request) *R {
 func (rt Route) newR() interface{} {
 	r := &R{index: -1,
 		handlers: rt.handlers,
-		app:      rt.routergroup.app,
+		App:      rt.routergroup.app,
 		RData:    make(ctxdata),
 	}
 	r.RFunc = r.ctxFunctions(rt.routergroup.app.Env)
@@ -101,7 +98,7 @@ func (rt Route) putR(r *R) {
 }
 
 func (r *R) start() {
-	r.RSession = r.app.SessionManager.SessionStart(r.rw, r.Request)
+	r.RSession = r.App.SessionManager.SessionStart(r.rw, r.Request)
 }
 
 func (r *R) release() {
@@ -188,7 +185,9 @@ func (r *R) WriteHeader(code int, contentType string) {
 func redirect(r *R, code int, location string) error {
 	if code >= 300 && code <= 308 {
 		http.Redirect(r.rw, r.Request, location, code)
+		r.release()
 		r.rw.WriteHeaderNow()
+		//r.rw.Write([]byte("redirecting..."))
 		return nil
 	} else {
 		return newError("Cannot send a redirect with status code %d", code)
@@ -234,7 +233,7 @@ func templatedata(r *R, data interface{}) *tdata {
 func rendertemplate(r *R, name string, data interface{}) error {
 	td := templatedata(r, data)
 	r.release()
-	err := r.app.Templator.Render(r.rw, name, td)
+	err := r.App.Templator.Render(r.rw, name, td)
 	return err
 }
 
@@ -245,7 +244,7 @@ func (r *R) RenderTemplate(name string, data interface{}) {
 }
 
 func urlfor(r *R, route string, external bool, params []string) (string, error) {
-	if route, ok := r.app.Routes()[route]; ok {
+	if route, ok := r.App.Routes()[route]; ok {
 		routeurl, _ := route.Url(params...)
 		if routeurl != nil {
 			if external {
@@ -275,4 +274,44 @@ func (r *R) UrlExternal(route string, params ...string) string {
 		return err.Error()
 	}
 	return ret.(string)
+}
+
+func flash(r *R, category string, message string) error {
+	if fl := r.RSession.Get("_flashes"); fl != nil {
+		if fls, ok := fl.(map[string]string); ok {
+			fls[category] = message
+			r.RSession.Set("_flashes", fls)
+		}
+	} else {
+		fl := make(map[string]string)
+		fl[category] = message
+		r.RSession.Set("_flashes", fl)
+	}
+	return nil
+}
+
+// Sets a flash message retrievable from the session.
+func (r *R) Flash(category string, message string) {
+	r.Call("flash", r, category, message)
+}
+
+func getflashmessages(r *R, categories []string) []string {
+	var ret []string
+	if fl := r.RSession.Get("_flashes"); fl != nil {
+		if fls, ok := fl.(map[string]string); ok {
+			for k, v := range fls {
+				if existsIn(k, categories) {
+					ret = append(ret, v)
+				}
+			}
+		}
+	}
+	r.RSession.Delete("_flashes")
+	return ret
+}
+
+// Gets flash messages set in the session by provided categories.
+func (r *R) GetFlashMessages(categories ...string) []string {
+	ret, _ := r.Call("getflashmessages", r, categories)
+	return ret.([]string)
 }
