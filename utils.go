@@ -74,7 +74,7 @@ func valueFunc(fn interface{}) reflect.Value {
 		panic(newError("Provided:(%+v, type: %T), but it is not a function", fn, fn))
 	}
 	if !goodFunc(v.Type()) {
-		panic(newError("Cannot add context method %q with %d results\nreturn must be 1 value, or 1 value and 1 error value", fn, v.Type().NumOut()))
+		panic(newError("Cannot add context function %q with %d results\nreturn must be 1 value, or 1 value and 1 error value", fn, v.Type().NumOut()))
 	}
 	return v
 }

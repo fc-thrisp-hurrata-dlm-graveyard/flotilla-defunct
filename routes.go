@@ -19,7 +19,7 @@ var (
 type (
 	// Data about a route for use & reuse within App.
 	Route struct {
-		cache       sync.Pool
+		p           sync.Pool
 		routergroup *RouteGroup
 		static      bool
 		method      string

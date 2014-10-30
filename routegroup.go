@@ -119,7 +119,7 @@ func (rg *RouteGroup) Handle(route *Route) {
 	route.routergroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
 	route.path = rg.pathFor(route.base)
-	route.cache.New = route.newCtx
+	route.p.New = route.newCtx
 	rg.addRoute(route)
 	// pass to engine group, using route base to register handle with the engine
 	rg.group.Handle(route.base, route.method, route.handle)

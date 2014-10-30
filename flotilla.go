@@ -13,8 +13,8 @@ type (
 	// A HandlerFunc is any function taking a single parameter, *R
 	HandlerFunc func(*Ctx)
 
-	// The base of running a Flotilla instance is an Engine struct with a Name,
-	// an Env with information specific to running the engine, and a chain of
+	// The base of running a Flotilla instance is an App struct with a Name,
+	// an Env with information specific to running the App, and a chain of
 	// RouteGroups
 	App struct {
 		engine *engine.Engine
@@ -23,30 +23,30 @@ type (
 		*RouteGroup
 	}
 
-	// A Blueprint struct is essential information about an engine for export
-	// to another engine
-	Blueprint struct {
+	// A Transport struct contains essential information about an App for export
+	// to another App.
+	Transport struct {
 		Name   string
 		Prefix string
 		Groups []*RouteGroup
 		Env    *Env
 	}
 
-	// The Flotilla interface returns a Blueprint struct.
+	// The Flotilla interface returns a Transport struct.
 	Flotilla interface {
-		Blueprint() *Blueprint
+		Transport() *Transport
 	}
 )
 
-// Returns an empty App instance
+// Returns an empty App instance with no configuration.
 func Empty() *App {
-	return &App{}
+	return &App{Env: EmptyEnv()}
 }
 
 // Returns a new App, with minimum configuration.
 func New(name string, conf ...Configuration) *App {
 	app := Empty()
-	app.Env = BaseEnv()
+	app.Env.NewEnv()
 	err := app.SetConf(conf...)
 	app.engine = app.defaultEngine()
 	app.RouteGroup = NewRouteGroup("/", app)
@@ -72,16 +72,16 @@ func (a *App) defaultEngine() *engine.Engine {
 // Extend takes anything satisfying the Flotilla interface, and integrates it
 // with the current Engine.
 func (app *App) Extend(f Flotilla) {
-	blueprint := f.Blueprint()
-	app.MergeFlotilla(blueprint.Name, f)
-	app.MergeRouteGroups(blueprint.Groups)
-	app.MergeEnv(blueprint.Env)
+	transport := f.Transport()
+	app.MergeFlotilla(transport.Name, f)
+	app.MergeRouteGroups(transport.Groups)
+	app.MergeEnv(transport.Env)
 }
 
-// Blueprint ensures the App satisfies interface Flotilla by providing
+// Transport ensures the App satisfies interface Flotilla by providing
 // essential information in a struct: Name, RouteGroups, and Env.
-func (app *App) Blueprint() *Blueprint {
-	return &Blueprint{Name: app.Name,
+func (app *App) Transport() *Transport {
+	return &Transport{Name: app.Name,
 		Groups: app.Groups(),
 		Env:    app.Env}
 }

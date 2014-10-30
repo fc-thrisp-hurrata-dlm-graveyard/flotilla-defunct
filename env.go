@@ -23,9 +23,6 @@ var (
 )
 
 type (
-	// A function that takes an App pointer to configure the App.
-	Configuration func(*App) error
-
 	envmap map[string]interface{}
 
 	// The App environment containing configuration variables & their store
@@ -42,31 +39,25 @@ type (
 	}
 )
 
-// SetConf takes any number of Configuration functions and to run the app through.
-func (a *App) SetConf(configurations ...Configuration) error {
-	for _, conf := range configurations {
-		if err := conf(a); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (e *Env) defaults() {
 	e.Store.adddefault("upload", "size", "10000000")   // bytes
 	e.Store.adddefault("secret", "key", "change-this") // weak default value
 }
 
-// BaseEnv produces a base environment useful to new app instances.
-func BaseEnv() *Env {
+// EmptyEnv produces an Env with intialization but no configuration.
+func EmptyEnv() *Env {
 	e := &Env{Store: make(Store)}
-	e.Templator = NewTemplator(e)
 	e.ctxfunctions = make(envmap)
-	e.AddCtxFuncs(builtinctxfuncs)
 	e.tplfunctions = make(envmap)
-	e.AddTplFuncs(builtintplfuncs)
-	e.defaults()
 	return e
+}
+
+// NewEnv configures an intialized Env.
+func (env *Env) NewEnv() {
+	env.Templator = NewTemplator(env)
+	env.AddCtxFuncs(builtinctxfuncs)
+	env.AddTplFuncs(builtintplfuncs)
+	env.defaults()
 }
 
 // Merges an outside env instance with the existing app.Env
@@ -97,15 +88,6 @@ func (env *Env) MergeFlotilla(name string, f Flotilla) {
 		env.flotilla = make(map[string]Flotilla)
 	}
 	env.flotilla[name] = f
-}
-
-// Mode takes a string for development, production, or testing to set the App mode.
-// Used in flotilla.New() or *App.SetConf()
-func Mode(mode string) Configuration {
-	return func(a *App) error {
-		a.SetMode(mode)
-		return nil
-	}
 }
 
 // SetMode sets the running mode for the App env by a string.
@@ -157,12 +139,28 @@ func (env *Env) AddTplFuncs(fns envmap) {
 	}
 }
 
+// AddCtxFunc adds a single Ctx function with the name string, checking that
+// the function is a valid function returning 1 value, or 1 value and 1 error
+// value.
+func (env *Env) AddCtxFunc(name string, fn interface{}) error {
+	err := validctxfunc(fn)
+	if err == nil {
+		env.ctxfunctions[name] = fn
+		return nil
+	}
+	return err
+}
+
 // AddCtxFuncs stores cross-handler functions in the Env as intermediate staging
 // for later use by R context.
-func (env *Env) AddCtxFuncs(fns envmap) {
+func (env *Env) AddCtxFuncs(fns envmap) error {
 	for k, v := range fns {
-		env.ctxfunctions[k] = v
+		err := env.AddCtxFunc(k, v)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (env *Env) defaultsessionconfig() string {
