@@ -1,7 +1,6 @@
 package flotilla
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,11 +11,7 @@ import (
 
 var (
 	builtintplfuncs = map[string]interface{}{
-		"Testfunc": func(s string) string {
-			fmt.Printf("template testfunc triggered\n")
-			return fmt.Sprintf("TESTFUNK TRIGGERED: %s", s)
-		},
-		//"getflashmessages": R.GetFlashMessages,
+		"getflashmessages": tgetflashmessages,
 	}
 )
 
@@ -42,7 +37,7 @@ type (
 )
 
 func NewTemplator(e *Env) *templator {
-	j := &templator{Djinn: djinn.New()}
+	j := &templator{Djinn: djinn.Empty()}
 	j.UpdateTemplateDirs(workingTemplates)
 	j.SetConf(djinn.Loaders(NewLoader(e)), djinn.TemplateFunctions(builtintplfuncs))
 	return j
@@ -101,4 +96,14 @@ func (fl *Loader) Load(name string) (string, error) {
 		}
 	}
 	return "", newError("Template %s does not exist", name)
+}
+
+func tgetflashmessages(t tdata, categories ...string) []string {
+	var ret []string
+	for k, v := range t.Flash {
+		if existsIn(k, categories) {
+			ret = append(ret, v)
+		}
+	}
+	return ret
 }

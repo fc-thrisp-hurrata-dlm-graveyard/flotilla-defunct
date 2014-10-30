@@ -16,13 +16,14 @@ const (
 
 var (
 	builtinctxfuncs = map[string]interface{}{
+		"allflashmessages": allflashmessages,
+		"flash":            flash,
+		"flashmessages":    flashmessages,
 		"redirect":         redirect,
+		"rendertemplate":   rendertemplate,
 		"servedata":        servedata,
 		"servefile":        servefile,
-		"rendertemplate":   rendertemplate,
 		"urlfor":           urlfor,
-		"flash":            flash,
-		"getflashmessages": getflashmessages,
 	}
 )
 
@@ -54,6 +55,7 @@ type (
 		Request *http.Request
 		Session session.SessionStore
 		RData   ctxdata
+		Flash   map[string]string
 	}
 )
 
@@ -172,8 +174,8 @@ func (r *R) MustGet(key string) interface{} {
 	return value
 }
 
-// WriteHeader writes the specified code and content type to the header.
-func (r *R) WriteHeader(code int, contentType string) {
+// WriteToHeader writes the specified code and content type to the header.
+func (r *R) WriteToHeader(code int, contentType string) {
 	if len(contentType) > 0 {
 		r.rw.Header().Set("Content-Type", contentType)
 	}
@@ -187,7 +189,6 @@ func redirect(r *R, code int, location string) error {
 		http.Redirect(r.rw, r.Request, location, code)
 		r.release()
 		r.rw.WriteHeaderNow()
-		//r.rw.Write([]byte("redirecting..."))
 		return nil
 	} else {
 		return newError("Cannot send a redirect with status code %d", code)
@@ -202,7 +203,7 @@ func (r *R) Redirect(code int, location string) {
 
 func servedata(r *R, code int, data []byte) error {
 	r.release()
-	r.WriteHeader(code, "text/plain")
+	r.WriteToHeader(code, "text/plain")
 	r.rw.Write(data)
 	return nil
 }
@@ -214,6 +215,7 @@ func (r *R) ServeData(code int, data []byte) {
 }
 
 func servefile(r *R, f http.File) error {
+	r.release()
 	fi, err := f.Stat()
 	if err == nil {
 		http.ServeContent(r.rw, r.Request, fi.Name(), fi.ModTime(), f)
@@ -227,7 +229,13 @@ func (r *R) ServeFile(f http.File) {
 }
 
 func templatedata(r *R, data interface{}) *tdata {
-	return &tdata{data, r.Request, r.RSession, r.RData}
+	return &tdata{
+		Data:    data,
+		Request: r.Request,
+		Session: r.RSession,
+		RData:   r.RData,
+		Flash:   allflashmessages(r),
+	}
 }
 
 func rendertemplate(r *R, name string, data interface{}) error {
@@ -295,23 +303,42 @@ func (r *R) Flash(category string, message string) {
 	r.Call("flash", r, category, message)
 }
 
-func getflashmessages(r *R, categories []string) []string {
+func flashmessages(r *R, categories []string) []string {
 	var ret []string
 	if fl := r.RSession.Get("_flashes"); fl != nil {
 		if fls, ok := fl.(map[string]string); ok {
 			for k, v := range fls {
 				if existsIn(k, categories) {
 					ret = append(ret, v)
+					delete(fls, k)
 				}
 			}
+			r.RSession.Set("_flashes", fls)
+		}
+	}
+	return ret
+}
+
+// Gets flash messages set in the session by provided categories, deleting those
+// returned from the session.
+func (r *R) FlashMessages(categories ...string) []string {
+	ret, _ := r.Call("flashmessages", r, categories)
+	return ret.([]string)
+}
+
+func allflashmessages(r *R) map[string]string {
+	var ret map[string]string
+	if fl := r.RSession.Get("_flashes"); fl != nil {
+		if fls, ok := fl.(map[string]string); ok {
+			ret = fls
 		}
 	}
 	r.RSession.Delete("_flashes")
 	return ret
 }
 
-// Gets flash messages set in the session by provided categories.
-func (r *R) GetFlashMessages(categories ...string) []string {
-	ret, _ := r.Call("getflashmessages", r, categories)
-	return ret.([]string)
+// Retrieves all flash messages
+func (r *R) AllFlashMessages() map[string]string {
+	ret, _ := r.Call("allflashmessages", r)
+	return ret.(map[string]string)
 }

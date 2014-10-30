@@ -3,7 +3,6 @@
 ### Flotilla 0.1.1 (tbd)
 
 - flash messaging
-- tighter association between response writing & session closure
 
 
 ### Flotilla 0.1.0 (10.17.2014)

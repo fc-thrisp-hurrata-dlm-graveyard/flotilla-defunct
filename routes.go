@@ -40,7 +40,7 @@ func (rt *Route) handle(c *engine.Ctx) {
 }
 
 // NewRoute returns a new Route from a string method, a string path, a boolean
-// indicating if the is static, and an aray of HandlerFunc
+// indicating if the route is static, and an aray of HandlerFunc
 func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *Route {
 	rt := &Route{method: method, static: static, handlers: handlers}
 	if static {
