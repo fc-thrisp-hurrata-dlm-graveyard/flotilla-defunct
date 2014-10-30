@@ -33,8 +33,8 @@ type (
 	Routes map[string]*Route
 )
 
-func (rt *Route) handle(c *engine.Ctx) {
-	rq := rt.getR(c)
+func (rt *Route) handle(ec *engine.Ctx) {
+	rq := rt.getCtx(ec)
 	rq.Next()
 	rt.putR(rq)
 }

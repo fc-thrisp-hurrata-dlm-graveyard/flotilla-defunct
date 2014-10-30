@@ -11,7 +11,7 @@ import (
 
 type (
 	// A HandlerFunc is any function taking a single parameter, *R
-	HandlerFunc func(*R)
+	HandlerFunc func(*Ctx)
 
 	// The base of running a Flotilla instance is an Engine struct with a Name,
 	// an Env with information specific to running the engine, and a chain of

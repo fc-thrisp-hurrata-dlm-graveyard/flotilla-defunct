@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-//func init() {}
-
 func PerformRequest(r http.Handler, method, path string) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
 	w := httptest.NewRecorder()
@@ -30,7 +28,7 @@ func methodNotMethod(method string) string {
 func testRouteOK(method string, t *testing.T) {
 	passed := false
 	f := New("flotilla_testRouteOK")
-	r := NewRoute(method, "/test", false, []HandlerFunc{func(r *R) { passed = true }})
+	r := NewRoute(method, "/test", false, []HandlerFunc{func(ctx *Ctx) { passed = true }})
 	f.Handle(r)
 	f.Env.SessionInit()
 
@@ -56,7 +54,7 @@ func TestRouteOK(t *testing.T) {
 func testGroupOK(method string, t *testing.T) {
 	passed := false
 	f := New("flotilla_testGroupOK")
-	f.Handle(NewRoute(method, "/test_group", false, []HandlerFunc{func(r *R) { passed = true }}))
+	f.Handle(NewRoute(method, "/test_group", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
 	f.Env.SessionInit()
 
 	w := PerformRequest(f, method, "/test_group")
@@ -82,7 +80,7 @@ func testSubGroupOK(method string, t *testing.T) {
 	passed := false
 	f := New("flotilla_testsubgroupOK")
 	g := f.New("/test_group")
-	g.Handle(NewRoute(method, "/test_group_subgroup", false, []HandlerFunc{func(r *R) { passed = true }}))
+	g.Handle(NewRoute(method, "/test_group_subgroup", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
 	f.Env.SessionInit()
 
 	w := PerformRequest(f, method, "/test_group/test_group_subgroup")
@@ -108,7 +106,7 @@ func testRouteNotOK(method string, t *testing.T) {
 	passed := false
 	f := New("flotilla_testroutenotok")
 	othermethod := methodNotMethod(method)
-	f.Handle(NewRoute(othermethod, "/test", false, []HandlerFunc{func(r *R) { passed = true }}))
+	f.Handle(NewRoute(othermethod, "/test", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
 	f.Env.SessionInit()
 
 	w := PerformRequest(f, method, "/test")
@@ -228,7 +226,7 @@ func testExtensionRouteOK(method string, t *testing.T) {
 	passed := false
 	r := New(fmt.Sprintf("flotilla_test_testExtensionRouteOK_base_%s", method))
 	r1 := New(fmt.Sprintf("flotilla_test_testExtensionRouteOK_extension_%s", method))
-	rt := NewRoute(method, "/extension_test", false, []HandlerFunc{func(r *R) {
+	rt := NewRoute(method, "/extension_test", false, []HandlerFunc{func(ctx *Ctx) {
 		passed = true
 	}})
 	r1.Handle(rt)

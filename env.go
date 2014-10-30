@@ -29,7 +29,7 @@ type (
 	envmap map[string]interface{}
 
 	// The App environment containing configuration variables & their store
-	// as well as other information/data structures relevant to the app.
+	// as well as other info & data relevant to the app.
 	Env struct {
 		Mode int
 		Store
@@ -53,8 +53,8 @@ func (a *App) SetConf(configurations ...Configuration) error {
 }
 
 func (e *Env) defaults() {
-	e.Store.adddefault("upload", "size", "10000000") // bytes
-	e.Store.adddefault("secret", "key", "-")         // weak default value
+	e.Store.adddefault("upload", "size", "10000000")   // bytes
+	e.Store.adddefault("secret", "key", "change-this") // weak default value
 }
 
 // BaseEnv produces a base environment useful to new app instances.

@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 )
 
-func appStaticFile(requested string, r *R) (exists bool) {
+func appStaticFile(requested string, ctx *Ctx) (exists bool) {
 	exists = false
-	for _, dir := range r.App.StaticDirs() {
+	for _, dir := range ctx.App.StaticDirs() {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) (err error) {
 			if filepath.Base(path) == requested {
 				f, _ := os.Open(path)
-				r.ServeFile(f)
+				ctx.ServeFile(f)
 				exists = true
 			}
 			return err
@@ -20,26 +20,26 @@ func appStaticFile(requested string, r *R) (exists bool) {
 	return exists
 }
 
-func appAssetFile(requested string, r *R) (exists bool) {
+func appAssetFile(requested string, ctx *Ctx) (exists bool) {
 	exists = false
-	f, err := r.App.Assets.Get(requested)
+	f, err := ctx.App.Assets.Get(requested)
 	if err == nil {
-		r.ServeFile(f)
+		ctx.ServeFile(f)
 		exists = true
 	}
 	return exists
 }
 
-func handleStatic(r *R) {
+func handleStatic(ctx *Ctx) {
 	var exists bool = false
-	requested := filepath.Base(r.Request.URL.Path)
-	exists = appStaticFile(requested, r)
+	requested := filepath.Base(ctx.Request.URL.Path)
+	exists = appStaticFile(requested, ctx)
 	if !exists {
-		exists = appAssetFile(requested, r)
+		exists = appAssetFile(requested, ctx)
 	}
 	if !exists {
-		r.Abort(404)
+		ctx.Abort(404)
 	} else {
-		r.rw.WriteHeaderNow()
+		ctx.rw.WriteHeaderNow()
 	}
 }

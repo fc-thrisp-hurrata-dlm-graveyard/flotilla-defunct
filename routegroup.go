@@ -119,7 +119,7 @@ func (rg *RouteGroup) Handle(route *Route) {
 	route.routergroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
 	route.path = rg.pathFor(route.base)
-	route.cache.New = route.newR
+	route.cache.New = route.newCtx
 	rg.addRoute(route)
 	// pass to engine group, using route base to register handle with the engine
 	rg.group.Handle(route.base, route.method, route.handle)
@@ -162,7 +162,7 @@ func (rg *RouteGroup) STATIC(path string) {
 // Custom HttpStatus for the group, set and called from engine HttpStatuses
 func (rg *RouteGroup) StatusHandle(code int, handlers ...HandlerFunc) {
 	StatusHandler := func(c *engine.Ctx) {
-		statusCtx := rg.app.tmpR(c.RW, c.Request)
+		statusCtx := rg.app.tmpCtx(c.RW, c.Request)
 		s := len(handlers)
 		for i := 0; i < s; i++ {
 			handlers[i](statusCtx)
