@@ -111,8 +111,8 @@ func (ctx *Ctx) Status(code int) {
 	ctx.Ctx.Status(code)
 }
 
-// Immediately ends processing of current R and return the code, the same as
-// calling *R.Status, but less informative & not configurable.
+// Immediately ends processing of current Ctx and return the code, the same as
+// calling *Ctx.Status, but less informative & not configurable.
 func (ctx *Ctx) Abort(code int) {
 	ctx.Ctx.Abort(code)
 }
