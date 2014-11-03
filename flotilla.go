@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	// A HandlerFunc is any function taking a single parameter, *R
+	// A HandlerFunc is any function taking a single parameter, *Ctx
 	HandlerFunc func(*Ctx)
 
 	// The base of running a Flotilla instance is an App struct with a Name,
@@ -23,18 +23,17 @@ type (
 		*RouteGroup
 	}
 
-	// A Transport struct contains essential information about an App for export
+	// A Blueprint struct contains essential information about an App for export
 	// to another App.
-	Transport struct {
+	Blueprint struct {
 		Name   string
-		Prefix string
 		Groups []*RouteGroup
 		Env    *Env
 	}
 
-	// The Flotilla interface returns a Transport struct.
+	// The Flotilla interface returns a Blueprint struct.
 	Flotilla interface {
-		Transport() *Transport
+		Blueprint() *Blueprint
 	}
 )
 
@@ -46,12 +45,15 @@ func Empty() *App {
 // Returns a new App, with minimum configuration.
 func New(name string, conf ...Configuration) *App {
 	app := Empty()
-	app.Env.NewEnv()
+	app.Env.BaseEnv()
 	err := app.SetConf(conf...)
 	app.engine = app.defaultEngine()
 	app.RouteGroup = NewRouteGroup("/", app)
 	app.Name = name
 	app.STATIC("static")
+	if app.Env.Templator == nil {
+		app.SetConf(Templating(NewTemplator(app.Env)))
+	}
 	if err != nil {
 		panic(fmt.Sprintf("[FLOTILLA] problem creating new *App: %s", err))
 	}
@@ -72,28 +74,28 @@ func (a *App) defaultEngine() *engine.Engine {
 // Extend takes anything satisfying the Flotilla interface, and integrates it
 // with the current Engine.
 func (app *App) Extend(f Flotilla) {
-	transport := f.Transport()
-	app.MergeFlotilla(transport.Name, f)
-	app.MergeRouteGroups(transport.Groups)
-	app.MergeEnv(transport.Env)
+	blueprint := f.Blueprint()
+	app.MergeFlotilla(blueprint.Name, f)
+	app.MergeRouteGroups(blueprint.Groups)
+	app.MergeEnv(blueprint.Env)
 }
 
-// Transport ensures the App satisfies interface Flotilla by providing
+// Blueprint ensures the App satisfies interface Flotilla by providing
 // essential information in a struct: Name, RouteGroups, and Env.
-func (app *App) Transport() *Transport {
-	return &Transport{Name: app.Name,
+func (app *App) Blueprint() *Blueprint {
+	return &Blueprint{Name: app.Name,
 		Groups: app.Groups(),
 		Env:    app.Env}
 }
 
 // Groups provides a flat array of RouteGroup instances attached to the App.
 func (app *App) Groups() (groups []*RouteGroup) {
-	type IterC func(r []*RouteGroup, fn IterC)
+	type IterC func(rs []*RouteGroup, fn IterC)
 
 	groups = append(groups, app.RouteGroup)
 
-	iter := func(r []*RouteGroup, fn IterC) {
-		for _, x := range r {
+	iter := func(rs []*RouteGroup, fn IterC) {
+		for _, x := range rs {
 			groups = append(groups, x)
 			fn(x.children, fn)
 		}
@@ -122,13 +124,13 @@ func (app *App) Routes() Routes {
 
 // MergeRouteGroups merges an array of RouteGroup instances into the App.
 func (app *App) MergeRouteGroups(groups []*RouteGroup) {
-	for _, x := range groups {
-		if group, ok := app.existingGroup(x.prefix); ok {
-			group.Use(x.Handlers...)
-			app.MergeRoutes(group, x.routes)
+	for _, g := range groups {
+		if group, ok := app.existingGroup(g.prefix); ok {
+			group.Use(g.Handlers...)
+			app.MergeRoutes(group, g.routes)
 		} else {
-			newgroup := app.RouteGroup.New(x.prefix, x.Handlers...)
-			app.MergeRoutes(newgroup, x.routes)
+			newgroup := app.RouteGroup.New(g.prefix, g.Handlers...)
+			app.MergeRoutes(newgroup, g.routes)
 		}
 	}
 }

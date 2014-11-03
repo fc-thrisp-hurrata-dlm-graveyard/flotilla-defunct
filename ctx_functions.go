@@ -20,9 +20,8 @@ var (
 func validctxfunc(fn interface{}) error {
 	if goodFunc(valueFunc(fn).Type()) {
 		return nil
-	} else {
-		return newError("function %q is not a valid CtxFunc; must be a function and return must be 1 value, or 1 value and 1 error value", fn)
 	}
+	return newError("function %q is not a valid Flotilla Ctx function; must be a function and return must be 1 value, or 1 value and 1 error value", fn)
 }
 
 func makectxfuncs(e *Env) ctxfuncs {
@@ -137,7 +136,7 @@ func flash(ctx *Ctx, category string, message string) error {
 	return nil
 }
 
-// Sets a flash message retrievable from the session.
+// Sets a flash message in the session with a category and a message.
 func (ctx *Ctx) Flash(category string, message string) {
 	ctx.Call("flash", ctx, category, message)
 }
@@ -158,8 +157,7 @@ func flashmessages(ctx *Ctx, categories []string) []string {
 	return ret
 }
 
-// Gets flash messages set in the session by provided categories, deleting those
-// returned from the session.
+// Gets flash messages set in the session by provided categories.
 func (ctx *Ctx) FlashMessages(categories ...string) []string {
 	ret, _ := ctx.Call("flashmessages", ctx, categories)
 	return ret.([]string)
@@ -176,7 +174,7 @@ func allflashmessages(ctx *Ctx) map[string]string {
 	return ret
 }
 
-// Retrieves all flash messages
+// Gets all flash messages set in the session.
 func (ctx *Ctx) AllFlashMessages() map[string]string {
 	ret, _ := ctx.Call("allflashmessages", ctx)
 	return ret.(map[string]string)

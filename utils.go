@@ -20,20 +20,11 @@ func existsIn(s string, l []string) bool {
 }
 
 func dirAdd(dir string, dirs []string) []string {
-	//adddir := dirAbs(dir)
 	if dirAppendable(dir, dirs) {
 		dirs = append(dirs, dir)
 	}
 	return dirs
 }
-
-//func dirAbs(dir string) string {
-//	if filepath.IsAbs(dir) {
-//		return dir
-//	} else {
-//		return filepath.Join(workingPath, dir)
-//	}
-//}
 
 func dirAppendable(dir string, dirs []string) bool {
 	for _, d := range dirs {

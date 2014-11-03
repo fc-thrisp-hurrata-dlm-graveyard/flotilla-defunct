@@ -62,6 +62,13 @@ func CtxFuncs(fns envmap) Configuration {
 	}
 }
 
+func Templating(t Templator) Configuration {
+	return func(a *App) error {
+		a.Env.Templator = t
+		return nil
+	}
+}
+
 // TemplateFunc adds a single function accessible within a template.
 func TemplateFunc(name string, fn interface{}) Configuration {
 	return func(a *App) error {
@@ -69,7 +76,7 @@ func TemplateFunc(name string, fn interface{}) Configuration {
 	}
 }
 
-// TemplateFuncs adds functions accessible to template by map[string]interface{}
+// TemplateFuncs adds functions accessible to templates.
 func TemplateFuncs(fns envmap) Configuration {
 	return func(a *App) error {
 		return nil

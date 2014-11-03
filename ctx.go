@@ -81,9 +81,7 @@ func (ctx *Ctx) start() {
 }
 
 func (ctx *Ctx) release() {
-	if ctx.Session != nil {
-		ctx.Session.SessionRelease(ctx.rw)
-	}
+	ctx.Session.SessionRelease(ctx.rw)
 }
 
 // Calls a function with name in *Ctx.ctxfuncs passing in the given args.
