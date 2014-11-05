@@ -1,7 +1,6 @@
 package flotilla
 
 import (
-	"log"
 	"math"
 	"net/http"
 	"reflect"
@@ -23,16 +22,15 @@ type (
 		rw       engine.ResponseWriter
 		Request  *http.Request
 		Session  session.SessionStore
-		Data     ctxdata
+		Data     ctxmap
+		App      *App
+		Ctx      *engine.Ctx
 		ctxfuncs
-		App *App
-		Ctx *engine.Ctx
+		ctxprocessors map[string]interface{}
 	}
 
-	// A map as a stash for data in the Ctx.
-	ctxdata map[string]interface{}
+	ctxmap map[string]interface{}
 
-	// A map of functions used in the Ctx
 	ctxfuncs map[string]reflect.Value
 )
 
@@ -40,6 +38,7 @@ type (
 func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 	ctx := &Ctx{App: a, Request: req}
 	ctx.rw = w
+	ctx.ctxprocessors = a.ctxprocessors
 	ctx.ctxfuncs = makectxfuncs(a.Env)
 	ctx.start()
 	return ctx
@@ -49,8 +48,9 @@ func (rt Route) newCtx() interface{} {
 	ctx := &Ctx{index: -1,
 		handlers: rt.handlers,
 		App:      rt.routergroup.app,
-		Data:     make(ctxdata),
+		Data:     make(ctxmap),
 	}
+	ctx.ctxprocessors = rt.ctxprocessors
 	ctx.ctxfuncs = makectxfuncs(rt.routergroup.app.Env)
 	return ctx
 }
@@ -129,15 +129,6 @@ func (ctx *Ctx) Get(key string) (interface{}, error) {
 		return item, nil
 	}
 	return nil, newError("Key %s does not exist.", key)
-}
-
-// MustGet returns the value for the given key or panics if nonexistent.
-func (ctx *Ctx) MustGet(key string) interface{} {
-	value, err := ctx.Get(key)
-	if err != nil || value == nil {
-		log.Panicf("Key %s doesn't exist", key)
-	}
-	return value
 }
 
 // WriteToHeader writes the specified code and values to the response Head.

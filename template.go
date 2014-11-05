@@ -1,6 +1,7 @@
 package flotilla
 
 import (
+	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,8 +13,9 @@ import (
 )
 
 type (
-	// An interface attached to an app env to handle templating.
+	// Templator is an interface with methods for application templating.
 	Templator interface {
+		Fetch(string) (*template.Template, error)
 		Render(io.Writer, string, interface{}) error
 		ListTemplateDirs() []string
 		UpdateTemplateDirs(...string)
@@ -37,7 +39,7 @@ type (
 		Any     interface{}
 		Request *http.Request
 		Session session.SessionStore
-		Data    ctxdata
+		Data    ctxmap
 		Flash   map[string]string
 	}
 )

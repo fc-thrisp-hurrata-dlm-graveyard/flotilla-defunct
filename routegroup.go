@@ -11,12 +11,13 @@ type (
 	// A RouteGroup gathers any number routes around a prefix and an array of
 	// group specific handlers.
 	RouteGroup struct {
-		app      *App
-		prefix   string
-		children []*RouteGroup
-		routes   Routes
-		group    *engine.Group
-		Handlers []HandlerFunc
+		app           *App
+		prefix        string
+		children      []*RouteGroup
+		routes        Routes
+		group         *engine.Group
+		ctxprocessors ctxmap
+		Handlers      []HandlerFunc
 	}
 )
 
@@ -54,9 +55,10 @@ func (rg *RouteGroup) pathNoLeadingSlash(path string) string {
 // provided string prefix.
 func NewRouteGroup(prefix string, app *App) *RouteGroup {
 	return &RouteGroup{prefix: prefix,
-		app:    app,
-		group:  app.engine.Group.New(prefix),
-		routes: make(Routes),
+		app:           app,
+		group:         app.engine.Group.New(prefix),
+		routes:        make(Routes),
+		ctxprocessors: make(ctxmap),
 	}
 }
 
@@ -65,6 +67,7 @@ func (rg *RouteGroup) New(component string, handlers ...HandlerFunc) *RouteGroup
 	prefix := rg.pathFor(component)
 
 	newrg := NewRouteGroup(prefix, rg.app)
+	newrg.ctxprocessors = rg.ctxprocessors
 	newrg.Handlers = rg.combineHandlers(handlers)
 
 	rg.children = append(rg.children, newrg)
@@ -74,8 +77,8 @@ func (rg *RouteGroup) New(component string, handlers ...HandlerFunc) *RouteGroup
 
 // Use adds any number of HandlerFunc to the RouteGroup which will be run before
 // route handlers for all Route attached to the RouteGroup.
-func (rg *RouteGroup) Use(middlewares ...HandlerFunc) {
-	for _, handler := range middlewares {
+func (rg *RouteGroup) Use(handlers ...HandlerFunc) {
+	for _, handler := range handlers {
 		if !rg.handlerExists(handler) {
 			rg.Handlers = append(rg.Handlers, handler)
 		}
@@ -84,15 +87,15 @@ func (rg *RouteGroup) Use(middlewares ...HandlerFunc) {
 
 // UseAt adds any number of HandlerFunc to the RouteGroup as middleware when you
 // must control the position in relation to other middleware.
-func (rg *RouteGroup) UseAt(index int, middlewares ...HandlerFunc) {
+func (rg *RouteGroup) UseAt(index int, handlers ...HandlerFunc) {
 	if index > len(rg.Handlers) {
-		rg.Use(middlewares...)
+		rg.Use(handlers...)
 		return
 	}
 
 	var newh []HandlerFunc
 
-	for _, handler := range middlewares {
+	for _, handler := range handlers {
 		if !rg.handlerExists(handler) {
 			newh = append(newh, handler)
 		}
@@ -111,13 +114,24 @@ func (rg *RouteGroup) addRoute(r *Route) {
 	}
 }
 
-// Handle registers new handlers and/or middlewares with a constructed Route.
+func (rg *RouteGroup) CtxProcessor(name string, fn interface{}) {
+	rg.ctxprocessors[name] = fn
+}
+
+func (rg *RouteGroup) CtxProcessors(cp ctxmap) {
+	for k, v := range cp {
+		rg.CtxProcessor(k, v)
+	}
+}
+
+// Handle registers new handlers and/or handlers with a constructed Route.
 // method. For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
 // functions can be used by specifying path & handlers.
 func (rg *RouteGroup) Handle(route *Route) {
 	// finalize Route with RouteGroup specific information
 	route.routergroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
+	route.CtxProcessors(rg.ctxprocessors)
 	route.path = rg.pathFor(route.base)
 	route.p.New = route.newCtx
 	rg.addRoute(route)

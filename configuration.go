@@ -30,7 +30,7 @@ func Mode(mode string) Configuration {
 }
 
 // EnvItem adds strings of the form "section_label:value" or "label:value" to
-// the Env store, by bypassing and without reading a conf file.
+// the Env store, bypassing and without reading a conf file.
 func EnvItem(items ...string) Configuration {
 	return func(a *App) error {
 		for _, item := range items {
@@ -69,16 +69,18 @@ func Templating(t Templator) Configuration {
 	}
 }
 
-// TemplateFunc adds a single function accessible within a template.
-func TemplateFunc(name string, fn interface{}) Configuration {
+// TemplateFunc adds a single context processor to the App primary RouteGroup.
+func CtxProcessor(name string, fn interface{}) Configuration {
 	return func(a *App) error {
+		a.CtxProcessor(name, fn)
 		return nil
 	}
 }
 
-// TemplateFuncs adds functions accessible to templates.
-func TemplateFuncs(fns envmap) Configuration {
+// TemplateFuncs adds a map of context processors to the App primary RouteGroup.
+func CtxProcessors(fns ctxmap) Configuration {
 	return func(a *App) error {
+		a.CtxProcessors(fns)
 		return nil
 	}
 }

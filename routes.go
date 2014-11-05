@@ -19,14 +19,15 @@ var (
 type (
 	// Data about a route for use & reuse within App.
 	Route struct {
-		p           sync.Pool
-		routergroup *RouteGroup
-		static      bool
-		method      string
-		base        string
-		path        string
-		handlers    []HandlerFunc
-		Name        string
+		p             sync.Pool
+		routergroup   *RouteGroup
+		static        bool
+		method        string
+		base          string
+		path          string
+		handlers      []HandlerFunc
+		ctxprocessors ctxmap
+		Name          string
 	}
 
 	// A map of Route instances keyed by a string.
@@ -123,4 +124,14 @@ func (rt *Route) Url(params ...string) (*url.URL, error) {
 		u.RawQuery = strings.Join(querystring, "&")
 	}
 	return u, nil
+}
+
+func (rt *Route) CtxProcessor(name string, fn interface{}) {
+	rt.ctxprocessors[name] = fn
+}
+
+func (rt *Route) CtxProcessors(cp ctxmap) {
+	for k, v := range cp {
+		rt.CtxProcessor(k, v)
+	}
 }

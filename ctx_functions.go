@@ -79,11 +79,13 @@ func (ctx *Ctx) ServeFile(f http.File) {
 func rendertemplate(ctx *Ctx, name string, data interface{}) error {
 	td := TemplateData(ctx, data)
 	ctx.release()
-	err := ctx.App.Templator.Render(ctx.rw, name, td)
+	t, err := ctx.App.Templator.Fetch(name)
+	t.Funcs(ctx.ctxprocessors)
+	err = t.Execute(ctx.rw, td)
 	return err
 }
 
-// RenderTemplate renders an HTML template response with the R rendertemplate
+// RenderTemplate renders an HTML template response with the Ctx rendertemplate
 // function.
 func (ctx *Ctx) RenderTemplate(name string, data interface{}) {
 	ctx.Call("rendertemplate", ctx, name, data)
@@ -103,7 +105,7 @@ func urlfor(ctx *Ctx, route string, external bool, params []string) (string, err
 }
 
 // Provides a relative url for the route specified using the parameters specified,
-// using the R urlfor function.
+// using the Ctx urlfor function.
 func (ctx *Ctx) UrlRelative(route string, params ...string) string {
 	ret, err := ctx.Call("urlfor", ctx, route, false, params)
 	if err != nil {
@@ -113,7 +115,7 @@ func (ctx *Ctx) UrlRelative(route string, params ...string) string {
 }
 
 // Provides a full, external url for the route specified using the given parameters,
-// using the R urlfor function.
+// using the Ctx urlfor function.
 func (ctx *Ctx) UrlExternal(route string, params ...string) string {
 	ret, err := ctx.Call("urlfor", ctx, route, true, params)
 	if err != nil {

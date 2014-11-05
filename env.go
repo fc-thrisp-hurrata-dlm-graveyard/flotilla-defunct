@@ -35,7 +35,6 @@ type (
 		Templator
 		flotilla     map[string]Flotilla
 		ctxfunctions envmap
-		tplfunctions envmap
 	}
 )
 
@@ -50,14 +49,12 @@ func (e *Env) defaults() {
 func EmptyEnv() *Env {
 	e := &Env{Store: make(Store)}
 	e.ctxfunctions = make(envmap)
-	e.tplfunctions = make(envmap)
 	return e
 }
 
 // NewEnv configures an intialized Env.
 func (env *Env) BaseEnv() {
 	env.AddCtxFuncs(builtinctxfuncs)
-	env.AddTplFuncs(builtintplfuncs)
 	env.defaults()
 }
 
@@ -131,13 +128,6 @@ func (env *Env) TemplateDirs() []string {
 // AddTemplatesDir adds a templates directory to the templator
 func (env *Env) AddTemplatesDir(dirs ...string) {
 	env.Templator.UpdateTemplateDirs(dirs...)
-}
-
-// AddTplFuncs adds template functions used by the default Templator.
-func (env *Env) AddTplFuncs(fns envmap) {
-	for k, v := range fns {
-		env.tplfunctions[k] = v
-	}
 }
 
 // AddCtxFunc adds a single Ctx function with the name string, checking that
