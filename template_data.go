@@ -1,5 +1,7 @@
 package flotilla
 
+import "fmt"
+
 type (
 	// TData is a map sent to and accessible within the template, by the
 	// builtin rendertemplate function.
@@ -9,12 +11,14 @@ type (
 )
 
 func templatedata(any interface{}) TData {
-	if any, ok := any.(map[string]interface{}); ok {
-		td := any
+	if rcvd, ok := any.(map[string]interface{}); ok {
+		td := rcvd
+		fmt.Printf("any IS a map\n")
 		return td
 	} else {
 		td := make(map[string]interface{})
 		td["Any"] = any
+		fmt.Printf("any IS NOT a map\n")
 		return td
 	}
 }
