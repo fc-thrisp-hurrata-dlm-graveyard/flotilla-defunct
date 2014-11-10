@@ -17,8 +17,10 @@ type (
 	// an Env with information specific to running the App, and a chain of
 	// RouteGroups
 	App struct {
-		engine *engine.Engine
-		Name   string
+		Configured    bool
+		Configuration []Configuration
+		engine        *engine.Engine
+		Name          string
 		*Env
 		*RouteGroup
 	}
@@ -46,17 +48,12 @@ func Empty() *App {
 func New(name string, conf ...Configuration) *App {
 	app := Empty()
 	app.Env.BaseEnv()
-	err := app.SetConf(conf...)
 	app.engine = app.defaultEngine()
 	app.RouteGroup = NewRouteGroup("/", app)
 	app.Name = name
 	app.STATIC("static")
-	if app.Env.Templator == nil {
-		app.SetConf(Templating(NewTemplator(app.Env)))
-	}
-	if err != nil {
-		panic(fmt.Sprintf("[FLOTILLA] problem creating new *App: %s", err))
-	}
+	app.Configured = false
+	app.Configuration = conf
 	return app
 }
 
@@ -165,25 +162,15 @@ func (app *App) MergeRoutes(group *RouteGroup, routes Routes) {
 	}
 }
 
-func (app *App) init() {
-	app.Env.SessionInit()
-	// Send Flotilla configured items back down to the engine after all
-	// configuration (should have) has taken place.
-	if mm, err := app.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
-		app.engine.SetConf(engine.MaxFormMemory(mm))
-	}
-	if app.Mode == prodmode {
-		app.engine.SetConf(engine.ServePanic(false))
-	}
-}
-
 // ServeHTTP implements the http.Handler interface for the App.
 func (app *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	app.engine.ServeHTTP(w, req)
 }
 
 func (app *App) Run(addr string) {
-	app.init()
+	if !app.Configured {
+		app.Configure(app.Configuration...)
+	}
 	if err := http.ListenAndServe(addr, app); err != nil {
 		panic(err)
 	}

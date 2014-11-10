@@ -35,6 +35,7 @@ type (
 		Templator
 		flotilla     map[string]Flotilla
 		ctxfunctions envmap
+		tplfunctions envmap
 	}
 )
 
@@ -67,7 +68,6 @@ func (env *Env) MergeEnv(o *Env) {
 	for _, dir := range o.StaticDirs() {
 		env.AddStaticDir(dir)
 	}
-	env.AddTemplatesDir(o.Templator.ListTemplateDirs()...)
 	env.AddCtxFuncs(o.ctxfunctions)
 }
 
@@ -120,6 +120,19 @@ func (env *Env) AddStaticDir(dirs ...string) {
 	env.Store["STATIC_DIRECTORIES"].updateList(dirs...)
 }
 
+// Sets a default templator if one is not set, and gathers template directories
+// from all attached Flotilla envs.
+func (env *Env) TemplatorInit() {
+	if env.Templator == nil {
+		env.Templator = NewTemplator(env)
+	}
+	for _, e := range env.fEnvs() {
+		if e.Templator != nil {
+			env.AddTemplatesDir(e.Templator.ListTemplateDirs()...)
+		}
+	}
+}
+
 // TemplateDirs produces a listing of templator template directories.
 func (env *Env) TemplateDirs() []string {
 	return env.Templator.ListTemplateDirs()
@@ -127,7 +140,9 @@ func (env *Env) TemplateDirs() []string {
 
 // AddTemplatesDir adds a templates directory to the templator
 func (env *Env) AddTemplatesDir(dirs ...string) {
-	env.Templator.UpdateTemplateDirs(dirs...)
+	if env.Templator != nil {
+		env.Templator.UpdateTemplateDirs(dirs...)
+	}
 }
 
 // AddCtxFunc adds a single Ctx function with the name string, checking that
@@ -154,6 +169,18 @@ func (env *Env) AddCtxFuncs(fns envmap) error {
 	return nil
 }
 
+// AddTplFuncs adds template functions stored in the Env for use by a Templator.
+func (env *Env) AddTplFunc(name string, fn interface{}) {
+	env.tplfunctions[name] = fn
+}
+
+// AddTplFuncs adds template functions stored in the Env for use by a Templator.
+func (env *Env) AddTplFuncs(fns envmap) {
+	for k, v := range fns {
+		env.AddTplFunc(k, v)
+	}
+}
+
 func (env *Env) defaultsessionconfig() string {
 	secret := env.Store["SECRET_KEY"].value
 	cookie_name := env.Store["SESSION_COOKIENAME"].value
@@ -177,6 +204,14 @@ func (env *Env) SessionInit() {
 		env.SessionManager = env.defaultsessionmanager()
 	}
 	go env.SessionManager.GC()
+}
+
+func (env *Env) fEnvs() []*Env {
+	var ret []*Env
+	for _, f := range env.flotilla {
+		ret = append(ret, f.Blueprint().Env)
+	}
+	return ret
 }
 
 func init() {

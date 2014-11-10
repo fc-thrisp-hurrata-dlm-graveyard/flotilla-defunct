@@ -1,21 +1,17 @@
 package flotilla
 
 import (
-	"html/template"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/thrisp/djinn"
-	"github.com/thrisp/flotilla/session"
 )
 
 type (
 	// Templator is an interface with methods for application templating.
 	Templator interface {
-		Fetch(string) (*template.Template, error)
 		Render(io.Writer, string, interface{}) error
 		ListTemplateDirs() []string
 		UpdateTemplateDirs(...string)
@@ -32,22 +28,12 @@ type (
 		env            *Env
 		FileExtensions []string
 	}
-
-	// TData is a struct sent to and accessible within the template, by the
-	// builtin rendertemplate function.
-	TData struct {
-		Any     interface{}
-		Request *http.Request
-		Session session.SessionStore
-		Data    ctxmap
-		Flash   map[string]string
-	}
 )
 
 func NewTemplator(e *Env) *templator {
 	j := &templator{Djinn: djinn.Empty()}
 	j.UpdateTemplateDirs(workingTemplates)
-	j.SetConf(djinn.Loaders(NewLoader(e)), djinn.TemplateFunctions(builtintplfuncs))
+	j.SetConf(djinn.Loaders(NewLoader(e)), djinn.TemplateFunctions(e.tplfunctions))
 	return j
 }
 
@@ -104,14 +90,4 @@ func (fl *Loader) Load(name string) (string, error) {
 		}
 	}
 	return "", newError("Template %s does not exist", name)
-}
-
-func TemplateData(ctx *Ctx, any interface{}) *TData {
-	return &TData{
-		Any:     any,
-		Request: ctx.Request,
-		Session: ctx.Session,
-		Data:    ctx.Data,
-		Flash:   allflashmessages(ctx),
-	}
 }

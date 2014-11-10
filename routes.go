@@ -43,7 +43,7 @@ func (rt *Route) handle(ec *engine.Ctx) {
 // NewRoute returns a new Route from a string method, a string path, a boolean
 // indicating if the route is static, and an aray of HandlerFunc
 func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *Route {
-	rt := &Route{method: method, static: static, handlers: handlers}
+	rt := &Route{method: method, static: static, handlers: handlers, ctxprocessors: make(ctxmap)}
 	if static {
 		if fp := strings.Split(path, "/"); fp[len(fp)-1] != "*filepath" {
 			rt.base = filepath.ToSlash(filepath.Join(path, "/*filepath"))

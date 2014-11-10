@@ -1,19 +1,54 @@
 package flotilla
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/thrisp/engine"
+)
+
+var (
+	configurelast []Configuration = []Configuration{ctemplating,
+		csession,
+		cengine}
+)
 
 type (
 	// A function that takes an App pointer to configure the App.
 	Configuration func(*App) error
 )
 
-// SetConf takes any number of Configuration functions and to run the app through.
-func (a *App) SetConf(configurations ...Configuration) error {
-	for _, conf := range configurations {
-		if err := conf(a); err != nil {
-			return err
-		}
+// Configure takes any number of Configuration functions and to run the app through.
+func (a *App) Configure(c ...Configuration) error {
+	var err error
+	c = append(c, configurelast...)
+	for _, fn := range c {
+		err = fn(a)
 	}
+	if err != nil {
+		return err
+	}
+	a.Configured = true
+	return nil
+}
+
+func cengine(a *App) error {
+	e := a.engine
+	if mm, err := a.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
+		e.SetConf(engine.MaxFormMemory(mm))
+	}
+	if a.Mode == prodmode {
+		e.SetConf(engine.ServePanic(false))
+	}
+	return nil
+}
+
+func csession(a *App) error {
+	a.Env.SessionInit()
+	return nil
+}
+
+func ctemplating(a *App) error {
+	a.Env.TemplatorInit()
 	return nil
 }
 
@@ -48,23 +83,38 @@ func EnvItem(items ...string) Configuration {
 	}
 }
 
-// CtxFunc adds a single function accessible as a Ctx function.
+// CtxFunc adds a single function accessible as a Context Function.
 func CtxFunc(name string, fn interface{}) Configuration {
 	return func(a *App) error {
 		return a.Env.AddCtxFunc(name, fn)
 	}
 }
 
-// CtxFuncs adds functions accessible as Ctx function by map[string]interface{}
+// CtxFuncs adds functions accessible as Context Function.
 func CtxFuncs(fns envmap) Configuration {
 	return func(a *App) error {
 		return a.Env.AddCtxFuncs(fns)
 	}
 }
 
+// Templating supplies a Templator to the App.
 func Templating(t Templator) Configuration {
 	return func(a *App) error {
 		a.Env.Templator = t
+		return nil
+	}
+}
+
+func TemplateFunction(name string, fn interface{}) Configuration {
+	return func(a *App) error {
+		a.Env.AddTplFunc(name, fn)
+		return nil
+	}
+}
+
+func TemplateFunctions(fns map[string]interface{}) Configuration {
+	return func(a *App) error {
+		a.Env.AddTplFuncs(fns)
 		return nil
 	}
 }
