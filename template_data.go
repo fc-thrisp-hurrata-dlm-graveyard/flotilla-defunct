@@ -21,6 +21,7 @@ func templatedata(any interface{}) TData {
 
 func TemplateData(ctx *Ctx, any interface{}) TData {
 	td := templatedata(any)
+	td["Ctx"] = ctx
 	td["Request"] = ctx.Request
 	td["Session"] = ctx.Session
 	for k, v := range ctx.Data {
@@ -44,6 +45,17 @@ func (t TData) GetFlashMessages(categories ...string) []string {
 	return ret
 }
 
+func (t TData) UrlFor(route string, external bool, params ...string) string {
+	if ctx, ok := t["Ctx"].(*Ctx); ok {
+		url, err := ctx.urlfor(route, external, params)
+		if err != nil {
+			return err
+		}
+		return url
+	}
+	return newError("Unable to return a url.")
+}
+
 func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
 	res, err := call(fn, ctx)
 	if err != nil {
@@ -52,7 +64,7 @@ func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
 	if ret, ok := res.(string); ok {
 		return ret, nil
 	}
-	return "", newError("ContextProcessor did not return a string")
+	return "", newError("No string returned.")
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {

@@ -2,7 +2,9 @@
 
 ### Flotilla 0.1.1 (tbd)
 
+- return to 'R' to 'Ctx'
 - flash messaging
+- in-template context processors 
 
 
 ### Flotilla 0.1.0 (10.17.2014)
