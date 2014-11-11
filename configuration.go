@@ -143,7 +143,7 @@ func CtxProcessor(name string, fn interface{}) Configuration {
 }
 
 // CtxProcessors adds a map of context processors to the App primary RouteGroup.
-func CtxProcessors(fns ctxmap) Configuration {
+func CtxProcessors(fns map[string]interface{}) Configuration {
 	return func(a *App) error {
 		a.CtxProcessors(fns)
 		return nil

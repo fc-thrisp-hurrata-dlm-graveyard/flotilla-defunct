@@ -9,10 +9,6 @@ import (
 	"github.com/thrisp/flotilla/session"
 )
 
-const (
-	AbortIndex = math.MaxInt8 / 2
-)
-
 type (
 	// Ctx is the primary context for passing & setting data between handlerfunc
 	// of a route, constructed from the *App and the app engine context data.
@@ -22,14 +18,12 @@ type (
 		rw       engine.ResponseWriter
 		Request  *http.Request
 		Session  session.SessionStore
-		Data     ctxmap
+		Data     map[string]interface{}
 		App      *App
 		Ctx      *engine.Ctx
 		ctxfuncs map[string]reflect.Value
 		ctxprcss map[string]reflect.Value
 	}
-
-	ctxmap map[string]interface{}
 )
 
 // An adhoc *Ctx built from a responsewriter & a request, not based on a route.
@@ -48,7 +42,7 @@ func (rt Route) newCtx() interface{} {
 	return &Ctx{index: -1,
 		handlers: rt.handlers,
 		App:      rt.routergroup.app,
-		Data:     make(ctxmap),
+		Data:     make(map[string]interface{}),
 		ctxfuncs: reflectFuncs(rt.routergroup.app.Env.ctxfunctions),
 		ctxprcss: reflectFuncs(rt.ctxprcss),
 	}
@@ -88,10 +82,10 @@ func (ctx *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
 	return call(ctx.ctxfuncs[name], args...)
 }
 
-// Copies the Ctx with handlers set to nil and index AbortIndex
+// Copies the Ctx with handlers set to nil; useful for read only copies in goroutines.
 func (ctx *Ctx) Copy() *Ctx {
 	var rcopy Ctx = *ctx
-	rcopy.index = AbortIndex
+	rcopy.index = math.MaxInt8 / 2
 	rcopy.handlers = nil
 	return &rcopy
 }

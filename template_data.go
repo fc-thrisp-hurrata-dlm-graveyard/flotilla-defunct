@@ -45,11 +45,14 @@ func (t TData) GetFlashMessages(categories ...string) []string {
 }
 
 func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
-	ret, err := call(fn, ctx)
+	res, err := call(fn, ctx)
 	if err != nil {
 		return "", err
 	}
-	return ret.(string), nil
+	if ret, ok := res.(string); ok {
+		return ret, nil
+	}
+	return "", newError("ContextProcessor did not return a string")
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {

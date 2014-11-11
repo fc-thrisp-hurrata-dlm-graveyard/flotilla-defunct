@@ -2,7 +2,6 @@ package flotilla
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/thrisp/engine"
 )
@@ -16,7 +15,7 @@ type (
 		children []*RouteGroup
 		routes   Routes
 		group    *engine.Group
-		ctxprcss ctxmap
+		ctxprcss map[string]interface{}
 		Handlers []HandlerFunc
 	}
 )
@@ -47,10 +46,6 @@ func (rg *RouteGroup) pathFor(path string) string {
 	return joined
 }
 
-func (rg *RouteGroup) pathNoLeadingSlash(path string) string {
-	return strings.TrimLeft(strings.Join([]string{rg.prefix, path}, "/"), "/")
-}
-
 // NewRouteGroup returns a new RouteGroup associated with the App, with the
 // provided string prefix.
 func NewRouteGroup(prefix string, app *App) *RouteGroup {
@@ -58,7 +53,7 @@ func NewRouteGroup(prefix string, app *App) *RouteGroup {
 		app:      app,
 		group:    app.engine.Group.New(prefix),
 		routes:   make(Routes),
-		ctxprcss: make(ctxmap),
+		ctxprcss: make(map[string]interface{}),
 	}
 }
 
@@ -122,7 +117,7 @@ func (rg *RouteGroup) CtxProcessor(name string, fn interface{}) {
 	}
 }
 
-func (rg *RouteGroup) CtxProcessors(cp ctxmap) {
+func (rg *RouteGroup) CtxProcessors(cp map[string]interface{}) {
 	for k, v := range cp {
 		rg.CtxProcessor(k, v)
 	}

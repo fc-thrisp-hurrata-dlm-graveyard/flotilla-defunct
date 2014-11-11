@@ -47,12 +47,6 @@ func (t *templator) UpdateTemplateDirs(dirs ...string) {
 	}
 }
 
-func (t *templator) UpdateTemplateFuncs(funcs map[string]interface{}) {
-	for k, v := range funcs {
-		t.FuncMap[k] = v
-	}
-}
-
 func NewLoader(e *Env) *Loader {
 	fl := &Loader{env: e}
 	fl.FileExtensions = append(fl.FileExtensions, ".html", ".dji")
