@@ -19,15 +19,15 @@ var (
 type (
 	// Data about a route for use & reuse within App.
 	Route struct {
-		p             sync.Pool
-		routergroup   *RouteGroup
-		static        bool
-		method        string
-		base          string
-		path          string
-		handlers      []HandlerFunc
-		ctxprocessors ctxmap
-		Name          string
+		p           sync.Pool
+		routergroup *RouteGroup
+		static      bool
+		method      string
+		base        string
+		path        string
+		handlers    []HandlerFunc
+		ctxprcss    ctxmap
+		Name        string
 	}
 
 	// A map of Route instances keyed by a string.
@@ -43,7 +43,7 @@ func (rt *Route) handle(ec *engine.Ctx) {
 // NewRoute returns a new Route from a string method, a string path, a boolean
 // indicating if the route is static, and an aray of HandlerFunc
 func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *Route {
-	rt := &Route{method: method, static: static, handlers: handlers, ctxprocessors: make(ctxmap)}
+	rt := &Route{method: method, static: static, handlers: handlers, ctxprcss: make(ctxmap)}
 	if static {
 		if fp := strings.Split(path, "/"); fp[len(fp)-1] != "*filepath" {
 			rt.base = filepath.ToSlash(filepath.Join(path, "/*filepath"))
@@ -127,7 +127,7 @@ func (rt *Route) Url(params ...string) (*url.URL, error) {
 }
 
 func (rt *Route) CtxProcessor(name string, fn interface{}) {
-	rt.ctxprocessors[name] = fn
+	rt.ctxprcss[name] = fn
 }
 
 func (rt *Route) CtxProcessors(cp ctxmap) {

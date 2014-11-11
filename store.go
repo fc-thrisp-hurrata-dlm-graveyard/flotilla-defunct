@@ -175,7 +175,7 @@ func (si *StoreItem) update(s string) {
 func (si *StoreItem) updateList(li ...string) {
 	if list, err := si.List(); err == nil {
 		for _, item := range li {
-			list = dirAdd(item, list)
+			list = doAdd(item, list)
 		}
 		si.value = strings.Join(list, ",")
 	}

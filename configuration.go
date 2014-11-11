@@ -1,6 +1,8 @@
 package flotilla
 
 import (
+	"log"
+	"os"
 	"strings"
 
 	"github.com/thrisp/engine"
@@ -33,11 +35,18 @@ func (a *App) Configure(c ...Configuration) error {
 
 func cengine(a *App) error {
 	e := a.engine
+	var cnf []engine.Conf
 	if mm, err := a.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
-		e.SetConf(engine.MaxFormMemory(mm))
+		cnf = append(cnf, engine.MaxFormMemory(mm))
 	}
 	if a.Mode == prodmode {
-		e.SetConf(engine.ServePanic(false))
+		cnf = append(cnf, engine.ServePanic(false))
+	}
+	if a.Mode != prodmode {
+		cnf = append(cnf, engine.Logger(log.New(os.Stdout, "[FLOTILLA]", 0)))
+	}
+	if err := e.SetConf(cnf...); err != nil {
+		return err
 	}
 	return nil
 }
@@ -90,8 +99,8 @@ func CtxFunc(name string, fn interface{}) Configuration {
 	}
 }
 
-// CtxFuncs adds functions accessible as Context Function.
-func CtxFuncs(fns envmap) Configuration {
+// CtxFuncs adds a map of functions accessible as Context Functions.
+func CtxFuncs(fns map[string]interface{}) Configuration {
 	return func(a *App) error {
 		return a.Env.AddCtxFuncs(fns)
 	}
@@ -105,6 +114,8 @@ func Templating(t Templator) Configuration {
 	}
 }
 
+// TemplateFunction passes a template function to the env for Templator or
+// other templating function use.
 func TemplateFunction(name string, fn interface{}) Configuration {
 	return func(a *App) error {
 		a.Env.AddTplFunc(name, fn)
@@ -112,6 +123,8 @@ func TemplateFunction(name string, fn interface{}) Configuration {
 	}
 }
 
+// TemplateFunction passes a map of functions to the env for Templator or
+// other templating function use.
 func TemplateFunctions(fns map[string]interface{}) Configuration {
 	return func(a *App) error {
 		a.Env.AddTplFuncs(fns)
@@ -119,15 +132,17 @@ func TemplateFunctions(fns map[string]interface{}) Configuration {
 	}
 }
 
-// TemplateFunc adds a single context processor to the App primary RouteGroup.
+// CtxProcessor adds a single template context processor to the App primary
+// RouteGroup. This will affect all Routegroups & Routes.
 func CtxProcessor(name string, fn interface{}) Configuration {
 	return func(a *App) error {
 		a.CtxProcessor(name, fn)
 		return nil
+		// eh need to defer or force revision of existing routes & group processors
 	}
 }
 
-// TemplateFuncs adds a map of context processors to the App primary RouteGroup.
+// CtxProcessors adds a map of context processors to the App primary RouteGroup.
 func CtxProcessors(fns ctxmap) Configuration {
 	return func(a *App) error {
 		a.CtxProcessors(fns)

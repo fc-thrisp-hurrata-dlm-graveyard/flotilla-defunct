@@ -30,7 +30,7 @@ func testRouteOK(method string, t *testing.T) {
 	f := New("flotilla_testRouteOK")
 	r := NewRoute(method, "/test", false, []HandlerFunc{func(ctx *Ctx) { passed = true }})
 	f.Handle(r)
-	f.Env.SessionInit()
+	f.Configure(f.Configuration...)
 
 	w := PerformRequest(f, method, "/test")
 
@@ -55,7 +55,7 @@ func testGroupOK(method string, t *testing.T) {
 	passed := false
 	f := New("flotilla_testGroupOK")
 	f.Handle(NewRoute(method, "/test_group", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
-	f.Env.SessionInit()
+	f.Configure(f.Configuration...)
 
 	w := PerformRequest(f, method, "/test_group")
 
@@ -81,7 +81,7 @@ func testSubGroupOK(method string, t *testing.T) {
 	f := New("flotilla_testsubgroupOK")
 	g := f.New("/test_group")
 	g.Handle(NewRoute(method, "/test_group_subgroup", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
-	f.Env.SessionInit()
+	f.Configure(f.Configuration...)
 
 	w := PerformRequest(f, method, "/test_group/test_group_subgroup")
 
@@ -107,7 +107,7 @@ func testRouteNotOK(method string, t *testing.T) {
 	f := New("flotilla_testroutenotok")
 	othermethod := methodNotMethod(method)
 	f.Handle(NewRoute(othermethod, "/test", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
-	f.Env.SessionInit()
+	f.Configure(f.Configuration...)
 
 	w := PerformRequest(f, method, "/test")
 
@@ -215,6 +215,7 @@ func TestExtension(t *testing.T) {
 	r1 := New("flotilla_test_testExtension_extension")
 
 	r.Extend(r1)
+	r.Configure(r.Configuration...)
 
 	if ext, ok := r.flotilla[r1.Name]; !ok {
 		t.Errorf("%s:%v basic extension was not found in %s:%v", r1.Name, ext, r.Name, r)
@@ -231,7 +232,7 @@ func testExtensionRouteOK(method string, t *testing.T) {
 	}})
 	r1.Handle(rt)
 	r.Extend(r1)
-	r.Env.SessionInit()
+	r.Configure(r.Configuration...)
 
 	w := PerformRequest(r, method, "/extension_test")
 

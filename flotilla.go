@@ -2,9 +2,7 @@ package flotilla
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/thrisp/engine"
 )
@@ -47,7 +45,7 @@ func Empty() *App {
 // Returns a new App, with minimum configuration.
 func New(name string, conf ...Configuration) *App {
 	app := Empty()
-	app.Env.BaseEnv()
+	app.BaseEnv()
 	app.engine = app.defaultEngine()
 	app.RouteGroup = NewRouteGroup("/", app)
 	app.Name = name
@@ -59,9 +57,6 @@ func New(name string, conf ...Configuration) *App {
 
 func (a *App) defaultEngine() *engine.Engine {
 	e, err := engine.New(engine.HTMLStatus(true))
-	if a.Mode != prodmode {
-		e.SetConf(engine.Logger(log.New(os.Stdout, "[FLOTILLA]", 0)))
-	}
 	if err != nil {
 		panic(fmt.Sprintf("[FLOTILLA] engine could not be created properly: %s", err))
 	}
@@ -169,7 +164,9 @@ func (app *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (app *App) Run(addr string) {
 	if !app.Configured {
-		app.Configure(app.Configuration...)
+		if err := app.Configure(app.Configuration...); err != nil {
+			panic(err)
+		}
 	}
 	if err := http.ListenAndServe(addr, app); err != nil {
 		panic(err)

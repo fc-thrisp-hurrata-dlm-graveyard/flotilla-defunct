@@ -22,14 +22,6 @@ func validctxfunc(fn interface{}) error {
 	return newError("function %q is not a valid Flotilla Ctx function; must be a function and return must be 1 value, or 1 value and 1 error value", fn)
 }
 
-func makectxfuncs(e *Env) ctxfuncs {
-	m := make(ctxfuncs)
-	for k, v := range e.ctxfunctions {
-		m[k] = valueFunc(v)
-	}
-	return m
-}
-
 func redirect(ctx *Ctx, code int, location string) error {
 	if code >= 300 && code <= 308 {
 		http.Redirect(ctx.rw, ctx.Request, location, code)

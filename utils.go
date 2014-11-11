@@ -19,16 +19,16 @@ func existsIn(s string, l []string) bool {
 	return false
 }
 
-func dirAdd(dir string, dirs []string) []string {
-	if dirAppendable(dir, dirs) {
-		dirs = append(dirs, dir)
+func doAdd(s string, ss []string) []string {
+	if isAppendable(s, ss) {
+		ss = append(ss, s)
 	}
-	return dirs
+	return ss
 }
 
-func dirAppendable(dir string, dirs []string) bool {
-	for _, d := range dirs {
-		if d == dir {
+func isAppendable(s string, ss []string) bool {
+	for _, x := range ss {
+		if x == s {
 			return false
 		}
 	}
@@ -39,8 +39,8 @@ func isFunc(fn interface{}) bool {
 	return reflect.ValueOf(fn).Kind() == reflect.Func
 }
 
-// Compare functions, see https://github.com/zenazn/goji/blob/master/web/func_equal.go
-func funcEqual(a, b interface{}) bool {
+// See https://github.com/zenazn/goji/blob/master/web/func_equal.go
+func equalFunc(a, b interface{}) bool {
 	if !isFunc(a) || !isFunc(b) {
 		panic("funcEqual: type error!")
 	}
@@ -49,29 +49,17 @@ func funcEqual(a, b interface{}) bool {
 	return av.InterfaceData() == bv.InterfaceData()
 }
 
-func mapvalueFunc(fns map[string]interface{}) map[string]reflect.Value {
-	newmap := make(map[string]reflect.Value)
-
-	for k, v := range fns {
-		newmap[k] = valueFunc(v)
-	}
-
-	return newmap
-}
-
 func valueFunc(fn interface{}) reflect.Value {
 	v := reflect.ValueOf(fn)
 	if v.Kind() != reflect.Func {
 		panic(newError("Provided:(%+v, type: %T), but it is not a function", fn, fn))
 	}
 	if !goodFunc(v.Type()) {
-		panic(newError("Cannot add context function %q with %d results\nreturn must be 1 value, or 1 value and 1 error value", fn, v.Type().NumOut()))
+		panic(newError("Cannot use function %q with %d results\nreturn must be 1 value, or 1 value and 1 error value", fn, v.Type().NumOut()))
 	}
 	return v
 }
 
-// checks that the function or method has signature conforming to either one
-// return value or one return value plus one returned error value.
 func goodFunc(typ reflect.Type) bool {
 	switch {
 	case typ.NumOut() == 1:
@@ -82,7 +70,14 @@ func goodFunc(typ reflect.Type) bool {
 	return false
 }
 
-// canBeNil reports whether an untyped nil can be assigned to the type. See reflect.Zero.
+func reflectFuncs(fns map[string]interface{}) map[string]reflect.Value {
+	ret := make(map[string]reflect.Value)
+	for k, v := range fns {
+		ret[k] = valueFunc(v)
+	}
+	return ret
+}
+
 func canBeNil(typ reflect.Type) bool {
 	switch typ.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
@@ -91,7 +86,7 @@ func canBeNil(typ reflect.Type) bool {
 	return false
 }
 
-// from http://golang.org/src/pkg/text/template/funcs.go
+// From http://golang.org/src/pkg/text/template/funcs.go
 func call(fn reflect.Value, args ...interface{}) (interface{}, error) {
 	typ := fn.Type()
 	numIn := typ.NumIn()
@@ -131,8 +126,8 @@ func call(fn reflect.Value, args ...interface{}) (interface{}, error) {
 	return result[0].Interface(), nil
 }
 
-func pathDropFilepathSplat(path string) string {
-	if fp := strings.Split(path, "/"); fp[len(fp)-1] == "*filepath" {
+func dropTrailing(path string, trailing string) string {
+	if fp := strings.Split(path, "/"); fp[len(fp)-1] == trailing {
 		return strings.Join(fp[0:len(fp)-1], "/")
 	}
 	return path

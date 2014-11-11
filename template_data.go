@@ -1,11 +1,11 @@
 package flotilla
 
+import "reflect"
+
 type (
 	// TData is a map sent to and accessible within the template, by the
 	// builtin rendertemplate function.
 	TData map[string]interface{}
-
-	ctxprc func(*Ctx) string
 )
 
 func templatedata(any interface{}) TData {
@@ -21,10 +21,11 @@ func templatedata(any interface{}) TData {
 
 func TemplateData(ctx *Ctx, any interface{}) TData {
 	td := templatedata(any)
-	td["Ctx"] = ctx
 	td["Request"] = ctx.Request
 	td["Session"] = ctx.Session
-	td["Data"] = ctx.Data
+	for k, v := range ctx.Data {
+		td[k] = v
+	}
 	td["Flash"] = allflashmessages(ctx)
 	td.ContextProcessors(ctx)
 	return td
@@ -43,22 +44,22 @@ func (t TData) GetFlashMessages(categories ...string) []string {
 	return ret
 }
 
-// ContextProcessor takes any context processor function and returns the
-// the resulting string, or "" in the event of a problem with processing
-func (t TData) ContextProcessor(fn ctxprc) string {
-	if tctx, ok := t["Ctx"].(*Ctx); ok {
-		x := fn(tctx)
-		return x
+func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
+	ret, err := call(fn, ctx)
+	if err != nil {
+		return "", err
 	}
-	return ""
+	return ret.(string), nil
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {
-	if ctx.ctxprocessors != nil {
-		for k, v := range ctx.ctxprocessors {
-			if v, ok := v.(ctxprc); ok {
-				t[k] = t.ContextProcessor(v)
+	if ctx.ctxprcss != nil {
+		for k, v := range ctx.ctxprcss {
+			ret, err := t.ContextProcessor(v, ctx)
+			if err != nil {
+				t[k] = err
 			}
+			t[k] = ret
 		}
 	}
 }

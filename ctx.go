@@ -25,34 +25,33 @@ type (
 		Data     ctxmap
 		App      *App
 		Ctx      *engine.Ctx
-		ctxfuncs
-		ctxprocessors map[string]interface{}
+		ctxfuncs map[string]reflect.Value
+		ctxprcss map[string]reflect.Value
 	}
 
 	ctxmap map[string]interface{}
-
-	ctxfuncs map[string]reflect.Value
 )
 
 // An adhoc *Ctx built from a responsewriter & a request, not based on a route.
 func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
-	ctx := &Ctx{App: a, Request: req}
-	ctx.rw = w
-	ctx.ctxprocessors = a.ctxprocessors
-	ctx.ctxfuncs = makectxfuncs(a.Env)
+	ctx := &Ctx{App: a,
+		Request:  req,
+		rw:       w,
+		ctxfuncs: reflectFuncs(a.Env.ctxfunctions),
+		ctxprcss: reflectFuncs(a.ctxprcss),
+	}
 	ctx.start()
 	return ctx
 }
 
 func (rt Route) newCtx() interface{} {
-	ctx := &Ctx{index: -1,
+	return &Ctx{index: -1,
 		handlers: rt.handlers,
 		App:      rt.routergroup.app,
 		Data:     make(ctxmap),
+		ctxfuncs: reflectFuncs(rt.routergroup.app.Env.ctxfunctions),
+		ctxprcss: reflectFuncs(rt.ctxprcss),
 	}
-	ctx.ctxprocessors = rt.ctxprocessors
-	ctx.ctxfuncs = makectxfuncs(rt.routergroup.app.Env)
-	return ctx
 }
 
 func (rt Route) getCtx(ec *engine.Ctx) *Ctx {

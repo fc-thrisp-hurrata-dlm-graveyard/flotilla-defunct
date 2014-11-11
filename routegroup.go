@@ -11,13 +11,13 @@ type (
 	// A RouteGroup gathers any number routes around a prefix and an array of
 	// group specific handlers.
 	RouteGroup struct {
-		app           *App
-		prefix        string
-		children      []*RouteGroup
-		routes        Routes
-		group         *engine.Group
-		ctxprocessors ctxmap
-		Handlers      []HandlerFunc
+		app      *App
+		prefix   string
+		children []*RouteGroup
+		routes   Routes
+		group    *engine.Group
+		ctxprcss ctxmap
+		Handlers []HandlerFunc
 	}
 )
 
@@ -31,7 +31,7 @@ func (rg *RouteGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
 
 func (rg *RouteGroup) handlerExists(outside HandlerFunc) bool {
 	for _, inside := range rg.Handlers {
-		if funcEqual(inside, outside) {
+		if equalFunc(inside, outside) {
 			return true
 		}
 	}
@@ -55,10 +55,10 @@ func (rg *RouteGroup) pathNoLeadingSlash(path string) string {
 // provided string prefix.
 func NewRouteGroup(prefix string, app *App) *RouteGroup {
 	return &RouteGroup{prefix: prefix,
-		app:           app,
-		group:         app.engine.Group.New(prefix),
-		routes:        make(Routes),
-		ctxprocessors: make(ctxmap),
+		app:      app,
+		group:    app.engine.Group.New(prefix),
+		routes:   make(Routes),
+		ctxprcss: make(ctxmap),
 	}
 }
 
@@ -67,7 +67,7 @@ func (rg *RouteGroup) New(component string, handlers ...HandlerFunc) *RouteGroup
 	prefix := rg.pathFor(component)
 
 	newrg := NewRouteGroup(prefix, rg.app)
-	newrg.ctxprocessors = rg.ctxprocessors
+	newrg.ctxprcss = rg.ctxprcss
 	newrg.Handlers = rg.combineHandlers(handlers)
 
 	rg.children = append(rg.children, newrg)
@@ -115,7 +115,11 @@ func (rg *RouteGroup) addRoute(r *Route) {
 }
 
 func (rg *RouteGroup) CtxProcessor(name string, fn interface{}) {
-	rg.ctxprocessors[name] = fn
+	rg.ctxprcss[name] = fn
+	// need to update existing routes
+	for _, v := range rg.routes {
+		v.CtxProcessor(name, fn)
+	}
 }
 
 func (rg *RouteGroup) CtxProcessors(cp ctxmap) {
@@ -131,7 +135,7 @@ func (rg *RouteGroup) Handle(route *Route) {
 	// finalize Route with RouteGroup specific information
 	route.routergroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
-	route.CtxProcessors(rg.ctxprocessors)
+	route.CtxProcessors(rg.ctxprcss)
 	route.path = rg.pathFor(route.base)
 	route.p.New = route.newCtx
 	rg.addRoute(route)
@@ -169,7 +173,7 @@ func (rg *RouteGroup) HEAD(path string, handlers ...HandlerFunc) {
 
 // STATIC adds a Static route handled by the app engine, based on the group prefix.
 func (rg *RouteGroup) STATIC(path string) {
-	rg.app.AddStaticDir(pathDropFilepathSplat(path))
+	rg.app.AddStaticDir(dropTrailing(path, "*filepath"))
 	rg.Handle(NewRoute("GET", path, true, []HandlerFunc{handleStatic}))
 }
 

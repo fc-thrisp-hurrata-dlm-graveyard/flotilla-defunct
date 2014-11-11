@@ -43,7 +43,7 @@ func (t *templator) ListTemplateDirs() []string {
 
 func (t *templator) UpdateTemplateDirs(dirs ...string) {
 	for _, dir := range dirs {
-		t.TemplateDirs = dirAdd(dir, t.TemplateDirs)
+		t.TemplateDirs = doAdd(dir, t.TemplateDirs)
 	}
 }
 
