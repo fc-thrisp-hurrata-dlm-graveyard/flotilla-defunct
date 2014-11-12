@@ -15,7 +15,8 @@ type (
 		children []*RouteGroup
 		routes   Routes
 		group    *engine.Group
-		ctxprcss map[string]interface{}
+		ctxprcss []*contextprocessor
+		//ctxprcss map[string]interface{}
 		Handlers []HandlerFunc
 	}
 )
@@ -50,10 +51,10 @@ func (rg *RouteGroup) pathFor(path string) string {
 // provided string prefix.
 func NewRouteGroup(prefix string, app *App) *RouteGroup {
 	return &RouteGroup{prefix: prefix,
-		app:      app,
-		group:    app.engine.Group.New(prefix),
-		routes:   make(Routes),
-		ctxprcss: make(map[string]interface{}),
+		app:    app,
+		group:  app.engine.Group.New(prefix),
+		routes: make(Routes),
+		//ctxprcss: make(map[string]interface{}),
 	}
 }
 
@@ -109,19 +110,19 @@ func (rg *RouteGroup) addRoute(r *Route) {
 	}
 }
 
-func (rg *RouteGroup) CtxProcessor(name string, fn interface{}) {
-	rg.ctxprcss[name] = fn
+func (rg *RouteGroup) CtxProcessor(name string, format string, fn interface{}) {
+	rg.ctxprcss = append(rg.ctxprcss, ContextProcessor(name, format, fn))
 	// need to update existing routes
 	for _, v := range rg.routes {
-		v.CtxProcessor(name, fn)
+		v.CtxProcessor(name, format, fn)
 	}
 }
 
-func (rg *RouteGroup) CtxProcessors(cp map[string]interface{}) {
-	for k, v := range cp {
-		rg.CtxProcessor(k, v)
-	}
-}
+//func (rg *RouteGroup) CtxProcessors(cp map[string]interface{}) {
+//	for k, v := range cp {
+//		rg.CtxProcessor(k, v)
+//	}
+//}
 
 // Handle registers new handlers and/or handlers with a constructed Route.
 // method. For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
@@ -130,7 +131,7 @@ func (rg *RouteGroup) Handle(route *Route) {
 	// finalize Route with RouteGroup specific information
 	route.routergroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
-	route.CtxProcessors(rg.ctxprcss)
+	route.ctxprcss = append(route.ctxprcss, rg.ctxprcss...)
 	route.path = rg.pathFor(route.base)
 	route.p.New = route.newCtx
 	rg.addRoute(route)

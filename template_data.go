@@ -2,6 +2,7 @@ package flotilla
 
 import (
 	"fmt"
+	"html/template"
 	"reflect"
 )
 
@@ -9,6 +10,12 @@ type (
 	// TData is a map sent to and accessible within the template, by the
 	// builtin rendertemplate function.
 	TData map[string]interface{}
+
+	contextprocessor struct {
+		name   string
+		format string
+		fn     reflect.Value
+	}
 )
 
 func templatedata(any interface{}) TData {
@@ -59,23 +66,44 @@ func (t TData) UrlFor(route string, external bool, params ...string) string {
 	return newError("Unable to return a url.").Error()
 }
 
-func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
-	res, err := call(fn, ctx)
+func ContextProcessor(name string, format string, function interface{}) *contextprocessor {
+	return &contextprocessor{name: name,
+		format: format,
+		fn:     valueFunc(function),
+	}
+}
+
+func (t TData) HtmlContextProcessor(cp *contextprocessor, ctx *Ctx) template.HTML {
+	res, err := call(cp.fn, ctx)
 	if err != nil {
-		return "", err
+		return template.HTML(fmt.Sprintf("%s", err))
+	}
+	if ret, ok := res.(template.HTML); ok {
+		return ret
+	}
+	return template.HTML("No HTML returned.")
+}
+
+func (t TData) StringContextProcessor(cp *contextprocessor, ctx *Ctx) string {
+	res, err := call(cp.fn, ctx)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
 	}
 	if ret, ok := res.(string); ok {
-		return ret, nil
+		return ret
 	}
-	return "", newError("No string returned.")
+	return "No string returned."
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {
-	for k, v := range ctx.ctxprcss {
-		ret, err := t.ContextProcessor(v, ctx)
-		if err != nil {
-			t[k] = err
+	for _, cp := range ctx.ctxprcss {
+		switch cp.format {
+		case "html":
+			t[cp.name] = t.HtmlContextProcessor(cp, ctx)
+		case "string":
+			t[cp.name] = t.StringContextProcessor(cp, ctx)
+		default:
+			t[cp.name] = t.StringContextProcessor(cp, ctx)
 		}
-		t[k] = ret
 	}
 }

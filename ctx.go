@@ -22,7 +22,7 @@ type (
 		App      *App
 		Ctx      *engine.Ctx
 		ctxfuncs map[string]reflect.Value
-		ctxprcss map[string]reflect.Value
+		ctxprcss []*contextprocessor //map[string]reflect.Value
 	}
 )
 
@@ -32,7 +32,7 @@ func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 		Request:  req,
 		rw:       w,
 		ctxfuncs: reflectFuncs(a.Env.ctxfunctions),
-		ctxprcss: reflectFuncs(a.ctxprcss),
+		ctxprcss: a.ctxprcss,
 	}
 	ctx.start()
 	return ctx
@@ -44,7 +44,7 @@ func (rt Route) newCtx() interface{} {
 		App:      rt.routergroup.app,
 		Data:     make(map[string]interface{}),
 		ctxfuncs: reflectFuncs(rt.routergroup.app.Env.ctxfunctions),
-		ctxprcss: reflectFuncs(rt.ctxprcss),
+		ctxprcss: rt.ctxprcss,
 	}
 }
 

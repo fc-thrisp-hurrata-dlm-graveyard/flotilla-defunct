@@ -48,6 +48,7 @@ func (e *Env) defaults() {
 func EmptyEnv() *Env {
 	return &Env{Store: make(Store),
 		ctxfunctions: make(map[string]interface{}),
+		tplfunctions: make(map[string]interface{}),
 	}
 }
 
