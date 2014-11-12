@@ -26,9 +26,8 @@ type (
 		base        string
 		path        string
 		handlers    []HandlerFunc
-		ctxprcss    []*contextprocessor
-		//ctxprcss    map[string]interface{}
-		Name string
+		ctxprcss    map[string]interface{}
+		Name        string
 	}
 
 	// A map of Route instances keyed by a string.
@@ -44,7 +43,7 @@ func (rt *Route) handle(ec *engine.Ctx) {
 // NewRoute returns a new Route from a string method, a string path, a boolean
 // indicating if the route is static, and an aray of HandlerFunc
 func NewRoute(method string, path string, static bool, handlers []HandlerFunc) *Route {
-	rt := &Route{method: method, static: static, handlers: handlers}
+	rt := &Route{method: method, static: static, handlers: handlers, ctxprcss: make(map[string]interface{})}
 	if static {
 		if fp := strings.Split(path, "/"); fp[len(fp)-1] != "*filepath" {
 			rt.base = filepath.ToSlash(filepath.Join(path, "/*filepath"))
@@ -127,12 +126,12 @@ func (rt *Route) Url(params ...string) (*url.URL, error) {
 	return u, nil
 }
 
-func (rt *Route) CtxProcessor(name string, format string, fn interface{}) {
-	rt.ctxprcss = append(rt.ctxprcss, ContextProcessor(name, format, fn))
+func (rt *Route) CtxProcessor(name string, fn interface{}) {
+	rt.ctxprcss[name] = fn
 }
 
-//func (rt *Route) CtxProcessors(cp map[string]interface{}) {
-//	for k, v := range cp {
-//		rt.CtxProcessor(k, v)
-//	}
-//}
+func (rt *Route) CtxProcessors(cp map[string]interface{}) {
+	for k, v := range cp {
+		rt.CtxProcessor(k, v)
+	}
+}

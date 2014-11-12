@@ -134,11 +134,10 @@ func TemplateFunctions(fns map[string]interface{}) Configuration {
 
 // CtxProcessor adds a single template context processor to the App primary
 // RouteGroup. This will affect all Routegroups & Routes.
-func CtxProcessor(name string, format string, fn interface{}) Configuration {
+func CtxProcessor(name string, fn interface{}) Configuration {
 	return func(a *App) error {
-		a.CtxProcessor(name, format, fn)
+		a.CtxProcessor(name, fn)
 		return nil
-		// eh need to defer or force revision of existing routes & group processors
 	}
 }
 

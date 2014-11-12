@@ -10,12 +10,6 @@ type (
 	// TData is a map sent to and accessible within the template, by the
 	// builtin rendertemplate function.
 	TData map[string]interface{}
-
-	contextprocessor struct {
-		name   string
-		format string
-		fn     reflect.Value
-	}
 )
 
 func templatedata(any interface{}) TData {
@@ -66,44 +60,28 @@ func (t TData) UrlFor(route string, external bool, params ...string) string {
 	return newError("Unable to return a url.").Error()
 }
 
-func ContextProcessor(name string, format string, function interface{}) *contextprocessor {
-	return &contextprocessor{name: name,
-		format: format,
-		fn:     valueFunc(function),
-	}
-}
-
-func (t TData) HtmlContextProcessor(cp *contextprocessor, ctx *Ctx) template.HTML {
-	res, err := call(cp.fn, ctx)
+func (t TData) ContextProcessor(name string, fn reflect.Value, ctx *Ctx) error {
+	res, err := call(fn, ctx)
 	if err != nil {
-		return template.HTML(fmt.Sprintf("%s", err))
+		t[name] = fmt.Sprintf("%s", err)
+		return nil
 	}
 	if ret, ok := res.(template.HTML); ok {
-		return ret
-	}
-	return template.HTML("No HTML returned.")
-}
-
-func (t TData) StringContextProcessor(cp *contextprocessor, ctx *Ctx) string {
-	res, err := call(cp.fn, ctx)
-	if err != nil {
-		return fmt.Sprintf("%s", err)
+		t[name] = ret
+		return nil
 	}
 	if ret, ok := res.(string); ok {
-		return ret
+		t[name] = ret
+		return nil
 	}
-	return "No string returned."
+	return newError("Context processor could not be run")
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {
-	for _, cp := range ctx.ctxprcss {
-		switch cp.format {
-		case "html":
-			t[cp.name] = t.HtmlContextProcessor(cp, ctx)
-		case "string":
-			t[cp.name] = t.StringContextProcessor(cp, ctx)
-		default:
-			t[cp.name] = t.StringContextProcessor(cp, ctx)
+	for k, fn := range ctx.ctxprcss {
+		err := t.ContextProcessor(k, fn, ctx)
+		if err != nil {
+			t[k] = err.Error()
 		}
 	}
 }
