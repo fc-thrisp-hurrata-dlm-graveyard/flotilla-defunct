@@ -89,8 +89,8 @@ func (fl *Loader) AssetTemplates() []string {
 }
 
 // ListTemplates returns a string array of absolute template paths for all
-// templates dirs & assets matching valid extensions(default .html, .dji)
-// associated with the flotilla loader,
+// templates dirs & assets matching valid extensions(default .html, .dji) and
+// associated with the flotilla loader.
 func (fl *Loader) ListTemplates() interface{} {
 	var ret []string
 	for _, p := range fl.env.TemplateDirs() {

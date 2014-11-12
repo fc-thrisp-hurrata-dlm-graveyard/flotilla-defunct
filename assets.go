@@ -33,7 +33,7 @@ type (
 	}
 
 	// A pseudo-file structure constructed from functions & optional prefix
-	// Flotilla can use binary data, and is the currently optimal way to define
+	// Flotilla can use binary data, and is the current optimal way to define
 	// inbuilt assets for extensions.
 	// See:
 	// https://github.com/jteeuwen/go-bindata
