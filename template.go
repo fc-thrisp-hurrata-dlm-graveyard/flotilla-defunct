@@ -1,6 +1,7 @@
 package flotilla
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,7 @@ type (
 	Templator interface {
 		Render(io.Writer, string, interface{}) error
 		ListTemplateDirs() []string
+		ListTemplates() []string
 		UpdateTemplateDirs(...string)
 	}
 
@@ -41,6 +43,15 @@ func (t *templator) ListTemplateDirs() []string {
 	return t.TemplateDirs
 }
 
+func (t *templator) ListTemplates() []string {
+	var ret []string
+	for _, l := range t.Djinn.Loaders {
+		ts := l.ListTemplates().([]string)
+		ret = append(ret, ts...)
+	}
+	return ret
+}
+
 func (t *templator) UpdateTemplateDirs(dirs ...string) {
 	for _, dir := range dirs {
 		t.TemplateDirs = doAdd(dir, t.TemplateDirs)
@@ -62,8 +73,36 @@ func (fl *Loader) ValidExtension(ext string) bool {
 	return false
 }
 
+// AssetTemplates returns a string array of templates in binary assets attached
+// to the application. Iterates all assets, returns filenames matching flotilla
+// loader valid extensions(default .html, .dji).
+func (fl *Loader) AssetTemplates() []string {
+	var ret []string
+	for _, assetfs := range fl.env.Assets {
+		for _, f := range assetfs.AssetNames() {
+			if fl.ValidExtension(filepath.Ext(f)) {
+				ret = append(ret, f)
+			}
+		}
+	}
+	return ret
+}
+
+// ListTemplates returns a string array of absolute template paths for all
+// templates dirs & assets matching valid extensions(default .html, .dji)
+// associated with the flotilla loader,
 func (fl *Loader) ListTemplates() interface{} {
-	return "flotilla loader ListTemplates not yet implemented"
+	var ret []string
+	for _, p := range fl.env.TemplateDirs() {
+		files, _ := ioutil.ReadDir(p)
+		for _, f := range files {
+			if fl.ValidExtension(filepath.Ext(f.Name())) {
+				ret = append(ret, fmt.Sprintf("%s/%s", p, f.Name()))
+			}
+		}
+	}
+	ret = append(ret, fl.AssetTemplates()...)
+	return ret
 }
 
 func (fl *Loader) Load(name string) (string, error) {

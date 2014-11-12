@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 )
 
-func appStaticFile(requested string, ctx *Ctx) (exists bool) {
-	exists = false
+func appStaticFile(requested string, ctx *Ctx) bool {
+	exists := false
 	for _, dir := range ctx.App.StaticDirs() {
 		filepath.Walk(dir, func(path string, _ os.FileInfo, _ error) (err error) {
 			if filepath.Base(path) == requested {
@@ -20,8 +20,8 @@ func appStaticFile(requested string, ctx *Ctx) (exists bool) {
 	return exists
 }
 
-func appAssetFile(requested string, ctx *Ctx) (exists bool) {
-	exists = false
+func appAssetFile(requested string, ctx *Ctx) bool {
+	exists := false
 	f, err := ctx.App.Assets.Get(requested)
 	if err == nil {
 		ctx.ServeFile(f)

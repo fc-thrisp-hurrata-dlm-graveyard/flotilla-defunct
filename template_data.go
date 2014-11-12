@@ -1,6 +1,9 @@
 package flotilla
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 type (
 	// TData is a map sent to and accessible within the template, by the
@@ -47,13 +50,13 @@ func (t TData) GetFlashMessages(categories ...string) []string {
 
 func (t TData) UrlFor(route string, external bool, params ...string) string {
 	if ctx, ok := t["Ctx"].(*Ctx); ok {
-		url, err := ctx.urlfor(route, external, params)
+		ret, err := ctx.Call("urlfor", route, external, params)
 		if err != nil {
-			return err
+			return newError(fmt.Sprint("%s", err)).Error()
 		}
-		return url
+		return ret.(string)
 	}
-	return newError("Unable to return a url.")
+	return newError("Unable to return a url.").Error()
 }
 
 func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
@@ -68,13 +71,11 @@ func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) (string, error) {
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {
-	if ctx.ctxprcss != nil {
-		for k, v := range ctx.ctxprcss {
-			ret, err := t.ContextProcessor(v, ctx)
-			if err != nil {
-				t[k] = err
-			}
-			t[k] = ret
+	for k, v := range ctx.ctxprcss {
+		ret, err := t.ContextProcessor(v, ctx)
+		if err != nil {
+			t[k] = err
 		}
+		t[k] = ret
 	}
 }

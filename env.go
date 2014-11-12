@@ -23,8 +23,6 @@ var (
 )
 
 type (
-	envmap map[string]interface{}
-
 	// The App environment containing configuration variables & their store
 	// as well as other info & data relevant to the app.
 	Env struct {
@@ -34,8 +32,8 @@ type (
 		Assets
 		Templator
 		flotilla     map[string]Flotilla
-		ctxfunctions envmap
-		tplfunctions envmap
+		ctxfunctions map[string]interface{}
+		tplfunctions map[string]interface{}
 	}
 )
 
@@ -48,9 +46,9 @@ func (e *Env) defaults() {
 
 // EmptyEnv produces an Env with intialization but no configuration.
 func EmptyEnv() *Env {
-	e := &Env{Store: make(Store)}
-	e.ctxfunctions = make(envmap)
-	return e
+	return &Env{Store: make(Store),
+		ctxfunctions: make(map[string]interface{}),
+	}
 }
 
 // NewEnv configures an intialized Env.
@@ -74,8 +72,10 @@ func (env *Env) MergeEnv(o *Env) {
 // MergeStore merges a Store instance with the Env's Store, without replacement.
 func (env *Env) MergeStore(s Store) {
 	for k, v := range s {
-		if _, ok := env.Store[k]; !ok {
-			env.Store[k] = v
+		if !v.defaultvalue {
+			if _, ok := env.Store[k]; !ok {
+				env.Store[k] = v
+			}
 		}
 	}
 }
@@ -159,7 +159,7 @@ func (env *Env) AddCtxFunc(name string, fn interface{}) error {
 
 // AddCtxFuncs stores cross-handler functions in the Env as intermediate staging
 // for later use by Ctx.
-func (env *Env) AddCtxFuncs(fns envmap) error {
+func (env *Env) AddCtxFuncs(fns map[string]interface{}) error {
 	for k, v := range fns {
 		err := env.AddCtxFunc(k, v)
 		if err != nil {
@@ -175,7 +175,7 @@ func (env *Env) AddTplFunc(name string, fn interface{}) {
 }
 
 // AddTplFuncs adds template functions stored in the Env for use by a Templator.
-func (env *Env) AddTplFuncs(fns envmap) {
+func (env *Env) AddTplFuncs(fns map[string]interface{}) {
 	for k, v := range fns {
 		env.AddTplFunc(k, v)
 	}

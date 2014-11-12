@@ -4,7 +4,8 @@
 
 - return to 'R' to 'Ctx'
 - flash messaging
-- in-template context processors 
+- in-template context processors
+- intialization & configuration streamlining 
 
 
 ### Flotilla 0.1.0 (10.17.2014)

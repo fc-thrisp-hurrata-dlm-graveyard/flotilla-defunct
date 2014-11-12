@@ -75,12 +75,12 @@ func (rt *Route) Named() string {
 // Url takes string parameters and applies them to a Route. First to any :parameter
 // params, then *splat params. If any params are left over(not the case with a
 // *splat), and the route method is GET, a query string of key=value is appended
-// to the end of the url with arbitrary assigned keys(e.g. value1=param) where
+// to the end of the url with arbitrarily assigned keys(e.g. value1=param) where
 // no key is provided
 //
 // e.g.
-// r1 := NewRoute("GET", /my/:mysterious/path, false, [AHandlerFunc])
-// r2 := NewRoute("GET", /my/*path, false, [AHandlerFunc])
+// r1 := NewRoute("GET", /my/:mysterious/path, false, []HandlerFunc{AHandlerFunc})
+// r2 := NewRoute("GET", /my/*path, false, []HandlerFunc{AHandlerFunc})
 // u1, _ := r1.Url("hello", "world=are" "you=there", "sayhi")
 // u2, _ := r2.Url("hello", "world", "are" "you", "there")
 // fmt.Printf("url1: %s\n", u1)
