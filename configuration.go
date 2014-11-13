@@ -39,10 +39,10 @@ func cengine(a *App) error {
 	if mm, err := a.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
 		cnf = append(cnf, engine.MaxFormMemory(mm))
 	}
-	if a.Mode == prodmode {
+	if a.Mode.Production {
 		cnf = append(cnf, engine.ServePanic(false))
 	}
-	if a.Mode != prodmode {
+	if !a.Mode.Production {
 		cnf = append(cnf, engine.Logger(log.New(os.Stdout, "[FLOTILLA]", 0)))
 	}
 	if err := e.SetConf(cnf...); err != nil {
@@ -62,10 +62,10 @@ func ctemplating(a *App) error {
 }
 
 // Mode takes a string for development, production, or testing to set the App mode.
-func Mode(mode string) Configuration {
+func Mode(mode string, value bool) Configuration {
 	return func(a *App) error {
 		if existsIn(mode, []string{"development", "testing", "production"}) {
-			a.SetMode(mode)
+			a.SetMode(mode, value)
 			return nil
 		} else {
 			return newError("mode must be development, testing, production, received %s", mode)

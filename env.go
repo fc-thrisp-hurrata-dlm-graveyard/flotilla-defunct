@@ -4,14 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/thrisp/flotilla/session"
-)
-
-const (
-	devmode = iota
-	prodmode
-	testmode
 )
 
 var (
@@ -19,14 +14,19 @@ var (
 	workingPath      string
 	workingStatic    string
 	workingTemplates string
-	defaultmode      int = devmode
 )
 
 type (
+	Modes struct {
+		Development bool
+		Production  bool
+		Testing     bool
+	}
+
 	// The App environment containing configuration variables & their store
 	// as well as other info & data relevant to the app.
 	Env struct {
-		Mode int
+		Mode *Modes
 		Store
 		SessionManager *session.Manager
 		Assets
@@ -46,7 +46,8 @@ func (e *Env) defaults() {
 
 // EmptyEnv produces an Env with intialization but no configuration.
 func EmptyEnv() *Env {
-	return &Env{Store: make(Store),
+	return &Env{Mode: &Modes{true, false, false},
+		Store:        make(Store),
 		ctxfunctions: make(map[string]interface{}),
 		tplfunctions: make(map[string]interface{}),
 	}
@@ -90,16 +91,10 @@ func (env *Env) MergeFlotilla(name string, f Flotilla) {
 }
 
 // SetMode sets the running mode for the App env by a string.
-func (env *Env) SetMode(value string) {
-	switch value {
-	case "development":
-		env.Mode = devmode
-	case "production":
-		env.Mode = prodmode
-	case "testing":
-		env.Mode = testmode
-	default:
-		env.Mode = defaultmode
+func (env *Env) SetMode(mode string, value bool) {
+	m := reflect.ValueOf(env.Mode).Elem().FieldByName(mode)
+	if m.CanSet() {
+		m.SetBool(value)
 	}
 }
 

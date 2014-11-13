@@ -25,7 +25,7 @@ func templatedata(any interface{}) TData {
 
 func TemplateData(ctx *Ctx, any interface{}) TData {
 	td := templatedata(any)
-	td["Ctx"] = ctx
+	td["Ctx"] = ctx.Copy()
 	td["Request"] = ctx.Request
 	td["Session"] = ctx.Session
 	for k, v := range ctx.Data {
@@ -51,37 +51,49 @@ func (t TData) GetFlashMessages(categories ...string) []string {
 
 func (t TData) UrlFor(route string, external bool, params ...string) string {
 	if ctx, ok := t["Ctx"].(*Ctx); ok {
-		ret, err := ctx.Call("urlfor", route, external, params)
+		ret, err := ctx.Call("urlfor", ctx, route, external, params)
 		if err != nil {
 			return newError(fmt.Sprint("%s", err)).Error()
 		}
 		return ret.(string)
 	}
-	return newError("Unable to return a url.").Error()
+	return fmt.Sprintf("Unable to return a url from: %s, %s, external(%t)", route, params, external)
 }
 
-func (t TData) ContextProcessor(name string, fn reflect.Value, ctx *Ctx) error {
-	res, err := call(fn, ctx)
+func (t TData) HTML(name string) template.HTML {
+	fn := t[name].(reflect.Value)
+	res, err := call(fn)
 	if err != nil {
-		t[name] = fmt.Sprintf("%s", err)
-		return nil
+		return template.HTML(err.Error())
 	}
 	if ret, ok := res.(template.HTML); ok {
-		t[name] = ret
-		return nil
+		return ret
+	}
+	return template.HTML("<p>context processor unprocessable as hmtl</p>")
+}
+
+func (t TData) STRING(name string) string {
+	fn := t[name].(reflect.Value)
+	res, err := call(fn)
+	if err != nil {
+		return err.Error()
 	}
 	if ret, ok := res.(string); ok {
-		t[name] = ret
-		return nil
+		return ret
 	}
-	return newError("Context processor could not be run")
+	return "context processor unprocessable as string"
+}
+
+func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) reflect.Value {
+	newfn := func() (interface{}, error) {
+		return call(fn, ctx)
+	}
+	return valueFunc(newfn)
 }
 
 func (t TData) ContextProcessors(ctx *Ctx) {
+	c := ctx.Copy()
 	for k, fn := range ctx.ctxprcss {
-		err := t.ContextProcessor(k, fn, ctx)
-		if err != nil {
-			t[k] = err.Error()
-		}
+		t[k] = t.ContextProcessor(fn, c)
 	}
 }

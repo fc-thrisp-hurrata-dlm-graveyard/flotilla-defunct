@@ -15,10 +15,10 @@ type (
 	// an Env with information specific to running the App, and a chain of
 	// RouteGroups
 	App struct {
-		Configured    bool
-		Configuration []Configuration
 		engine        *engine.Engine
 		Name          string
+		Configured    bool
+		Configuration []Configuration
 		*Env
 		*RouteGroup
 	}
