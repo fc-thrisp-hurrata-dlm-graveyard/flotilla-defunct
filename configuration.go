@@ -64,12 +64,16 @@ func ctemplating(a *App) error {
 // Mode takes a string for development, production, or testing to set the App mode.
 func Mode(mode string, value bool) Configuration {
 	return func(a *App) error {
-		if existsIn(mode, []string{"development", "testing", "production"}) {
-			a.SetMode(mode, value)
-			return nil
+		m := strings.Title(mode)
+		if existsIn(m, []string{"Development", "Testing", "Production"}) {
+			err := a.SetMode(m, value)
+			if err != nil {
+				return err
+			}
 		} else {
-			return newError("mode must be development, testing, production, received %s", mode)
+			return newError("mode must be Development, Testing, or Production; received %s", mode)
 		}
+		return nil
 	}
 }
 
@@ -142,9 +146,9 @@ func CtxProcessor(name string, fn interface{}) Configuration {
 }
 
 // CtxProcessors adds a map of context processors to the App primary RouteGroup.
-//func CtxProcessors(fns map[string]interface{}) Configuration {
-//	return func(a *App) error {
-//		a.CtxProcessors(fns)
-//		return nil
-//	}
-//}
+func CtxProcessors(fns map[string]interface{}) Configuration {
+	return func(a *App) error {
+		a.CtxProcessors(fns)
+		return nil
+	}
+}

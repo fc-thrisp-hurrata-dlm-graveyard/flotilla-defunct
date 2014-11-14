@@ -91,11 +91,13 @@ func (env *Env) MergeFlotilla(name string, f Flotilla) {
 }
 
 // SetMode sets the running mode for the App env by a string.
-func (env *Env) SetMode(mode string, value bool) {
+func (env *Env) SetMode(mode string, value bool) error {
 	m := reflect.ValueOf(env.Mode).Elem().FieldByName(mode)
 	if m.CanSet() {
 		m.SetBool(value)
+		return nil
 	}
+	return newError("env could not be set to %s", mode)
 }
 
 // A string array of static dirs set in env.Store["staticdirectories"]
