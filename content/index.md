@@ -12,13 +12,14 @@ Flotilla is a new project, documentation, testing, and more to come soon.
 
 # Installation<a name="installation"></a>
 
-Flotilla has several dependencies:
-
-- [jingo](http://github.com/thrisp/jingo/) *templating*
+Flotilla is built around two core dependencies: 
 
 - [engine](http://github.com/thrisp/engine) *routing, multiplexing, net/http basics & interface*
 
-After installing, you can install with `go get github.com/thrisp/flotilla`.
+- [djinn](http://github.com/thrisp/djinn/) *templating*
+
+
+After installing, you can install with `go get -u github.com/thrisp/flotilla`.
 
 # Quickstart<a name="quickstart"></a>
 
