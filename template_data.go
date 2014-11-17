@@ -24,15 +24,16 @@ func templatedata(any interface{}) TData {
 }
 
 func TemplateData(ctx *Ctx, any interface{}) TData {
+	ctxcopy := ctx.Copy()
 	td := templatedata(any)
-	td["Ctx"] = ctx.Copy()
+	td["Ctx"] = ctxcopy
 	td["Request"] = ctx.Request
 	td["Session"] = ctx.Session
 	for k, v := range ctx.Data {
 		td[k] = v
 	}
 	td["Flash"] = allflashmessages(ctx)
-	td.ContextProcessors(ctx)
+	td.ContextProcessors(ctxcopy)
 	return td
 }
 
@@ -69,7 +70,7 @@ func (t TData) HTML(name string) template.HTML {
 	if ret, ok := res.(template.HTML); ok {
 		return ret
 	}
-	return template.HTML("<p>context processor unprocessable as hmtl</p>")
+	return template.HTML(fmt.Sprintf("<p>context processor %s unprocessable as hmtl</p>", name))
 }
 
 func (t TData) STRING(name string) string {
@@ -81,7 +82,7 @@ func (t TData) STRING(name string) string {
 	if ret, ok := res.(string); ok {
 		return ret
 	}
-	return "context processor unprocessable as string"
+	return fmt.Sprintf("context processor %s unprocessable as string", name)
 }
 
 func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) reflect.Value {
@@ -91,9 +92,8 @@ func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) reflect.Value {
 	return valueFunc(newfn)
 }
 
-func (t TData) ContextProcessors(ctx *Ctx) {
-	c := ctx.Copy()
-	for k, fn := range ctx.ctxprcss {
-		t[k] = t.ContextProcessor(fn, c)
+func (t TData) ContextProcessors(ctxcopy *Ctx) {
+	for k, fn := range ctxcopy.ctxprcss {
+		t[k] = t.ContextProcessor(fn, ctxcopy)
 	}
 }

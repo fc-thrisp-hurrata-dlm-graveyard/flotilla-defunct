@@ -59,8 +59,7 @@ func (t *templator) UpdateTemplateDirs(dirs ...string) {
 }
 
 func NewLoader(e *Env) *Loader {
-	fl := &Loader{env: e}
-	fl.FileExtensions = append(fl.FileExtensions, ".html", ".dji")
+	fl := &Loader{env: e, FileExtensions: []string{".html", ".dji"}}
 	return fl
 }
 

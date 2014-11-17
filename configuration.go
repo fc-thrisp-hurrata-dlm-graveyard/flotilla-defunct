@@ -71,7 +71,7 @@ func Mode(mode string, value bool) Configuration {
 				return err
 			}
 		} else {
-			return newError("mode must be Development, Testing, or Production; received %s", mode)
+			return newError("mode must be Development, Testing, or Production; not %s", mode)
 		}
 		return nil
 	}
