@@ -19,15 +19,15 @@ var (
 type (
 	// Data about a route for use & reuse within App.
 	Route struct {
-		p           sync.Pool
-		routergroup *RouteGroup
-		static      bool
-		method      string
-		base        string
-		path        string
-		handlers    []HandlerFunc
-		ctxprcss    map[string]interface{}
-		Name        string
+		p          sync.Pool
+		routegroup *RouteGroup
+		static     bool
+		method     string
+		base       string
+		path       string
+		handlers   []HandlerFunc
+		ctxprcss   map[string]interface{}
+		Name       string
 	}
 
 	// A map of Route instances keyed by a string.

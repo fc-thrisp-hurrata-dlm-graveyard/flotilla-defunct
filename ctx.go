@@ -41,9 +41,9 @@ func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 func (rt Route) newCtx() interface{} {
 	return &Ctx{index: -1,
 		handlers: rt.handlers,
-		App:      rt.routergroup.app,
+		App:      rt.routegroup.app,
 		Data:     make(map[string]interface{}),
-		ctxfuncs: reflectFuncs(rt.routergroup.app.Env.ctxfunctions),
+		ctxfuncs: reflectFuncs(rt.routegroup.app.Env.ctxfunctions),
 		ctxprcss: reflectFuncs(rt.ctxprcss),
 	}
 }
@@ -131,7 +131,18 @@ func (ctx *Ctx) WriteToHeader(code int, values ...[]string) {
 	if code >= 0 {
 		ctx.rw.WriteHeader(code)
 	}
-	for _, v := range values {
-		ctx.rw.Header().Set(v[0], v[1])
+	ctx.ModifyHeader("set", values...)
+}
+
+func (ctx *Ctx) ModifyHeader(action string, values ...[]string) {
+	switch action {
+	case "set":
+		for _, v := range values {
+			ctx.rw.Header().Set(v[0], v[1])
+		}
+	default:
+		for _, v := range values {
+			ctx.rw.Header().Add(v[0], v[1])
+		}
 	}
 }

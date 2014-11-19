@@ -128,7 +128,7 @@ func (rg *RouteGroup) CtxProcessors(cp map[string]interface{}) {
 // functions can be used by specifying path & handlers.
 func (rg *RouteGroup) Handle(route *Route) {
 	// finalize Route with RouteGroup specific information
-	route.routergroup = rg
+	route.routegroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
 	route.CtxProcessors(rg.ctxprcss)
 	route.path = rg.pathFor(route.base)

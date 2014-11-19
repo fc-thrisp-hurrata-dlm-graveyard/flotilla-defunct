@@ -38,10 +38,11 @@ type (
 )
 
 func (e *Env) defaults() {
-	e.Store.adddefault("upload", "size", "10000000")   // bytes
-	e.Store.adddefault("secret", "key", "change-this") // weak default value
+	e.Store.adddefault("upload", "size", "10000000")           // bytes
+	e.Store.adddefault("secret", "key", "flotilla:secret:key") // weak default value
 	e.Store.adddefault("session", "cookiename", "session")
 	e.Store.adddefault("session", "lifetime", "2629743")
+	e.Store.add("static", "directories", "")
 }
 
 // EmptyEnv produces an Env with intialization but no configuration.
@@ -102,19 +103,15 @@ func (env *Env) SetMode(mode string, value bool) error {
 
 // A string array of static dirs set in env.Store["staticdirectories"]
 func (env *Env) StaticDirs() []string {
-	if static, ok := env.Store["STATIC_DIRECTORIES"]; ok {
-		if ret, err := static.List(); err == nil {
-			return ret
-		}
+	if ret, err := env.Store["STATIC_DIRECTORIES"].List(); err == nil {
+		return ret
+	} else {
+		return []string{err.Error()}
 	}
-	return []string{}
 }
 
 // AddStaticDir adds a static directory to be searched when a static route is accessed.
 func (env *Env) AddStaticDir(dirs ...string) {
-	if _, ok := env.Store["STATIC_DIRECTORIES"]; !ok {
-		env.Store.add("static", "directories", "")
-	}
 	env.Store["STATIC_DIRECTORIES"].updateList(dirs...)
 }
 

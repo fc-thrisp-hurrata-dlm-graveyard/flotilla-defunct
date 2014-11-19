@@ -5,6 +5,8 @@ import "net/http"
 var (
 	builtinctxfuncs = map[string]interface{}{
 		"allflashmessages": allflashmessages,
+		"cookie":           cookie,
+		"cookies":          cookies,
 		"flash":            flash,
 		"flashmessages":    flashmessages,
 		"redirect":         redirect,

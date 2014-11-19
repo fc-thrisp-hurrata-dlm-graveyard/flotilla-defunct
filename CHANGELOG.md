@@ -5,7 +5,8 @@
 - return to 'R' to 'Ctx'
 - flash messaging
 - in-template context processors
-- intialization & configuration streamlining 
+- intialization & configuration streamlining
+- coinciding boolean modes (development, testing, & production)
 
 
 ### Flotilla 0.1.0 (10.17.2014)
@@ -13,7 +14,7 @@
 - semantic versioning
 - 'R' type for per-route handled context
 - reintegrate Djinn(formerly Jingo) templating
-- tighter interaction of Engine statuses & panics
+- tighter interaction with Engine statuses & panics
 - simple configuration functions, removal of flags 
 - package-level errors
 - essential testing, bugfixes, and refactoring  
