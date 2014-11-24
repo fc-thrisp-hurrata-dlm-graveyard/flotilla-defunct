@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	configurelast []Configuration = []Configuration{ctemplating,
+	configurelast []Configuration = []Configuration{cstatic,
+		ctemplating,
 		csession,
 		cengine}
 )
@@ -58,6 +59,11 @@ func csession(a *App) error {
 
 func ctemplating(a *App) error {
 	a.Env.TemplatorInit()
+	return nil
+}
+
+func cstatic(a *App) error {
+	a.Env.StaticorInit()
 	return nil
 }
 

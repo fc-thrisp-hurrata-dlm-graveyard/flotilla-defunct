@@ -37,7 +37,7 @@ type (
 	// A StoreItem contains a default string value and/or a string value.
 	StoreItem struct {
 		defaultvalue bool
-		value        string
+		Value        string
 	}
 
 	// Store is a map of StoreItem managed by App.Env, used as a store of varied
@@ -129,54 +129,52 @@ func (s Store) newkey(section string, key string) string {
 }
 
 func (s Store) add(section, key, value string) {
-	s[s.newkey(section, key)] = &StoreItem{value: value, defaultvalue: false}
+	s[s.newkey(section, key)] = &StoreItem{Value: value, defaultvalue: false}
 }
 
 func (s Store) adddefault(section, key, value string) {
-	s[s.newkey(section, key)] = &StoreItem{value: value, defaultvalue: true}
+	s[s.newkey(section, key)] = &StoreItem{Value: value, defaultvalue: true}
 }
 
+// Bool attempts to return the storeitem value as type bool
 func (si StoreItem) Bool() (bool, error) {
-	if value, ok := boolString[strings.ToLower(si.value)]; ok {
+	if value, ok := boolString[strings.ToLower(si.Value)]; ok {
 		return value, nil
 	}
-	return false, newError("could not return Bool value from StoreItem value")
+	return false, newError("could not return Bool value from StoreItem")
 }
 
+// Float attempts to return the storeitem value as type float
 func (si *StoreItem) Float() (value float64, err error) {
-	if value, err := strconv.ParseFloat(si.value, 64); err == nil {
+	if value, err := strconv.ParseFloat(si.Value, 64); err == nil {
 		return value, nil
 	}
-	return 0.0, newError("could not return Float value from StoreItem value")
+	return 0.0, newError("could not return Float value from StoreItem")
 }
 
+// Int attempts to return the storeitem value as type int
 func (si *StoreItem) Int() (value int, err error) {
-	if value, err := strconv.Atoi(si.value); err == nil {
+	if value, err := strconv.Atoi(si.Value); err == nil {
 		return value, nil
 	}
-	return 0, newError("could not return Int value from StoreItem value")
+	return 0, newError("could not return Int value from StoreItem")
 }
 
+// Int64 attempts to return the storeitem value as type int64
 func (si *StoreItem) Int64() (value int64, err error) {
-	if value, err := strconv.ParseInt(si.value, 10, 64); err == nil {
+	if value, err := strconv.ParseInt(si.Value, 10, 64); err == nil {
 		return value, nil
 	}
-	return 0, newError("could not return Int64 value from StoreItem value")
+	return 0, newError("could not return Int64 value from StoreItem")
 }
 
-func (si *StoreItem) List() (value []string, err error) {
-	return strings.Split(si.value, ","), nil
-}
-
-func (si *StoreItem) update(s string) {
-	si.value = s
-}
-
-func (si *StoreItem) updateList(li ...string) {
-	if list, err := si.List(); err == nil {
-		for _, item := range li {
-			list = doAdd(item, list)
-		}
-		si.value = strings.Join(list, ",")
+// List updates the storeitem value to a list with the provided strings, and
+// then returns the updated value as a string array type.
+func (si *StoreItem) List(li ...string) []string {
+	list := strings.Split(si.Value, ",")
+	for _, item := range li {
+		list = doAdd(item, list)
 	}
+	si.Value = strings.Join(list, ",")
+	return strings.Split(si.Value, ",")
 }

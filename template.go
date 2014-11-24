@@ -32,10 +32,28 @@ type (
 	}
 )
 
-func NewTemplator(e *Env) *templator {
+// Sets a default templator if one is not set, and gathers template directories
+// from all attached Flotilla envs.
+func (env *Env) TemplatorInit() {
+	if env.Templator == nil {
+		env.Templator = NewTemplator(env)
+	}
+}
+
+// TemplateDirs produces a listing of templator template directories.
+func (env *Env) TemplateDirs(dirs ...string) []string {
+	storedirs := env.Store["TEMPLATE_DIRECTORIES"].List(dirs...)
+	if env.Templator != nil {
+		env.Templator.UpdateTemplateDirs(storedirs...)
+		return env.Templator.ListTemplateDirs()
+	}
+	return storedirs
+}
+
+func NewTemplator(env *Env) *templator {
 	j := &templator{Djinn: djinn.Empty()}
-	j.UpdateTemplateDirs(workingTemplates)
-	j.SetConf(djinn.Loaders(NewLoader(e)), djinn.TemplateFunctions(e.tplfunctions))
+	j.UpdateTemplateDirs(env.Store["TEMPLATE_DIRECTORIES"].List()...)
+	j.SetConf(djinn.Loaders(NewLoader(env)), djinn.TemplateFunctions(env.tplfunctions))
 	return j
 }
 
@@ -58,8 +76,8 @@ func (t *templator) UpdateTemplateDirs(dirs ...string) {
 	}
 }
 
-func NewLoader(e *Env) *Loader {
-	fl := &Loader{env: e, FileExtensions: []string{".html", ".dji"}}
+func NewLoader(env *Env) *Loader {
+	fl := &Loader{env: env, FileExtensions: []string{".html", ".dji"}}
 	return fl
 }
 

@@ -48,7 +48,7 @@ func unpackcookie(ctx *Ctx, cookie *http.Cookie) string {
 	sig := parts[2]
 
 	if secret, ok := ctx.App.Env.Store["SECRET_KEY"]; ok {
-		h := hmac.New(sha1.New, []byte(secret.value))
+		h := hmac.New(sha1.New, []byte(secret.Value))
 
 		if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
 			return ""
@@ -72,7 +72,7 @@ func (ctx *Ctx) ReadCookies() map[string]string {
 func cookie(ctx *Ctx, secure bool, name string, value string, opts []interface{}) error {
 	if secure {
 		if secret, ok := ctx.App.Env.Store["SECRET_KEY"]; ok {
-			value = securevalue(secret.value, value)
+			value = securevalue(secret.Value, value)
 		}
 	}
 	cke := basiccookie(name, value, opts...)

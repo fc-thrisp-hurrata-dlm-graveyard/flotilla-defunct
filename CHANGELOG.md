@@ -1,17 +1,19 @@
 ##Changelog
 
-### Flotilla 0.1.1 (tbd)
+### Flotilla 0.2.0 (tbd)
 
 - return to 'R' to 'Ctx'
 - flash messaging
 - in-template context processors
-- intialization & configuration streamlining
+- initialization & configuration streamlining
 - coinciding boolean modes (development, testing, & production)
+- methods for viewing & setting plain or minimally secure cookies
+- public store item value for easier access to store settings 
 
 
 ### Flotilla 0.1.0 (10.17.2014)
 
-- semantic versioning
+- basic adherence to semantic versioning
 - 'R' type for per-route handled context
 - reintegrate Djinn(formerly Jingo) templating
 - tighter interaction with Engine statuses & panics

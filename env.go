@@ -30,6 +30,7 @@ type (
 		Store
 		SessionManager *session.Manager
 		Assets
+		Staticor
 		Templator
 		flotilla     map[string]Flotilla
 		ctxfunctions map[string]interface{}
@@ -38,11 +39,12 @@ type (
 )
 
 func (e *Env) defaults() {
-	e.Store.adddefault("upload", "size", "10000000")           // bytes
-	e.Store.adddefault("secret", "key", "flotilla:secret:key") // weak default value
+	e.Store.adddefault("upload", "size", "10000000")             // bytes
+	e.Store.adddefault("secret", "key", "Flotilla;Secret;Key;1") // weak default value
 	e.Store.adddefault("session", "cookiename", "session")
 	e.Store.adddefault("session", "lifetime", "2629743")
-	e.Store.add("static", "directories", "")
+	e.Store.add("static", "directories", workingStatic)
+	e.Store.add("template", "directories", workingTemplates)
 }
 
 // EmptyEnv produces an Env with intialization but no configuration.
@@ -66,9 +68,8 @@ func (env *Env) MergeEnv(o *Env) {
 	for _, fs := range o.Assets {
 		env.Assets = append(env.Assets, fs)
 	}
-	for _, dir := range o.StaticDirs() {
-		env.AddStaticDir(dir)
-	}
+	env.StaticDirs(o.Store["STATIC_DIRECTORIES"].List()...)
+	env.TemplateDirs(o.Store["TEMPLATE_DIRECTORIES"].List()...)
 	env.AddCtxFuncs(o.ctxfunctions)
 }
 
@@ -99,45 +100,6 @@ func (env *Env) SetMode(mode string, value bool) error {
 		return nil
 	}
 	return newError("env could not be set to %s", mode)
-}
-
-// A string array of static dirs set in env.Store["staticdirectories"]
-func (env *Env) StaticDirs() []string {
-	if ret, err := env.Store["STATIC_DIRECTORIES"].List(); err == nil {
-		return ret
-	} else {
-		return []string{err.Error()}
-	}
-}
-
-// AddStaticDir adds a static directory to be searched when a static route is accessed.
-func (env *Env) AddStaticDir(dirs ...string) {
-	env.Store["STATIC_DIRECTORIES"].updateList(dirs...)
-}
-
-// Sets a default templator if one is not set, and gathers template directories
-// from all attached Flotilla envs.
-func (env *Env) TemplatorInit() {
-	if env.Templator == nil {
-		env.Templator = NewTemplator(env)
-	}
-	for _, e := range env.fEnvs() {
-		if e.Templator != nil {
-			env.AddTemplatesDir(e.Templator.ListTemplateDirs()...)
-		}
-	}
-}
-
-// TemplateDirs produces a listing of templator template directories.
-func (env *Env) TemplateDirs() []string {
-	return env.Templator.ListTemplateDirs()
-}
-
-// AddTemplatesDir adds a templates directory to the templator
-func (env *Env) AddTemplatesDir(dirs ...string) {
-	if env.Templator != nil {
-		env.Templator.UpdateTemplateDirs(dirs...)
-	}
 }
 
 // AddCtxFunc adds a single Ctx function with the name string, checking that
@@ -177,8 +139,8 @@ func (env *Env) AddTplFuncs(fns map[string]interface{}) {
 }
 
 func (env *Env) defaultsessionconfig() string {
-	secret := env.Store["SECRET_KEY"].value
-	cookie_name := env.Store["SESSION_COOKIENAME"].value
+	secret := env.Store["SECRET_KEY"].Value
+	cookie_name := env.Store["SESSION_COOKIENAME"].Value
 	session_lifetime, _ := env.Store["SESSION_LIFETIME"].Int64()
 	prvdrcfg := fmt.Sprintf(`"ProviderConfig":"{\"maxage\": %d,\"cookieName\":\"%s\",\"securityKey\":\"%s\"}"`, session_lifetime, cookie_name, secret)
 	return fmt.Sprintf(`{"cookieName":"%s","enableSetCookie":false,"gclifetime":3600, %s}`, cookie_name, prvdrcfg)
@@ -199,14 +161,6 @@ func (env *Env) SessionInit() {
 		env.SessionManager = env.defaultsessionmanager()
 	}
 	go env.SessionManager.GC()
-}
-
-func (env *Env) fEnvs() []*Env {
-	var ret []*Env
-	for _, f := range env.flotilla {
-		ret = append(ret, f.Blueprint().Env)
-	}
-	return ret
 }
 
 func init() {

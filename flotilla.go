@@ -72,6 +72,11 @@ func (app *App) Extend(f Flotilla) {
 	app.MergeEnv(blueprint.Env)
 }
 
+//func (app *App) Mount(prefix string, f Flotilla) {
+// integrate all flotilla functionality but mount all groups and/or routes to a prefix
+// app.Mount("admin", f) will prefix all routes with /admin/route-as-set-in-Flotilla
+//}
+
 // Blueprint ensures the App satisfies interface Flotilla by providing
 // essential information in a struct: Name, RouteGroups, and Env.
 func (app *App) Blueprint() *Blueprint {

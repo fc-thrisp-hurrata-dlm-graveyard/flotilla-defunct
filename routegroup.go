@@ -168,7 +168,7 @@ func (rg *RouteGroup) HEAD(path string, handlers ...HandlerFunc) {
 
 // STATIC adds a Static route handled by the app engine, based on the group prefix.
 func (rg *RouteGroup) STATIC(path string) {
-	rg.app.AddStaticDir(dropTrailing(path, "*filepath"))
+	rg.app.StaticDirs(dropTrailing(path, "*filepath"))
 	rg.Handle(NewRoute("GET", path, true, []HandlerFunc{handleStatic}))
 }
 
