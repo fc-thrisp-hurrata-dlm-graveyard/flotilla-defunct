@@ -1,9 +1,6 @@
 package flotilla
 
-import (
-	"fmt"
-	"net/http"
-)
+import "net/http"
 
 var (
 	builtinctxfuncs = map[string]interface{}{
@@ -120,7 +117,6 @@ func (ctx *Ctx) UrlExternal(route string, params ...string) string {
 }
 
 func flash(ctx *Ctx, category string, message string) error {
-	fmt.Printf("in flash func\n")
 	if fl := ctx.Session.Get("_flashes"); fl != nil {
 		if fls, ok := fl.(map[string]string); ok {
 			fls[category] = message
