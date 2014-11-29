@@ -1,6 +1,9 @@
 package flotilla
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 var (
 	builtinctxfuncs = map[string]interface{}{
@@ -26,9 +29,10 @@ func validctxfunc(fn interface{}) error {
 
 func redirect(ctx *Ctx, code int, location string) error {
 	if code >= 300 && code <= 308 {
-		http.Redirect(ctx.rw, ctx.Request, location, code)
-		ctx.release()
-		ctx.rw.WriteHeaderNow()
+		ctx.Defer(func(c *Ctx) {
+			http.Redirect(c.rw, c.Request, location, code)
+			c.rw.WriteHeaderNow()
+		})
 		return nil
 	} else {
 		return newError("Cannot send a redirect with status code %d", code)
@@ -42,9 +46,10 @@ func (ctx *Ctx) Redirect(code int, location string) {
 }
 
 func servedata(ctx *Ctx, code int, data []byte) error {
-	ctx.release()
-	ctx.WriteToHeader(code, []string{"Content-Type", "text/plain"})
-	ctx.rw.Write(data)
+	ctx.Defer(func(c *Ctx) {
+		c.WriteToHeader(code, []string{"Content-Type", "text/plain"})
+		c.rw.Write(data)
+	})
 	return nil
 }
 
@@ -55,7 +60,6 @@ func (ctx *Ctx) ServeData(code int, data []byte) {
 }
 
 func servefile(ctx *Ctx, f http.File) error {
-	ctx.release()
 	fi, err := f.Stat()
 	if err == nil {
 		http.ServeContent(ctx.rw, ctx.Request, fi.Name(), fi.ModTime(), f)
@@ -70,9 +74,10 @@ func (ctx *Ctx) ServeFile(f http.File) {
 
 func rendertemplate(ctx *Ctx, name string, data interface{}) error {
 	td := TemplateData(ctx, data)
-	ctx.release()
-	err := ctx.App.Templator.Render(ctx.rw, name, td)
-	return err
+	ctx.Defer(func(c *Ctx) {
+		c.App.Templator.Render(c.rw, name, td)
+	})
+	return nil
 }
 
 // RenderTemplate renders an HTML template response with the R rendertemplate
@@ -115,6 +120,7 @@ func (ctx *Ctx) UrlExternal(route string, params ...string) string {
 }
 
 func flash(ctx *Ctx, category string, message string) error {
+	fmt.Printf("in flash func\n")
 	if fl := ctx.Session.Get("_flashes"); fl != nil {
 		if fls, ok := fl.(map[string]string); ok {
 			fls[category] = message

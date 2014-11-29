@@ -10,13 +10,13 @@ type (
 	// A RouteGroup gathers any number routes around a prefix and an array of
 	// group specific handlers.
 	RouteGroup struct {
-		app      *App
-		prefix   string
-		children []*RouteGroup
-		routes   Routes
-		group    *engine.Group
-		ctxprcss map[string]interface{}
-		Handlers []HandlerFunc
+		app           *App
+		prefix        string
+		children      []*RouteGroup
+		routes        Routes
+		group         *engine.Group
+		ctxprocessors map[string]interface{}
+		Handlers      []HandlerFunc
 	}
 )
 
@@ -50,10 +50,10 @@ func (rg *RouteGroup) pathFor(path string) string {
 // provided string prefix.
 func NewRouteGroup(prefix string, app *App) *RouteGroup {
 	return &RouteGroup{prefix: prefix,
-		app:      app,
-		group:    app.engine.Group.New(prefix),
-		routes:   make(Routes),
-		ctxprcss: make(map[string]interface{}),
+		app:           app,
+		group:         app.engine.Group.New(prefix),
+		routes:        make(Routes),
+		ctxprocessors: make(map[string]interface{}),
 	}
 }
 
@@ -62,7 +62,7 @@ func (rg *RouteGroup) New(component string, handlers ...HandlerFunc) *RouteGroup
 	prefix := rg.pathFor(component)
 
 	newrg := NewRouteGroup(prefix, rg.app)
-	newrg.ctxprcss = rg.ctxprcss
+	newrg.ctxprocessors = rg.ctxprocessors
 	newrg.Handlers = rg.combineHandlers(handlers)
 
 	rg.children = append(rg.children, newrg)
@@ -110,7 +110,7 @@ func (rg *RouteGroup) addRoute(r *Route) {
 }
 
 func (rg *RouteGroup) CtxProcessor(name string, fn interface{}) {
-	rg.ctxprcss[name] = fn
+	rg.ctxprocessors[name] = fn
 	// need to update existing routes
 	for _, rt := range rg.routes {
 		rt.CtxProcessor(name, fn)
@@ -130,7 +130,7 @@ func (rg *RouteGroup) Handle(route *Route) {
 	// finalize Route with RouteGroup specific information
 	route.routegroup = rg
 	route.handlers = rg.combineHandlers(route.handlers)
-	route.CtxProcessors(rg.ctxprcss)
+	route.CtxProcessors(rg.ctxprocessors)
 	route.path = rg.pathFor(route.base)
 	route.p.New = route.newCtx
 	rg.addRoute(route)

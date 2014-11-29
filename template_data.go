@@ -93,7 +93,7 @@ func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) reflect.Value {
 }
 
 func (t TData) ContextProcessors(ctxcopy *Ctx) {
-	for k, fn := range ctxcopy.ctxprcss {
+	for k, fn := range ctxcopy.processors {
 		t[k] = t.ContextProcessor(fn, ctxcopy)
 	}
 }

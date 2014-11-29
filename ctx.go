@@ -13,38 +13,39 @@ type (
 	// Ctx is the primary context for passing & setting data between handlerfunc
 	// of a route, constructed from the *App and the app engine context data.
 	Ctx struct {
-		index    int8
-		handlers []HandlerFunc
-		rw       engine.ResponseWriter
-		Request  *http.Request
-		Session  session.SessionStore
-		Data     map[string]interface{}
-		App      *App
-		Ctx      *engine.Ctx
-		ctxfuncs map[string]reflect.Value
-		ctxprcss map[string]reflect.Value
+		index      int8
+		handlers   []HandlerFunc
+		rw         engine.ResponseWriter
+		Request    *http.Request
+		Session    session.SessionStore
+		Data       map[string]interface{}
+		App        *App
+		Ctx        *engine.Ctx
+		funcs      map[string]reflect.Value
+		processors map[string]reflect.Value
+		deferred   []HandlerFunc
 	}
 )
 
 // An adhoc *Ctx built from a responsewriter & a request, not based on a route.
 func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 	ctx := &Ctx{App: a,
-		Request:  req,
-		rw:       w,
-		ctxfuncs: reflectFuncs(a.Env.ctxfunctions),
-		ctxprcss: reflectFuncs(a.ctxprcss),
+		Request:    req,
+		rw:         w,
+		funcs:      reflectFuncs(a.Env.ctxfunctions),
+		processors: reflectFuncs(a.ctxprocessors),
 	}
-	ctx.start()
+	ctx.Start()
 	return ctx
 }
 
 func (rt Route) newCtx() interface{} {
 	return &Ctx{index: -1,
-		handlers: rt.handlers,
-		App:      rt.routegroup.app,
-		Data:     make(map[string]interface{}),
-		ctxfuncs: reflectFuncs(rt.routegroup.app.Env.ctxfunctions),
-		ctxprcss: reflectFuncs(rt.ctxprcss),
+		handlers:   rt.handlers,
+		App:        rt.routegroup.app,
+		Data:       make(map[string]interface{}),
+		funcs:      reflectFuncs(rt.routegroup.app.Env.ctxfunctions),
+		processors: reflectFuncs(rt.ctxprocessors),
 	}
 }
 
@@ -56,7 +57,7 @@ func (rt Route) getCtx(ec *engine.Ctx) *Ctx {
 	for _, p := range ec.Params {
 		ctx.Data[p.Key] = p.Value
 	}
-	ctx.start()
+	ctx.Start()
 	return ctx
 }
 
@@ -66,20 +67,21 @@ func (rt Route) putR(ctx *Ctx) {
 	for k, _ := range ctx.Data {
 		delete(ctx.Data, k)
 	}
+	ctx.deferred = nil
 	rt.p.Put(ctx)
 }
 
-func (ctx *Ctx) start() {
+func (ctx *Ctx) Start() {
 	ctx.Session = ctx.App.SessionManager.SessionStart(ctx.rw, ctx.Request)
 }
 
-func (ctx *Ctx) release() {
+func (ctx *Ctx) Release() {
 	ctx.Session.SessionRelease(ctx.rw)
 }
 
-// Calls a function with name in *Ctx.ctxfuncs passing in the given args.
+// Calls a function with name in *Ctx.funcs passing in the given args.
 func (ctx *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
-	return call(ctx.ctxfuncs[name], args...)
+	return call(ctx.funcs[name], args...)
 }
 
 // Copies the Ctx with handlers set to nil; useful for read only copies in goroutines.
@@ -90,6 +92,14 @@ func (ctx *Ctx) Copy() *Ctx {
 	return &rcopy
 }
 
+func (ctx *Ctx) events() {
+	ctx.Defer(func(c *Ctx) { c.Release() })
+	ctx.Next()
+	for _, fn := range ctx.deferred {
+		fn(ctx)
+	}
+}
+
 // Executes the pending handlers in the chain inside the calling handlectx.
 func (ctx *Ctx) Next() {
 	ctx.index++
@@ -97,6 +107,10 @@ func (ctx *Ctx) Next() {
 	for ; ctx.index < s; ctx.index++ {
 		ctx.handlers[ctx.index](ctx)
 	}
+}
+
+func (ctx *Ctx) Defer(fn HandlerFunc) {
+	ctx.deferred = append(ctx.deferred, fn)
 }
 
 // Calls Ctx.Status in the Engine, with a fall through to Ctx.Abort.
