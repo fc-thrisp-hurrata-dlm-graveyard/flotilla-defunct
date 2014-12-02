@@ -76,7 +76,9 @@ func (ctx *Ctx) Start() {
 }
 
 func (ctx *Ctx) Release() {
-	ctx.Session.SessionRelease(ctx.rw)
+	if !ctx.rw.Written() {
+		ctx.Session.SessionRelease(ctx.rw)
+	}
 }
 
 // Calls a function with name in *Ctx.funcs passing in the given args.

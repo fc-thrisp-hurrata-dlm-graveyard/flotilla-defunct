@@ -33,7 +33,7 @@ func TemplateData(ctx *Ctx, any interface{}) TData {
 		td[k] = v
 	}
 	td["Flash"] = allflashmessages(ctx)
-	td.ContextProcessors(ctxcopy)
+	td.contextprocessors(ctxcopy)
 	return td
 }
 
@@ -61,6 +61,8 @@ func (t TData) UrlFor(route string, external bool, params ...string) string {
 	return fmt.Sprintf("Unable to return a url from: %s, %s, external(%t)", route, params, external)
 }
 
+// HTML will call the context processor by name return html, html formatted error,
+// or html formatted notice that the processor could not return an html value.
 func (t TData) HTML(name string) template.HTML {
 	fn := t[name].(reflect.Value)
 	res, err := call(fn)
@@ -73,6 +75,9 @@ func (t TData) HTML(name string) template.HTML {
 	return template.HTML(fmt.Sprintf("<p>context processor %s unprocessable as hmtl</p>", name))
 }
 
+// STRING will call the context processor by name, returning a string value, an
+// error string value, or a string indicating that the processor could not return
+// a string value.
 func (t TData) STRING(name string) string {
 	fn := t[name].(reflect.Value)
 	res, err := call(fn)
@@ -85,15 +90,25 @@ func (t TData) STRING(name string) string {
 	return fmt.Sprintf("context processor %s unprocessable as string", name)
 }
 
-func (t TData) ContextProcessor(fn reflect.Value, ctx *Ctx) reflect.Value {
+// CALL will call the context processor by name, returning an interface{} or error.
+func (t TData) CALL(name string) interface{} {
+	fn := t[name].(reflect.Value)
+	if res, err := call(fn); err == nil {
+		return res
+	} else {
+		return err
+	}
+}
+
+func (t TData) contextprocessor(fn reflect.Value, ctx *Ctx) reflect.Value {
 	newfn := func() (interface{}, error) {
 		return call(fn, ctx)
 	}
 	return valueFunc(newfn)
 }
 
-func (t TData) ContextProcessors(ctxcopy *Ctx) {
+func (t TData) contextprocessors(ctxcopy *Ctx) {
 	for k, fn := range ctxcopy.processors {
-		t[k] = t.ContextProcessor(fn, ctxcopy)
+		t[k] = t.contextprocessor(fn, ctxcopy)
 	}
 }
