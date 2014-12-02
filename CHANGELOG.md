@@ -1,15 +1,16 @@
 ##Changelog
 
-### Flotilla 0.2.0 (tbd)
+### Flotilla 0.2.0 (12.2.2014)
 
-- return to 'R' to 'Ctx'
+- return from 'R' to 'Ctx'
 - flash messaging
 - in-template context processors
 - initialization & configuration streamlining
-- coinciding boolean modes (development, testing, & production)
+- coinciding boolean app modes (development, testing, & production)
 - methods for viewing & setting plain or minimally secure cookies
 - public store item value for easier access to store settings 
-
+- deferral of ctx functions until after all handlers have run
+- bugfixes & refactoring  
 
 ### Flotilla 0.1.0 (10.17.2014)
 
