@@ -4,7 +4,7 @@
         <div class="container">
             <div id=fl-content>
                 {{ partial "logo.html" . }}
-                {{ range where .Data.Pages "Title" "flotilla-index"}}
+                {{ range where .Data.Pages "Title" "index"}}
                     {{ .Content}}<br>
                 {{ end }}
                 {{ partial "footer.html" }}
