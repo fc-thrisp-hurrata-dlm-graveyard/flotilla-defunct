@@ -1,0 +1,13 @@
+{{ partial "head.html" . }}
+<html>
+    <body>
+        {{ partial "sidebar.html" . }}
+        <div class="content container">
+            <div class=page>
+            {{ range where .Data.Pages "Title" "index"}}
+                {{ .Content}}
+                {{ end }} 
+            </div>
+        </div>
+    </body>
+</html>

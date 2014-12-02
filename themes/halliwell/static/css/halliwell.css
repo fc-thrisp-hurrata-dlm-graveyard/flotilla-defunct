@@ -1,0 +1,179 @@
+body{background-color: rgba(233,233,212,0.2);}
+
+a {color: #272B5D; text-decoration: none;}
+a:hover {color: #3D4172; border-bottom: 1px dotted #3D4172;}
+a:visited {color: #595C88;}
+a.reference em {font-style: normal;}
+
+pre {
+    font-family: consolas,monospace;
+    font-size: 80%;
+    line-height: 1.5em;
+    padding: .5em 1em; 
+    border-radius: 5px;
+    background-color: rgba(245,245,245,0.8);
+    text-shadow: 0 1px 0 white;
+    overflow-x: auto;
+}
+
+code {
+    font-family: consolas,monospace;
+    font-size: 85%;
+    color: #333;           
+    font-weight: bold;
+}
+
+td.code { width: 100%; }
+
+/*
+ * Global resets
+ *
+ * Update the foundational and global aspects of the page.
+ */
+
+html {
+  font-family: "PT Sans", Helvetica, Arial, sans-serif;
+}
+
+@media (min-width: 48rem) {
+  html {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 58rem) {
+  html {
+    font-size: 20px;
+  }
+}
+
+/*
+ * Sidebar
+ *
+ * Flexible banner for housing site name, intro, and "footer" content. Starts
+ * out above content in mobile and later moves to the side with wider viewports.
+ */
+
+.sidebar {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #1C1D00;
+  background-color: rgba(194,196,116,0.4);
+  background-image: url("/flotilla/img/logo.png");
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: contain;
+}
+
+@media (min-width: 48rem) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 18rem;
+    text-align: left;
+  }
+}
+
+/* Sidebar links 
+.sidebar a {
+  color: #;
+}*/
+
+/* About section */
+.sidebar-about h1 {
+  color: #1C1D00;
+  margin-top: 0;
+  font-family: "PT Sans", sans-serif;
+  font-weight: 900;
+  font-size: 5.5rem;
+}
+
+/* Sidebar nav */
+.sidebar-nav {
+  padding-left: 0;
+  list-style: none;
+}
+
+.sidebar-nav-item {
+  display: block;
+}
+
+.sidebar-nav-item.active {
+  font-weight: bold;
+}
+
+/* Sticky sidebar
+ *
+ * Add the `sidebar-sticky` class to the sidebar's container to affix it the
+ * contents to the bottom of the sidebar in tablets and up.
+ */
+
+@media (min-width: 48rem) {
+  .sidebar-sticky {
+    position: absolute;
+    right:  1rem;
+    bottom: 1rem;
+    left:   1rem; 
+  }
+}
+
+.sidebar-sticky h1 {
+  color: #1C1D00;
+  margin-top: 0;
+  font-family: "PT Sans", sans-serif;
+  font-weight: 900;
+  font-size: 5.5rem;
+}
+
+
+/* Container
+ *
+ * Align the contents of the site above the proper threshold with some margin-fu
+ * with a 25%-wide `.sidebar`.
+ */
+
+.content {
+  padding-top:    4rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 48rem) {
+  .content {
+    max-width: 38rem;
+    margin-left: 20rem;
+    margin-right: 2rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .content {
+    margin-left: 22rem;
+    margin-right: 4rem;
+  }
+}
+
+/*
+ * Reverse layout
+ *
+ * Flip the orientation of the page by placing the `.sidebar` on the right.
+ */
+
+@media (min-width: 48rem) {
+  .layout-reverse .sidebar {
+    left: auto;
+    right: 0;
+  }
+  .layout-reverse .content {
+    margin-left: 2rem;
+    margin-right: 20rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .layout-reverse .content {
+    margin-left: 4rem;
+    margin-right: 22rem;
+  }
+}
