@@ -1,6 +1,12 @@
 ##Changelog
 
-### Flotilla 0.2.0 (12.2.2014)
+### Flotilla 0.3.0 (12.9.2014)
+
+- eliminate Blueprint interface, shift RouteGroup idioms to Blueprint idioms
+- Blueprint deferral of engine router handling if not linked to an app until 
+  registered with an app
+
+### Flotilla 0.2.0 (12.2.2014) ~unreleased
 
 - return from 'R' to 'Ctx'
 - flash messaging

@@ -32,8 +32,8 @@ type (
 	}
 )
 
-// Sets a default templator if one is not set, and gathers template directories
-// from all attached Flotilla envs.
+// TemplatorInit sets a default templator if one is not set, and gathers template
+// directories from all attached Flotilla envs.
 func (env *Env) TemplatorInit() {
 	if env.Templator == nil {
 		env.Templator = NewTemplator(env)
@@ -50,6 +50,7 @@ func (env *Env) TemplateDirs(dirs ...string) []string {
 	return storedirs
 }
 
+// NewTemplator returns a new instance of the default Flotilla templator.
 func NewTemplator(env *Env) *templator {
 	j := &templator{Djinn: djinn.Empty()}
 	j.UpdateTemplateDirs(env.Store["TEMPLATE_DIRECTORIES"].List()...)

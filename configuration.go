@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	configurelast []Configuration = []Configuration{cstatic,
+	configurelast []Configuration = []Configuration{cblueprints,
+		cstatic,
 		ctemplating,
 		csession,
 		cengine}
@@ -64,6 +65,15 @@ func ctemplating(a *App) error {
 
 func cstatic(a *App) error {
 	a.Env.StaticorInit()
+	return nil
+}
+
+func cblueprints(a *App) error {
+	for _, b := range a.Blueprints() {
+		if !b.registered {
+			b.Register(a)
+		}
+	}
 	return nil
 }
 
@@ -143,7 +153,7 @@ func TemplateFunctions(fns map[string]interface{}) Configuration {
 }
 
 // CtxProcessor adds a single template context processor to the App primary
-// RouteGroup. This will affect all Routegroups & Routes.
+// Blueprint. This will affect all Blueprints & Routes.
 func CtxProcessor(name string, fn interface{}) Configuration {
 	return func(a *App) error {
 		a.CtxProcessor(name, fn)
@@ -151,7 +161,7 @@ func CtxProcessor(name string, fn interface{}) Configuration {
 	}
 }
 
-// CtxProcessors adds a map of context processors to the App primary RouteGroup.
+// CtxProcessors adds a map of context processors to the App primary Blueprint.
 func CtxProcessors(fns map[string]interface{}) Configuration {
 	return func(a *App) error {
 		a.CtxProcessors(fns)

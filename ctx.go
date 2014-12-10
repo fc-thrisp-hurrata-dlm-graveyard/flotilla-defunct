@@ -10,6 +10,9 @@ import (
 )
 
 type (
+	// A HandlerFunc is any function taking a single parameter, *Ctx
+	HandlerFunc func(*Ctx)
+
 	// Ctx is the primary context for passing & setting data between handlerfunc
 	// of a route, constructed from the *App and the app engine context data.
 	Ctx struct {
@@ -42,9 +45,9 @@ func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 func (rt Route) newCtx() interface{} {
 	return &Ctx{index: -1,
 		handlers:   rt.handlers,
-		App:        rt.routegroup.app,
+		App:        rt.blueprint.app,
 		Data:       make(map[string]interface{}),
-		funcs:      reflectFuncs(rt.routegroup.app.Env.ctxfunctions),
+		funcs:      reflectFuncs(rt.blueprint.app.Env.ctxfunctions),
 		processors: reflectFuncs(rt.ctxprocessors),
 	}
 }

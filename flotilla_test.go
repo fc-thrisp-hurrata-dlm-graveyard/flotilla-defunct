@@ -117,47 +117,38 @@ func TestRouteNotOK(t *testing.T) {
 	}
 }
 
-func TestExtension(t *testing.T) {
-	r := New("flotilla_test_testExtension_base")
-	r1 := New("flotilla_test_testExtension_extension")
-
-	b := r1.Blueprint()
-
-	if b.Name != "flotilla_test_testExtension_extension" {
-		t.Errorf("test extension blueprint Name incorrect: %s", b.Name)
-	}
-
-	r.Extend(r1)
-	r.Configure(r.Configuration...)
-
-	if ext, ok := r.flotilla[r1.Name]; !ok {
-		t.Errorf("%s:%v basic extension was not found in %s:%v", r1.Name, ext, r.Name, r)
-	}
-}
-
-func testExtensionRouteOK(method string, t *testing.T) {
+func testBlueprintRoute(method string, t *testing.T) {
 	passed := false
-	r := New(fmt.Sprintf("flotilla_test_testExtensionRouteOK_base_%s", method))
-	r1 := New(fmt.Sprintf("flotilla_test_testExtensionRouteOK_extension_%s", method))
-	rt := NewRoute(method, "/test_extension", false, []HandlerFunc{func(ctx *Ctx) {
+
+	f := New("flotilla_test_Base")
+
+	b := NewBlueprint("/blueprint")
+
+	blueprintroute := NewRoute(method, "/test_blueprint", false, []HandlerFunc{func(ctx *Ctx) {
 		passed = true
 	}})
-	r1.Handle(rt)
-	r.Extend(r1)
-	r.Configure(r.Configuration...)
 
-	w := PerformRequest(r, method, "/test_extension")
+	b.Handle(blueprintroute)
+
+	f.RegisterBlueprints(b)
+
+	f.Configure(f.Configuration...)
+
+	expected := "/blueprint/test_blueprint"
+
+	w := PerformRequest(f, method, expected)
 
 	if passed == false {
-		t.Errorf(method + " extended handler was not invoked.")
+		t.Errorf(fmt.Sprintf("%s blueprint route: %s was not invoked.", method, expected))
 	}
+
 	if w.Code != http.StatusOK {
 		t.Errorf("Status code should be %v, was %d", http.StatusOK, w.Code)
 	}
 }
 
-func TestExtensionRouteOK(t *testing.T) {
+func TestBlueprintRoute(t *testing.T) {
 	for _, m := range METHODS {
-		testExtensionRouteOK(m, t)
+		testBlueprintRoute(m, t)
 	}
 }
