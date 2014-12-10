@@ -26,7 +26,7 @@ func validctxfunc(fn interface{}) error {
 
 func redirect(ctx *Ctx, code int, location string) error {
 	if code >= 300 && code <= 308 {
-		ctx.Defer(func(c *Ctx) {
+		ctx.Push(func(c *Ctx) {
 			http.Redirect(c.rw, c.Request, location, code)
 			c.rw.WriteHeaderNow()
 		})
@@ -43,7 +43,7 @@ func (ctx *Ctx) Redirect(code int, location string) {
 }
 
 func servedata(ctx *Ctx, code int, data []byte) error {
-	ctx.Defer(func(c *Ctx) {
+	ctx.Push(func(c *Ctx) {
 		c.WriteToHeader(code, []string{"Content-Type", "text/plain"})
 		c.rw.Write(data)
 	})
@@ -71,7 +71,7 @@ func (ctx *Ctx) ServeFile(f http.File) {
 
 func rendertemplate(ctx *Ctx, name string, data interface{}) error {
 	td := TemplateData(ctx, data)
-	ctx.Defer(func(c *Ctx) {
+	ctx.Push(func(c *Ctx) {
 		c.App.Templator.Render(c.rw, name, td)
 	})
 	return nil

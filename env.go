@@ -32,7 +32,6 @@ type (
 		Assets
 		Staticor
 		Templator
-		blueprints   map[string]Blueprint
 		ctxfunctions map[string]interface{}
 		tplfunctions map[string]interface{}
 	}
@@ -82,14 +81,6 @@ func (env *Env) MergeStore(s Store) {
 			}
 		}
 	}
-}
-
-// MergeFlotilla adds Flotilla to the Env
-func (env *Env) StoreBlueprint(name string, b Blueprint) {
-	if env.blueprints == nil {
-		env.blueprints = make(map[string]Blueprint)
-	}
-	env.blueprints[name] = b
 }
 
 // SetMode sets the running mode for the App env by a string.

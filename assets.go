@@ -39,8 +39,8 @@ type (
 	// https://github.com/jteeuwen/go-bindata
 	// https://github.com/elazarl/go-bindata-assetfs
 	AssetFS struct {
-		Asset      func(path string) ([]byte, error)
-		AssetDir   func(path string) ([]string, error)
+		Asset      func(string) ([]byte, error)
+		AssetDir   func(string) ([]string, error)
 		AssetNames func() []string
 		Prefix     string
 	}

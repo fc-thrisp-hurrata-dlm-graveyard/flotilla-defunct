@@ -25,14 +25,14 @@ type (
 
 // Blueprints provides a flat array of Blueprint instances attached to the App.
 func (app *App) Blueprints() []*Blueprint {
-	type IterC func(rs []*Blueprint, fn IterC)
+	type IterC func(bs []*Blueprint, fn IterC)
 
 	var bps []*Blueprint
 
 	bps = append(bps, app.Blueprint)
 
-	iter := func(rs []*Blueprint, fn IterC) {
-		for _, x := range rs {
+	iter := func(bs []*Blueprint, fn IterC) {
+		for _, x := range bs {
 			bps = append(bps, x)
 			fn(x.children, fn)
 		}
@@ -65,29 +65,24 @@ func (app *App) existingBlueprint(prefix string) (*Blueprint, bool) {
 }
 
 // Mount takes an unregistered blueprint, registering and mounting the routes to
-// the provided string mount point
-func (app *App) Mount(mount string, blueprint *Blueprint) error {
+// the provided string mount point with a copy of the blueprint. If inherit is
+// true, the blueprint becomes a child blueprint of app.Blueprint.
+func (app *App) Mount(mount string, inherit bool, blueprint *Blueprint) error {
 	if blueprint.registered {
 		return newError("only unregistered blueprints may be mounted; %s is already registered", blueprint.Prefix)
 	}
-	return nil
-}
-
-func (b *Blueprint) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	s := len(b.Handlers) + len(handlers)
-	h := make([]HandlerFunc, 0, s)
-	h = append(h, b.Handlers...)
-	h = append(h, handlers...)
-	return h
-}
-
-func (b *Blueprint) handlerExists(outside HandlerFunc) bool {
-	for _, inside := range b.Handlers {
-		if equalFunc(inside, outside) {
-			return true
-		}
+	var mountblueprint *Blueprint
+	newprefix := filepath.ToSlash(filepath.Join(mount, blueprint.Prefix))
+	if inherit {
+		mountblueprint = app.New(newprefix)
+	} else {
+		mountblueprint = NewBlueprint(newprefix)
 	}
-	return false
+	for _, route := range blueprint.held {
+		mountblueprint.Handle(route)
+	}
+	app.RegisterBlueprints(mountblueprint)
+	return nil
 }
 
 func (b *Blueprint) pathFor(path string) string {
@@ -99,8 +94,7 @@ func (b *Blueprint) pathFor(path string) string {
 	return joined
 }
 
-// NewBlueprint returns a new Blueprint associated with the App, with the
-// provided string prefix.
+// NewBlueprint returns a new Blueprint with the provided string prefix.
 func NewBlueprint(prefix string) *Blueprint {
 	return &Blueprint{Prefix: prefix,
 		routes:        make(Routes),
@@ -129,7 +123,7 @@ func (b *Blueprint) rundeferred() {
 	b.deferred = nil
 }
 
-// New Creates a new child Blueprint with the base component string & handlers.
+// New Creates a new child Blueprint from the existing Blueprint.
 func (b *Blueprint) New(component string, handlers ...HandlerFunc) *Blueprint {
 	prefix := b.pathFor(component)
 
@@ -140,6 +134,23 @@ func (b *Blueprint) New(component string, handlers ...HandlerFunc) *Blueprint {
 	b.children = append(b.children, newb)
 
 	return newb
+}
+
+func (b *Blueprint) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
+	s := len(b.Handlers) + len(handlers)
+	h := make([]HandlerFunc, 0, s)
+	h = append(h, b.Handlers...)
+	h = append(h, handlers...)
+	return h
+}
+
+func (b *Blueprint) handlerExists(outside HandlerFunc) bool {
+	for _, inside := range b.Handlers {
+		if equalFunc(inside, outside) {
+			return true
+		}
+	}
+	return false
 }
 
 // Use adds any number of HandlerFunc to the Blueprint which will be run before
@@ -185,7 +196,7 @@ func (b *Blueprint) Hold(r *Route) {
 	b.held = append(b.held, r)
 }
 
-func (b *Blueprint) Defer(register func(), route *Route) {
+func (b *Blueprint) Push(register func(), route *Route) {
 	if b.registered {
 		register()
 	} else {
@@ -196,9 +207,7 @@ func (b *Blueprint) Defer(register func(), route *Route) {
 	}
 }
 
-func (b *Blueprint) CtxProcessor(name string, fn interface{}) {
-	b.ctxprocessors[name] = fn
-	// need to update existing blueprints & routes
+func (b *Blueprint) propagate(name string, fn interface{}) {
 	for _, blueprint := range b.children {
 		blueprint.CtxProcessor(name, fn)
 	}
@@ -207,13 +216,19 @@ func (b *Blueprint) CtxProcessor(name string, fn interface{}) {
 	}
 }
 
+func (b *Blueprint) CtxProcessor(name string, fn interface{}) {
+	b.ctxprocessors[name] = fn
+	// update existing blueprints & routes
+	b.propagate(name, fn)
+}
+
 func (b *Blueprint) CtxProcessors(cp map[string]interface{}) {
 	for k, v := range cp {
 		b.CtxProcessor(k, v)
 	}
 }
 
-func (b *Blueprint) register(route *Route) {
+func (b *Blueprint) onregister(route *Route) {
 	route.blueprint = b
 	route.handlers = b.combineHandlers(route.handlers)
 	route.CtxProcessors(b.ctxprocessors)
@@ -227,11 +242,11 @@ func (b *Blueprint) register(route *Route) {
 // functions can be used by specifying path & handlers.
 func (b *Blueprint) Handle(route *Route) {
 	register := func() {
-		b.register(route)
+		b.onregister(route)
 		b.Add(route)
 		b.group.Handle(route.base, route.method, route.handle)
 	}
-	b.Defer(register, route)
+	b.Push(register, route)
 }
 
 func (b *Blueprint) POST(path string, handlers ...HandlerFunc) {
@@ -286,5 +301,5 @@ func (b *Blueprint) StatusHandle(code int, handlers ...HandlerFunc) {
 			b.group.HttpStatuses.New(ns)
 		}
 	}
-	b.Defer(register, nil)
+	b.Push(register, nil)
 }

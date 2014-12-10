@@ -120,7 +120,7 @@ func TestRouteNotOK(t *testing.T) {
 func testBlueprintRoute(method string, t *testing.T) {
 	passed := false
 
-	f := New("flotilla_test_Base")
+	f := New("flotilla_test_Blueprint")
 
 	b := NewBlueprint("/blueprint")
 
@@ -150,5 +150,52 @@ func testBlueprintRoute(method string, t *testing.T) {
 func TestBlueprintRoute(t *testing.T) {
 	for _, m := range METHODS {
 		testBlueprintRoute(m, t)
+	}
+}
+
+func testMountBlueprint(method string, t *testing.T) {
+	passed := false
+
+	f := New("flotilla_test_BlueprintMount")
+
+	b := NewBlueprint("/mount")
+
+	blueprintroute := NewRoute(method, "/test_blueprint", false, []HandlerFunc{func(ctx *Ctx) {
+		passed = true
+	}})
+
+	b.Handle(blueprintroute)
+
+	f.Mount("/testone", true, b)
+
+	f.Mount("/testtwo", false, b)
+
+	f.RegisterBlueprints(b)
+
+	f.Configure(f.Configuration...)
+
+	err := f.Mount("/cannot", false, b)
+
+	if err == nil {
+		t.Errorf("mounting a registered blueprint return no error")
+	}
+
+	perform := func(expected string, method string, app *App) {
+		PerformRequest(app, method, expected)
+
+		if passed == false {
+			t.Errorf(fmt.Sprintf("%s blueprint route: %s was not invoked.", method, expected))
+		}
+
+		passed = false
+	}
+
+	perform("/testone/mount/test_blueprint", method, f)
+	perform("/testtwo/mount/test_blueprint", method, f)
+}
+
+func TestMountBlueprint(t *testing.T) {
+	for _, m := range METHODS {
+		testMountBlueprint(m, t)
 	}
 }

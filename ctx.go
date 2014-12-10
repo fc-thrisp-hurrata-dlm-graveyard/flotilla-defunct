@@ -35,7 +35,7 @@ func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 	ctx := &Ctx{App: a,
 		Request:    req,
 		rw:         w,
-		funcs:      reflectFuncs(a.Env.ctxfunctions),
+		funcs:      reflectFuncs(a.ctxfunctions),
 		processors: reflectFuncs(a.ctxprocessors),
 	}
 	ctx.Start()
@@ -45,9 +45,9 @@ func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
 func (rt Route) newCtx() interface{} {
 	return &Ctx{index: -1,
 		handlers:   rt.handlers,
-		App:        rt.blueprint.app,
+		App:        rt.App(),
 		Data:       make(map[string]interface{}),
-		funcs:      reflectFuncs(rt.blueprint.app.Env.ctxfunctions),
+		funcs:      reflectFuncs(rt.CtxFuncs()),
 		processors: reflectFuncs(rt.ctxprocessors),
 	}
 }
@@ -98,7 +98,7 @@ func (ctx *Ctx) Copy() *Ctx {
 }
 
 func (ctx *Ctx) events() {
-	ctx.Defer(func(c *Ctx) { c.Release() })
+	ctx.Push(func(c *Ctx) { c.Release() })
 	ctx.Next()
 	for _, fn := range ctx.deferred {
 		fn(ctx)
@@ -114,7 +114,8 @@ func (ctx *Ctx) Next() {
 	}
 }
 
-func (ctx *Ctx) Defer(fn HandlerFunc) {
+// Push places a handlerfunc in ctx.deferred for execution after all handlersfuncs have run.
+func (ctx *Ctx) Push(fn HandlerFunc) {
 	ctx.deferred = append(ctx.deferred, fn)
 }
 
@@ -124,12 +125,12 @@ func (ctx *Ctx) Status(code int) {
 }
 
 // Immediately ends processing of current Ctx and return the code, the same as
-// calling *Ctx.Status, but less informative & not configurable.
+// calling Ctx.Status, but less informative & not configurable.
 func (ctx *Ctx) Abort(code int) {
 	ctx.Ctx.Abort(code)
 }
 
-// Sets a new pair key/value just for the specified context.
+// Sets a new pair key/value in the current Ctx.
 func (ctx *Ctx) Set(key string, item interface{}) {
 	ctx.Data[key] = item
 }
