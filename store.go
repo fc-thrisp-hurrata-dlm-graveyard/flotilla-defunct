@@ -121,7 +121,7 @@ func (s Store) parseLine(section, line string) (string, error) {
 	return section, newError("flotilla env conf parse error")
 }
 
-func (s Store) newkey(section string, key string) string {
+func (s Store) newKey(section string, key string) string {
 	if len(section) != 0 {
 		key = fmt.Sprintf("%s_%s", section, strings.ToLower(key))
 	}
@@ -129,11 +129,11 @@ func (s Store) newkey(section string, key string) string {
 }
 
 func (s Store) add(section, key, value string) {
-	s[s.newkey(section, key)] = &StoreItem{Value: value, defaultvalue: false}
+	s[s.newKey(section, key)] = &StoreItem{Value: value, defaultvalue: false}
 }
 
-func (s Store) adddefault(section, key, value string) {
-	s[s.newkey(section, key)] = &StoreItem{Value: value, defaultvalue: true}
+func (s Store) addDefault(section, key, value string) {
+	s[s.newKey(section, key)] = &StoreItem{Value: value, defaultvalue: true}
 }
 
 // Bool attempts to return the storeitem value as type bool

@@ -4,6 +4,7 @@ import "net/http"
 
 var (
 	builtinctxfuncs = map[string]interface{}{
+		"abort":            defaultabort,
 		"allflashmessages": allflashmessages,
 		"cookie":           cookie,
 		"cookies":          cookies,
@@ -17,11 +18,30 @@ var (
 	}
 )
 
-func validctxfunc(fn interface{}) error {
+func validCtxFunc(fn interface{}) error {
 	if goodFunc(valueFunc(fn).Type()) {
 		return nil
 	}
 	return newError("function %q is not a valid Flotilla Ctx function; must be a function and return must be 1 value, or 1 value and 1 error value", fn)
+}
+
+func defaultabort(c *Ctx, code int) error {
+	if code >= 0 {
+		c.rw.WriteHeader(code)
+	}
+	return nil
+}
+
+func (ctx *Ctx) Status(code int) {
+	if ctx.statusfunc != nil {
+		ctx.statusfunc(code)
+	} else {
+		ctx.Call("abort", ctx, code)
+	}
+}
+
+func (ctx *Ctx) Abort(code int) {
+	ctx.Call("abort", ctx, code)
 }
 
 func redirect(ctx *Ctx, code int, location string) error {

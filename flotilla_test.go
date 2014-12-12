@@ -49,51 +49,6 @@ func TestRouteOK(t *testing.T) {
 	}
 }
 
-func testGroupOK(method string, t *testing.T) {
-	passed := false
-	f := New("flotilla_testGroupOK")
-	f.Handle(NewRoute(method, "/test_group", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
-	f.Configure(f.Configuration...)
-
-	w := PerformRequest(f, method, "/test_group")
-
-	if passed == false {
-		t.Errorf(method + " group route handler was not invoked.")
-	}
-	if w.Code != http.StatusOK {
-		t.Errorf("Status code should be %v, was %d", http.StatusOK, w.Code)
-	}
-}
-
-func TestGroupOK(t *testing.T) {
-	for _, m := range METHODS {
-		testGroupOK(m, t)
-	}
-}
-
-func testSubGroupOK(method string, t *testing.T) {
-	passed := false
-	f := New("flotilla_testsubgroupOK")
-	g := f.New("/test_group")
-	g.Handle(NewRoute(method, "/test_group_subgroup", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
-	f.Configure(f.Configuration...)
-
-	w := PerformRequest(f, method, "/test_group/test_group_subgroup")
-
-	if passed == false {
-		t.Errorf(method + " group route handler was not invoked.")
-	}
-	if w.Code != http.StatusOK {
-		t.Errorf("Status code should be %v, was %d", http.StatusOK, w.Code)
-	}
-}
-
-func TestSubGroupOK(t *testing.T) {
-	for _, m := range METHODS {
-		testSubGroupOK(m, t)
-	}
-}
-
 func testRouteNotOK(method string, t *testing.T) {
 	passed := false
 	f := New("flotilla_testroutenotok")

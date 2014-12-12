@@ -12,7 +12,7 @@ type (
 	TData map[string]interface{}
 )
 
-func templatedata(any interface{}) TData {
+func templateData(any interface{}) TData {
 	if rcvd, ok := any.(map[string]interface{}); ok {
 		td := rcvd
 		return td
@@ -25,7 +25,7 @@ func templatedata(any interface{}) TData {
 
 func TemplateData(ctx *Ctx, any interface{}) TData {
 	ctxcopy := ctx.Copy()
-	td := templatedata(any)
+	td := templateData(any)
 	td["Ctx"] = ctxcopy
 	td["Request"] = ctx.Request
 	td["Session"] = ctx.Session
@@ -33,7 +33,7 @@ func TemplateData(ctx *Ctx, any interface{}) TData {
 		td[k] = v
 	}
 	td["Flash"] = allflashmessages(ctx)
-	td.contextprocessors(ctxcopy)
+	td.contextProcessors(ctxcopy)
 	return td
 }
 
@@ -64,7 +64,7 @@ func (t TData) UrlFor(route string, external bool, params ...string) string {
 // HTML will call the context processor by name return html, html formatted error,
 // or html formatted notice that the processor could not return an html value.
 func (t TData) HTML(name string) template.HTML {
-	if fn, ok := t.ctxprc(name); ok {
+	if fn, ok := t.ctxPrc(name); ok {
 		res, err := call(fn)
 		if err != nil {
 			return template.HTML(err.Error())
@@ -80,7 +80,7 @@ func (t TData) HTML(name string) template.HTML {
 // error string value, or a string indicating that the processor could not return
 // a string value.
 func (t TData) STRING(name string) string {
-	if fn, ok := t.ctxprc(name); ok {
+	if fn, ok := t.ctxPrc(name); ok {
 		res, err := call(fn)
 		if err != nil {
 			return err.Error()
@@ -94,7 +94,7 @@ func (t TData) STRING(name string) string {
 
 // CALL will call the context processor by name, returning an interface{} or error.
 func (t TData) CALL(name string) interface{} {
-	if fn, ok := t.ctxprc(name); ok {
+	if fn, ok := t.ctxPrc(name); ok {
 		if res, err := call(fn); err == nil {
 			return res
 		} else {
@@ -104,7 +104,7 @@ func (t TData) CALL(name string) interface{} {
 	return fmt.Sprintf("context processor %s cannot be processed by CALL", name)
 }
 
-func (t TData) ctxprc(name string) (reflect.Value, bool) {
+func (t TData) ctxPrc(name string) (reflect.Value, bool) {
 	if fn, ok := t[name]; ok {
 		if fn, ok := fn.(reflect.Value); ok {
 			return fn, true
@@ -113,15 +113,15 @@ func (t TData) ctxprc(name string) (reflect.Value, bool) {
 	return reflect.Value{}, false
 }
 
-func (t TData) contextprocessor(fn reflect.Value, ctx *Ctx) reflect.Value {
+func (t TData) contextProcessor(fn reflect.Value, ctxcopy *Ctx) reflect.Value {
 	newfn := func() (interface{}, error) {
-		return call(fn, ctx)
+		return call(fn, ctxcopy)
 	}
 	return valueFunc(newfn)
 }
 
-func (t TData) contextprocessors(ctxcopy *Ctx) {
+func (t TData) contextProcessors(ctxcopy *Ctx) {
 	for k, fn := range ctxcopy.processors {
-		t[k] = t.contextprocessor(fn, ctxcopy)
+		t[k] = t.contextProcessor(fn, ctxcopy)
 	}
 }

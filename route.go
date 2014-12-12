@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/thrisp/engine"
+	"golang.org/x/net/context"
 )
 
 var (
@@ -80,10 +80,10 @@ func (rt *Route) CtxFuncs() map[string]interface{} {
 	return rt.blueprint.app.Env.ctxfunctions
 }
 
-func (rt *Route) handle(ec *engine.Ctx) {
-	rq := rt.getCtx(ec)
+func (rt *Route) handle(c context.Context) {
+	rq := rt.getCtx(c.Value("Current").(Current))
 	rq.events()
-	rt.putR(rq)
+	rt.putCtx(rq)
 }
 
 // NewRoute returns a new Route from a string method, a string path, a boolean

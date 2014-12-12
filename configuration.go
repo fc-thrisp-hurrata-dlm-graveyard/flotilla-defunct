@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	configurelast []Configuration = []Configuration{cblueprints,
+	configureLast = []Configuration{cblueprints,
 		cstatic,
 		ctemplating,
 		csession,
@@ -24,7 +24,7 @@ type (
 // Configure takes any number of Configuration functions and to run the app through.
 func (a *App) Configure(c ...Configuration) error {
 	var err error
-	c = append(c, configurelast...)
+	c = append(c, configureLast...)
 	for _, fn := range c {
 		err = fn(a)
 	}
@@ -50,6 +50,7 @@ func cengine(a *App) error {
 	if err := e.SetConf(cnf...); err != nil {
 		return err
 	}
+
 	return nil
 }
 

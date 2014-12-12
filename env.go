@@ -38,10 +38,10 @@ type (
 )
 
 func (e *Env) defaults() {
-	e.Store.adddefault("upload", "size", "10000000")             // bytes
-	e.Store.adddefault("secret", "key", "Flotilla;Secret;Key;1") // weak default value
-	e.Store.adddefault("session", "cookiename", "session")
-	e.Store.adddefault("session", "lifetime", "2629743")
+	e.Store.addDefault("upload", "size", "10000000")             // bytes
+	e.Store.addDefault("secret", "key", "Flotilla;Secret;Key;1") // weak default value
+	e.Store.addDefault("session", "cookiename", "session")
+	e.Store.addDefault("session", "lifetime", "2629743")
 	e.Store.add("static", "directories", workingStatic)
 	e.Store.add("template", "directories", workingTemplates)
 }
@@ -97,7 +97,7 @@ func (env *Env) SetMode(mode string, value bool) error {
 // the function is a valid function returning 1 value, or 1 value and 1 error
 // value.
 func (env *Env) AddCtxFunc(name string, fn interface{}) error {
-	err := validctxfunc(fn)
+	err := validCtxFunc(fn)
 	if err == nil {
 		env.ctxfunctions[name] = fn
 		return nil

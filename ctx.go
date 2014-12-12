@@ -2,7 +2,9 @@ package flotilla
 
 import (
 	"math"
+	"mime/multipart"
 	"net/http"
+	"net/url"
 	"reflect"
 
 	"github.com/thrisp/engine"
@@ -10,6 +12,18 @@ import (
 )
 
 type (
+	// The Current interface handles the information boundary between incoming
+	// engine context and flotilla context. The engine must provide a context.Context
+	// with a Value fitting this interface.
+	Current interface {
+		Request() *http.Request
+		Data() map[string]interface{}
+		Form() url.Values
+		Files() map[string][]*multipart.FileHeader
+		StatusFunc() func(int)
+		Writer() engine.ResponseWriter
+	}
+
 	// A HandlerFunc is any function taking a single parameter, *Ctx
 	HandlerFunc func(*Ctx)
 
@@ -23,10 +37,10 @@ type (
 		Session    session.SessionStore
 		Data       map[string]interface{}
 		App        *App
-		Ctx        *engine.Ctx
 		funcs      map[string]reflect.Value
 		processors map[string]reflect.Value
 		deferred   []HandlerFunc
+		statusfunc func(int)
 	}
 )
 
@@ -52,19 +66,17 @@ func (rt Route) newCtx() interface{} {
 	}
 }
 
-func (rt Route) getCtx(ec *engine.Ctx) *Ctx {
+func (rt Route) getCtx(c Current) *Ctx {
 	ctx := rt.p.Get().(*Ctx)
-	ctx.Request = ec.Request
-	ctx.rw = ec.RW
-	ctx.Ctx = ec
-	for _, p := range ec.Params {
-		ctx.Data[p.Key] = p.Value
-	}
+	ctx.Request = c.Request()
+	ctx.rw = c.Writer()
+	ctx.Data = c.Data()
+	ctx.statusfunc = c.StatusFunc()
 	ctx.Start()
 	return ctx
 }
 
-func (rt Route) putR(ctx *Ctx) {
+func (rt Route) putCtx(ctx *Ctx) {
 	ctx.index = -1
 	ctx.Session = nil
 	for k, _ := range ctx.Data {
@@ -89,7 +101,7 @@ func (ctx *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
 	return call(ctx.funcs[name], args...)
 }
 
-// Copies the Ctx with handlers set to nil; useful for read only copies in goroutines.
+// Copies the Ctx with handlers set to nil.
 func (ctx *Ctx) Copy() *Ctx {
 	var rcopy Ctx = *ctx
 	rcopy.index = math.MaxInt8 / 2
@@ -117,17 +129,6 @@ func (ctx *Ctx) Next() {
 // Push places a handlerfunc in ctx.deferred for execution after all handlersfuncs have run.
 func (ctx *Ctx) Push(fn HandlerFunc) {
 	ctx.deferred = append(ctx.deferred, fn)
-}
-
-// Calls Ctx.Status in the Engine, with a fall through to Ctx.Abort.
-func (ctx *Ctx) Status(code int) {
-	ctx.Ctx.Status(code)
-}
-
-// Immediately ends processing of current Ctx and return the code, the same as
-// calling Ctx.Status, but less informative & not configurable.
-func (ctx *Ctx) Abort(code int) {
-	ctx.Ctx.Abort(code)
 }
 
 // Sets a new pair key/value in the current Ctx.
