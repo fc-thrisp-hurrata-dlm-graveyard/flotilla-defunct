@@ -3,7 +3,6 @@ package flotilla
 import (
 	"path/filepath"
 
-	"github.com/thrisp/engine"
 	"golang.org/x/net/context"
 )
 
@@ -83,7 +82,7 @@ func (app *App) Mount(mount string, inherit bool, blueprints ...*Blueprint) erro
 		newprefix := filepath.ToSlash(filepath.Join(mount, blueprint.Prefix))
 
 		if inherit {
-			mbp = app.New(newprefix)
+			mbp = app.NewBlueprint(newprefix)
 		} else {
 			mbp = NewBlueprint(newprefix)
 		}
@@ -116,11 +115,17 @@ func NewBlueprint(prefix string) *Blueprint {
 	}
 }
 
-// RegisteredBlueprint creates a new Blueprint and registers it with the App.
-func RegisteredBlueprint(prefix string, app *App) *Blueprint {
-	b := NewBlueprint(prefix)
-	b.Register(app)
-	return b
+// New creates a new child Blueprint from the existing Blueprint.
+func (b *Blueprint) NewBlueprint(component string, handlers ...HandlerFunc) *Blueprint {
+	prefix := b.pathFor(component)
+
+	newb := NewBlueprint(prefix)
+	newb.ctxprocessors = b.ctxprocessors
+	newb.Handlers = b.combineHandlers(handlers)
+
+	b.children = append(b.children, newb)
+
+	return newb
 }
 
 // Register will provide the app instance to the blueprint to finalize all deferred actions.
@@ -135,19 +140,6 @@ func (b *Blueprint) runDeferred() {
 		fn()
 	}
 	b.deferred = nil
-}
-
-// New creates a new child Blueprint from the existing Blueprint.
-func (b *Blueprint) New(component string, handlers ...HandlerFunc) *Blueprint {
-	prefix := b.pathFor(component)
-
-	newb := RegisteredBlueprint(prefix, b.app)
-	newb.ctxprocessors = b.ctxprocessors
-	newb.Handlers = b.combineHandlers(handlers)
-
-	b.children = append(b.children, newb)
-
-	return newb
 }
 
 func (b *Blueprint) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
@@ -261,7 +253,7 @@ func (b *Blueprint) Handle(route *Route) {
 	register := func() {
 		b.register(route)
 		b.add(route)
-		b.app.engine.Handle(route.path, route.method, route.handle)
+		b.app.Take(route.path, route.method, route.handle)
 	}
 	b.push(register, route)
 }
@@ -294,9 +286,9 @@ func (b *Blueprint) HEAD(path string, handlers ...HandlerFunc) {
 	b.Handle(NewRoute("HEAD", path, false, handlers))
 }
 
-// STATIC adds a Static route handled by the app engine, based on the blueprint prefix.
+// STATIC adds a Static route handled by the app, based on the blueprint prefix.
 func (b *Blueprint) STATIC(path string) {
-	b.app.StaticDirs(dropTrailing(path, "*filepath"))
+	b.push(func() { b.app.StaticDirs(dropTrailing(path, "*filepath")) }, nil)
 	b.Handle(NewRoute("GET", path, true, []HandlerFunc{handleStatic}))
 }
 
@@ -314,13 +306,7 @@ func (b *Blueprint) StatusHandle(code int, handlers ...HandlerFunc) {
 		}
 	}
 	register := func() {
-		if ss, ok := b.app.engine.HttpStatuses[code]; ok {
-			ss.Update(statushandler)
-		} else {
-			ns := engine.NewHttpStatus(code, string(code))
-			ns.Update(statushandler)
-			b.app.engine.HttpStatuses.New(ns)
-		}
+		b.app.TakeStatus(code, statushandler)
 	}
 	b.push(register, nil)
 }

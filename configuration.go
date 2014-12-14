@@ -1,56 +1,43 @@
 package flotilla
 
-import (
-	"log"
-	"os"
-	"strings"
-
-	"github.com/thrisp/engine"
-)
+import "strings"
 
 var (
 	configureLast = []Configuration{cblueprints,
 		cstatic,
 		ctemplating,
-		csession,
-		cengine}
+		csession}
 )
 
 type (
+	Config struct {
+		Configured    bool
+		Configuration []Configuration
+		deferred      []Configuration
+	}
+
 	// A function that takes an App pointer to configure the App.
 	Configuration func(*App) error
 )
 
+func defaultConfig() *Config {
+	return &Config{deferred: configureLast}
+}
+
 // Configure takes any number of Configuration functions and to run the app through.
 func (a *App) Configure(c ...Configuration) error {
 	var err error
-	c = append(c, configureLast...)
-	for _, fn := range c {
+	a.Configuration = append(a.Configuration, c...)
+	for _, fn := range a.Configuration {
+		err = fn(a)
+	}
+	for _, fn := range a.deferred {
 		err = fn(a)
 	}
 	if err != nil {
 		return err
 	}
 	a.Configured = true
-	return nil
-}
-
-func cengine(a *App) error {
-	e := a.engine
-	var cnf []engine.Conf
-	if mm, err := a.Env.Store["UPLOAD_SIZE"].Int64(); err == nil {
-		cnf = append(cnf, engine.MaxFormMemory(mm))
-	}
-	if a.Mode.Production {
-		cnf = append(cnf, engine.ServePanic(false))
-	}
-	if !a.Mode.Production {
-		cnf = append(cnf, engine.Logger(log.New(os.Stdout, "[FLOTILLA]", 0)))
-	}
-	if err := e.SetConf(cnf...); err != nil {
-		return err
-	}
-
 	return nil
 }
 

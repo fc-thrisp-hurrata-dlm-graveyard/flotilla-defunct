@@ -28,7 +28,7 @@ func methodNotMethod(method string) string {
 
 func testRouteOK(method string, t *testing.T) {
 	passed := false
-	f := New("flotilla_testRouteOK")
+	f := New("flotilla_testRouteOK", DefaultEngine)
 	r := NewRoute(method, "/test", false, []HandlerFunc{func(ctx *Ctx) { passed = true }})
 	f.Handle(r)
 	f.Configure(f.Configuration...)
@@ -51,7 +51,7 @@ func TestRouteOK(t *testing.T) {
 
 func testRouteNotOK(method string, t *testing.T) {
 	passed := false
-	f := New("flotilla_testroutenotok")
+	f := New("flotilla_testroutenotok", DefaultEngine)
 	othermethod := methodNotMethod(method)
 	f.Handle(NewRoute(othermethod, "/test_notfound", false, []HandlerFunc{func(ctx *Ctx) { passed = true }}))
 	f.Configure(f.Configuration...)
@@ -75,7 +75,7 @@ func TestRouteNotOK(t *testing.T) {
 func testBlueprintRoute(method string, t *testing.T) {
 	passed := false
 
-	f := New("flotilla_test_Blueprint")
+	f := New("flotilla_test_Blueprint", DefaultEngine)
 
 	b := NewBlueprint("/blueprint")
 
@@ -111,7 +111,7 @@ func TestBlueprintRoute(t *testing.T) {
 func testMountBlueprint(method string, t *testing.T) {
 	passed := false
 
-	f := New("flotilla_test_BlueprintMount")
+	f := New("flotilla_test_BlueprintMount", DefaultEngine)
 
 	b := NewBlueprint("/mount")
 

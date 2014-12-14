@@ -20,7 +20,7 @@ type (
 		Data() map[string]interface{}
 		Form() url.Values
 		Files() map[string][]*multipart.FileHeader
-		StatusFunc() func(int)
+		StatusFunc() (func(int), bool)
 		Writer() engine.ResponseWriter
 	}
 
@@ -71,7 +71,9 @@ func (rt Route) getCtx(c Current) *Ctx {
 	ctx.Request = c.Request()
 	ctx.rw = c.Writer()
 	ctx.Data = c.Data()
-	ctx.statusfunc = c.StatusFunc()
+	if sf, exists := c.StatusFunc(); exists {
+		ctx.statusfunc = sf
+	}
 	ctx.Start()
 	return ctx
 }
