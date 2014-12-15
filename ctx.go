@@ -12,6 +12,18 @@ import (
 )
 
 type (
+	ResponseWriter interface {
+		http.ResponseWriter
+		http.Hijacker
+		http.Flusher
+		http.CloseNotifier
+
+		Status() int
+		Size() int
+		Written() bool
+		WriteHeaderNow()
+	}
+
 	// The Current interface handles the information boundary between incoming
 	// engine context and flotilla context. The engine must provide a context.Context
 	// with a Value fitting this interface.
@@ -32,20 +44,20 @@ type (
 	Ctx struct {
 		index      int8
 		handlers   []HandlerFunc
-		rw         engine.ResponseWriter
+		deferred   []HandlerFunc
+		rw         ResponseWriter
+		funcs      map[string]reflect.Value
+		processors map[string]reflect.Value
+		statusfunc func(int)
 		Request    *http.Request
 		Session    session.SessionStore
 		Data       map[string]interface{}
 		App        *App
-		funcs      map[string]reflect.Value
-		processors map[string]reflect.Value
-		deferred   []HandlerFunc
-		statusfunc func(int)
 	}
 )
 
 // An adhoc *Ctx built from a responsewriter & a request, not based on a route.
-func (a *App) tmpCtx(w engine.ResponseWriter, req *http.Request) *Ctx {
+func (a *App) tmpCtx(w ResponseWriter, req *http.Request) *Ctx {
 	ctx := &Ctx{App: a,
 		Request:    req,
 		rw:         w,

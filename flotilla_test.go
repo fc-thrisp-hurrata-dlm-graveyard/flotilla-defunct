@@ -5,8 +5,9 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
-
 	"testing"
+
+	"golang.org/x/net/context"
 )
 
 var METHODS []string = []string{"GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS", "HEAD"}
@@ -24,6 +25,58 @@ func methodNotMethod(method string) string {
 		methodNotMethod(newmethod)
 	}
 	return newmethod
+}
+
+func TestingEngine(a *App) error {
+	a.Engine = newtestengine()
+	return nil
+}
+
+type TestEngine struct {
+	routes map[string]func(context.Context)
+}
+
+func newtestengine() *TestEngine {
+	return &TestEngine{routes: make(map[string]func(context.Context))}
+}
+
+func (te *TestEngine) Take(method string, route string, handler func(context.Context)) {
+	k := fmt.Sprintf("%s:%s", method, route)
+	te.routes[k] = handler
+}
+
+func (te *TestEngine) TakeStatus(code int, handler func(context.Context)) {}
+
+func (te *TestEngine) Reconfigure(func() error) error {
+	return nil
+}
+
+func (te *TestEngine) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	path := req.URL.Path
+	method := req.Method
+	if rt, ok := te.routes[fmt.Sprintf("%s:%s", method, path)]; ok {
+		rt(context.WithValue(context.Background(), "current", true))
+	}
+}
+
+func testCustomEngine(method string, t *testing.T) {
+	passed := false
+	f := New("flotilla_testRouteOK", TestingEngine)
+	f.Take(method, "/test", func(ctx context.Context) {
+		if ctx.Value("current").(bool) {
+			passed = true
+		}
+	})
+	PerformRequest(f, method, "/test")
+	if passed == false {
+		t.Errorf("test engine was not used")
+	}
+}
+
+func TestCustomEngine(t *testing.T) {
+	for _, m := range METHODS {
+		testCustomEngine(m, t)
+	}
 }
 
 func testRouteOK(method string, t *testing.T) {

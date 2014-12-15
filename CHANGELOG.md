@@ -1,10 +1,11 @@
 ##Changelog
 
-### Flotilla 0.3.0 (12.9.2014)
+### Flotilla 0.3.0 (12.15.2014)
 
-- eliminate Blueprint interface, shift RouteGroup idioms to Blueprint idioms
-- Blueprint deferral of engine router handling if not linked to an app until 
-  registered with an app
+- new Blueprint concepts 
+- eliminate old Blueprint interface, merge RouteGroup & Blueprint idioms to one
+- engine interface & default engine, for future extensible engines
+- essential testing, bugfixes, and refactoring
 
 ### Flotilla 0.2.0 (12.2.2014) ~unreleased
 
