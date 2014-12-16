@@ -12,7 +12,7 @@ var (
 		"flashmessages":    flashmessages,
 		"redirect":         redirect,
 		"rendertemplate":   rendertemplate,
-		"servedata":        servedata,
+		"serveplain":       serveplain,
 		"servefile":        servefile,
 		"urlfor":           urlfor,
 	}
@@ -62,7 +62,7 @@ func (ctx *Ctx) Redirect(code int, location string) {
 	ctx.Call("redirect", ctx, code, location)
 }
 
-func servedata(ctx *Ctx, code int, data []byte) error {
+func serveplain(ctx *Ctx, code int, data []byte) error {
 	ctx.Push(func(c *Ctx) {
 		c.WriteToHeader(code, []string{"Content-Type", "text/plain"})
 		c.rw.Write(data)
@@ -70,10 +70,10 @@ func servedata(ctx *Ctx, code int, data []byte) error {
 	return nil
 }
 
-// ServeData writes plain data into the body stream and updates the HTTP code,
-// using the Ctx servedata function.
-func (ctx *Ctx) ServeData(code int, data []byte) {
-	ctx.Call("servedata", ctx, code, data)
+// ServePlain writes plain data into the body stream and updates the HTTP code,
+// using the Ctx serveplain function.
+func (ctx *Ctx) ServePlain(code int, data []byte) {
+	ctx.Call("serveplain", ctx, code, data)
 }
 
 func servefile(ctx *Ctx, f http.File) error {

@@ -62,19 +62,19 @@ func (env *Env) BaseEnv() {
 }
 
 // Merges an outside env instance with the calling Env.
-func (env *Env) MergeEnv(o *Env) {
-	env.MergeStore(o.Store)
-	for _, fs := range o.Assets {
+func (env *Env) MergeEnv(other *Env) {
+	env.MergeStore(other.Store)
+	for _, fs := range other.Assets {
 		env.Assets = append(env.Assets, fs)
 	}
-	env.StaticDirs(o.Store["STATIC_DIRECTORIES"].List()...)
-	env.TemplateDirs(o.Store["TEMPLATE_DIRECTORIES"].List()...)
-	env.AddCtxFuncs(o.ctxfunctions)
+	env.StaticDirs(other.Store["STATIC_DIRECTORIES"].List()...)
+	env.TemplateDirs(other.Store["TEMPLATE_DIRECTORIES"].List()...)
+	env.AddCtxFuncs(other.ctxfunctions)
 }
 
 // MergeStore merges a Store instance with the Env's Store, without replacement.
-func (env *Env) MergeStore(s Store) {
-	for k, v := range s {
+func (env *Env) MergeStore(other Store) {
+	for k, v := range other {
 		if !v.defaultvalue {
 			if _, ok := env.Store[k]; !ok {
 				env.Store[k] = v

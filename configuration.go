@@ -122,8 +122,7 @@ func Templating(t Templator) Configuration {
 	}
 }
 
-// TemplateFunction passes a template function to the env for Templator or
-// other templating function use.
+// TemplateFunction passes a template function to the env for Templator use.
 func TemplateFunction(name string, fn interface{}) Configuration {
 	return func(a *App) error {
 		a.Env.AddTplFunc(name, fn)
@@ -131,8 +130,7 @@ func TemplateFunction(name string, fn interface{}) Configuration {
 	}
 }
 
-// TemplateFunction passes a map of functions to the env for Templator or
-// other templating function use.
+// TemplateFunction passes a map of functions to the env for Templator use.
 func TemplateFunctions(fns map[string]interface{}) Configuration {
 	return func(a *App) error {
 		a.Env.AddTplFuncs(fns)

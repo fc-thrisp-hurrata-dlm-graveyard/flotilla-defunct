@@ -24,11 +24,11 @@ func Empty(name string) *App {
 }
 
 // Returns a new App with the provided Engine and minimum configuration.
-func New(name string, efn SetEngine, conf ...Configuration) *App {
+func New(name string, enginefn SetEngine, conf ...Configuration) *App {
 	app := Empty(name)
 	app.BaseEnv()
 	app.Config = defaultConfig()
-	efn(app)
+	enginefn(app)
 	app.Blueprint = NewBlueprint("/")
 	app.STATIC("static")
 	app.Configured = false

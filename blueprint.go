@@ -246,9 +246,9 @@ func (b *Blueprint) register(route *Route) {
 	route.registered = true
 }
 
-// Handle registers new handlers and/or handlers with a constructed Route.
-// method. For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
-// functions can be used by specifying path & handlers.
+// Handle registers new handlers and/or existing handlers with a constructed Route.
+// For GET, POST, DELETE, PATCH, PUT, OPTIONS, and HEAD requests the respective
+// shortcut functions can be used by specifying path & handlers.
 func (b *Blueprint) Handle(route *Route) {
 	register := func() {
 		b.register(route)
@@ -258,12 +258,12 @@ func (b *Blueprint) Handle(route *Route) {
 	b.push(register, route)
 }
 
-func (b *Blueprint) POST(path string, handlers ...HandlerFunc) {
-	b.Handle(NewRoute("POST", path, false, handlers))
-}
-
 func (b *Blueprint) GET(path string, handlers ...HandlerFunc) {
 	b.Handle(NewRoute("GET", path, false, handlers))
+}
+
+func (b *Blueprint) POST(path string, handlers ...HandlerFunc) {
+	b.Handle(NewRoute("POST", path, false, handlers))
 }
 
 func (b *Blueprint) DELETE(path string, handlers ...HandlerFunc) {

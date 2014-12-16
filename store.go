@@ -145,7 +145,7 @@ func (si StoreItem) Bool() (bool, error) {
 }
 
 // Float attempts to return the storeitem value as type float
-func (si *StoreItem) Float() (value float64, err error) {
+func (si *StoreItem) Float() (float64, error) {
 	if value, err := strconv.ParseFloat(si.Value, 64); err == nil {
 		return value, nil
 	}
@@ -153,7 +153,7 @@ func (si *StoreItem) Float() (value float64, err error) {
 }
 
 // Int attempts to return the storeitem value as type int
-func (si *StoreItem) Int() (value int, err error) {
+func (si *StoreItem) Int() (int, error) {
 	if value, err := strconv.Atoi(si.Value); err == nil {
 		return value, nil
 	}
@@ -161,7 +161,7 @@ func (si *StoreItem) Int() (value int, err error) {
 }
 
 // Int64 attempts to return the storeitem value as type int64
-func (si *StoreItem) Int64() (value int64, err error) {
+func (si *StoreItem) Int64() (int64, error) {
 	if value, err := strconv.ParseInt(si.Value, 10, 64); err == nil {
 		return value, nil
 	}
