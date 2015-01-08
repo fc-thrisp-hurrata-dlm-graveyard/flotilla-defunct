@@ -11,7 +11,7 @@ import (
 )
 
 type (
-	// Templator is an interface with methods for application templating.
+	// Templator is an interface with methods for app templating.
 	Templator interface {
 		Render(io.Writer, string, interface{}) error
 		ListTemplateDirs() []string

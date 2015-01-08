@@ -1,5 +1,13 @@
 ##Changelog
 
+### Flotilla 0.3.2 ()
+
+- change 'ctx functions' to 'extensions'
+
+### Flotilla 0.3.1 (12.16.2014)
+
+- update travis.yml to accomodate 1.4/1.3 cover package path difference
+
 ### Flotilla 0.3.0 (12.15.2014)
 
 - new Blueprint concepts 
@@ -11,7 +19,7 @@
 
 - return from 'R' to 'Ctx'
 - flash messaging
-- in-template context processors
+- per-route, in-template context processors
 - initialization & configuration streamlining
 - coinciding boolean app modes (development, testing, & production)
 - methods for viewing & setting plain or minimally secure cookies

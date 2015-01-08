@@ -103,14 +103,14 @@ func EnvItem(items ...string) Configuration {
 // CtxFunc adds a single function accessible as a Context Function.
 func CtxFunc(name string, fn interface{}) Configuration {
 	return func(a *App) error {
-		return a.Env.AddCtxFunc(name, fn)
+		return a.Env.AddExtension(name, fn)
 	}
 }
 
 // CtxFuncs adds a map of functions accessible as Context Functions.
 func CtxFuncs(fns map[string]interface{}) Configuration {
 	return func(a *App) error {
-		return a.Env.AddCtxFuncs(fns)
+		return a.Env.AddExtensions(fns)
 	}
 }
 

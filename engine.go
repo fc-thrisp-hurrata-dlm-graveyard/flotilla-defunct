@@ -11,6 +11,7 @@ import (
 )
 
 type (
+	// SetEngine is a function that takes an App instance to set an engine for the App.
 	SetEngine func(*App) error
 
 	Engine interface {

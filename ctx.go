@@ -46,7 +46,7 @@ type (
 		handlers   []HandlerFunc
 		deferred   []HandlerFunc
 		rw         ResponseWriter
-		funcs      map[string]reflect.Value
+		extensions map[string]reflect.Value
 		processors map[string]reflect.Value
 		statusfunc func(int)
 		Request    *http.Request
@@ -61,7 +61,7 @@ func (a *App) tmpCtx(w ResponseWriter, req *http.Request) *Ctx {
 	ctx := &Ctx{App: a,
 		Request:    req,
 		rw:         w,
-		funcs:      reflectFuncs(a.ctxfunctions),
+		extensions: reflectFuncs(a.extensions),
 		processors: reflectFuncs(a.ctxprocessors),
 	}
 	ctx.Start()
@@ -73,7 +73,7 @@ func (rt Route) newCtx() interface{} {
 		handlers:   rt.handlers,
 		App:        rt.App(),
 		Data:       make(map[string]interface{}),
-		funcs:      reflectFuncs(rt.CtxFuncs()),
+		extensions: reflectFuncs(rt.Extensions()),
 		processors: reflectFuncs(rt.ctxprocessors),
 	}
 }
@@ -110,9 +110,9 @@ func (ctx *Ctx) Release() {
 	}
 }
 
-// Calls a function with name in *Ctx.funcs passing in the given args.
+// Calls a function with name in *Ctx.extensions passing in the given args.
 func (ctx *Ctx) Call(name string, args ...interface{}) (interface{}, error) {
-	return call(ctx.funcs[name], args...)
+	return call(ctx.extensions[name], args...)
 }
 
 // Copies the Ctx with handlers set to nil.
@@ -140,7 +140,7 @@ func (ctx *Ctx) Next() {
 	}
 }
 
-// Push places a handlerfunc in ctx.deferred for execution after all handlersfuncs have run.
+// Push places a handlerfunc in ctx.deferred for execution after all handlerfuncs have run.
 func (ctx *Ctx) Push(fn HandlerFunc) {
 	ctx.deferred = append(ctx.deferred, fn)
 }

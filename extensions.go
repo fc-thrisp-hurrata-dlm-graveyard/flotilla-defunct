@@ -3,8 +3,8 @@ package flotilla
 import "net/http"
 
 var (
-	builtinctxfuncs = map[string]interface{}{
-		"abort":            defaultabort,
+	builtinextensions = map[string]interface{}{
+		"abort":            abort,
 		"allflashmessages": allflashmessages,
 		"cookie":           cookie,
 		"cookies":          cookies,
@@ -14,18 +14,19 @@ var (
 		"rendertemplate":   rendertemplate,
 		"serveplain":       serveplain,
 		"servefile":        servefile,
+		"status":           abort,
 		"urlfor":           urlfor,
 	}
 )
 
-func validCtxFunc(fn interface{}) error {
+func validExtension(fn interface{}) error {
 	if goodFunc(valueFunc(fn).Type()) {
 		return nil
 	}
 	return newError("function %q is not a valid Flotilla Ctx function; must be a function and return must be 1 value, or 1 value and 1 error value", fn)
 }
 
-func defaultabort(c *Ctx, code int) error {
+func abort(c *Ctx, code int) error {
 	if code >= 0 {
 		c.rw.WriteHeader(code)
 	}
@@ -36,7 +37,7 @@ func (ctx *Ctx) Status(code int) {
 	if ctx.statusfunc != nil {
 		ctx.statusfunc(code)
 	} else {
-		ctx.Call("abort", ctx, code)
+		ctx.Call("status", ctx, code)
 	}
 }
 

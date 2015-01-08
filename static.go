@@ -6,6 +6,9 @@ import (
 )
 
 type (
+	// Staticor is an interface to handling static files requiring methods to
+	// get & set string directories as well as determine(and potentially handle
+	// however appropriate) existence of static files given a string and a Ctx.
 	Staticor interface {
 		StaticDirs(...string) []string
 		Exists(string, *Ctx) bool

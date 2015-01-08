@@ -76,8 +76,8 @@ func (rt *Route) App() *App {
 	return rt.blueprint.app
 }
 
-func (rt *Route) CtxFuncs() map[string]interface{} {
-	return rt.blueprint.app.Env.ctxfunctions
+func (rt *Route) Extensions() map[string]interface{} {
+	return rt.blueprint.app.Env.extensions
 }
 
 func (rt *Route) handle(c context.Context) {

@@ -32,7 +32,7 @@ type (
 		Assets
 		Staticor
 		Templator
-		ctxfunctions map[string]interface{}
+		extensions   map[string]interface{}
 		tplfunctions map[string]interface{}
 	}
 )
@@ -50,14 +50,14 @@ func (e *Env) defaults() {
 func EmptyEnv() *Env {
 	return &Env{Mode: &Modes{true, false, false},
 		Store:        make(Store),
-		ctxfunctions: make(map[string]interface{}),
+		extensions:   make(map[string]interface{}),
 		tplfunctions: make(map[string]interface{}),
 	}
 }
 
 // NewEnv configures an intialized Env.
 func (env *Env) BaseEnv() {
-	env.AddCtxFuncs(builtinctxfuncs)
+	env.AddExtensions(builtinextensions)
 	env.defaults()
 }
 
@@ -69,7 +69,7 @@ func (env *Env) MergeEnv(other *Env) {
 	}
 	env.StaticDirs(other.Store["STATIC_DIRECTORIES"].List()...)
 	env.TemplateDirs(other.Store["TEMPLATE_DIRECTORIES"].List()...)
-	env.AddCtxFuncs(other.ctxfunctions)
+	env.AddExtensions(other.extensions)
 }
 
 // MergeStore merges a Store instance with the Env's Store, without replacement.
@@ -93,23 +93,23 @@ func (env *Env) SetMode(mode string, value bool) error {
 	return newError("env could not be set to %s", mode)
 }
 
-// AddCtxFunc adds a single Ctx function with the name string, checking that
+// AddExtension adds a single Ctx function with the name string, checking that
 // the function is a valid function returning 1 value, or 1 value and 1 error
 // value.
-func (env *Env) AddCtxFunc(name string, fn interface{}) error {
-	err := validCtxFunc(fn)
+func (env *Env) AddExtension(name string, fn interface{}) error {
+	err := validExtension(fn)
 	if err == nil {
-		env.ctxfunctions[name] = fn
+		env.extensions[name] = fn
 		return nil
 	}
 	return err
 }
 
-// AddCtxFuncs stores cross-handler functions in the Env as intermediate staging
+// AddExtensions stores cross-handler functions in the Env as intermediate staging
 // for later use by Ctx.
-func (env *Env) AddCtxFuncs(fns map[string]interface{}) error {
+func (env *Env) AddExtensions(fns map[string]interface{}) error {
 	for k, v := range fns {
-		err := env.AddCtxFunc(k, v)
+		err := env.AddExtension(k, v)
 		if err != nil {
 			return err
 		}
