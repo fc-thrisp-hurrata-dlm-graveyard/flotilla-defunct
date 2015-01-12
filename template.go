@@ -82,7 +82,7 @@ func NewLoader(env *Env) *Loader {
 	return fl
 }
 
-func (fl *Loader) ValidExtension(ext string) bool {
+func (fl *Loader) ValidFileExtension(ext string) bool {
 	for _, extension := range fl.FileExtensions {
 		if extension == ext {
 			return true
@@ -98,7 +98,7 @@ func (fl *Loader) AssetTemplates() []string {
 	var ret []string
 	for _, assetfs := range fl.env.Assets {
 		for _, f := range assetfs.AssetNames() {
-			if fl.ValidExtension(filepath.Ext(f)) {
+			if fl.ValidFileExtension(filepath.Ext(f)) {
 				ret = append(ret, f)
 			}
 		}
@@ -114,7 +114,7 @@ func (fl *Loader) ListTemplates() interface{} {
 	for _, p := range fl.env.TemplateDirs() {
 		files, _ := ioutil.ReadDir(p)
 		for _, f := range files {
-			if fl.ValidExtension(filepath.Ext(f.Name())) {
+			if fl.ValidFileExtension(filepath.Ext(f.Name())) {
 				ret = append(ret, fmt.Sprintf("%s/%s", p, f.Name()))
 			}
 		}
@@ -126,7 +126,7 @@ func (fl *Loader) ListTemplates() interface{} {
 func (fl *Loader) Load(name string) (string, error) {
 	for _, p := range fl.env.TemplateDirs() {
 		f := filepath.Join(p, name)
-		if fl.ValidExtension(filepath.Ext(f)) {
+		if fl.ValidFileExtension(filepath.Ext(f)) {
 			// existing template dirs
 			if _, err := os.Stat(f); err == nil {
 				file, err := os.Open(f)
