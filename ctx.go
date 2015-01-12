@@ -101,7 +101,7 @@ func (rt Route) putCtx(ctx *Ctx) {
 }
 
 func (ctx *Ctx) Start() {
-	ctx.Session = ctx.App.SessionManager.SessionStart(ctx.rw, ctx.Request)
+	ctx.Session, _ = ctx.App.SessionManager.SessionStart(ctx.rw, ctx.Request)
 }
 
 func (ctx *Ctx) Release() {
