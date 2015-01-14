@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title> start </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <link href='https://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+    <link href="/flotilla/css/flotilla.css" rel="stylesheet" type='text/css'>
+    
+    
+</head>
+
+<html>
+    <body>
+        <div class="container">
+            <header>
+    Flotilla
+</header>
+
+            
+
+<h1 id="toc_0">Getting Started</h1>
+
+<h2 id="toc_1">Installation<a name="installation"></a></h2>
+
+<p>Flotilla is built around two core dependencies:</p>
+
+<ul>
+<li><p><a href="http://github.com/thrisp/engine">engine</a> <em>routing, multiplexing, net/http basics &amp; interface</em></p></li>
+
+<li><p><a href="http://github.com/thrisp/djinn/">djinn</a> <em>templating</em></p></li>
+</ul>
+
+<p>Flotilla can be installed with <code>go get -u github.com/thrisp/flotilla</code>.</p>
+
+<h2 id="toc_2">Example<a name="example"></a></h2>
+
+<p>A simple example application using Flotilla.</p>
+
+<p>main.go</p>
+
+<pre><code>package main
+
+import (
+    &quot;math/rand&quot;
+    &quot;os&quot;
+    &quot;os/signal&quot;
+
+    &quot;github.com/thrisp/flotilla&quot;
+)
+
+var lucky = []rune(&quot;1234567890&quot;)
+
+func randSeq(n int) string {
+    b := make([]rune, n)
+    for i := range b {
+        b[i] = lucky[rand.Intn(len(lucky))]
+    }
+    return string(b)
+}
+
+func Display(f *flotilla.Ctx) {
+    ret := fmt.Sprintf(&quot;Your lucky number is: %s&quot;, randSeq(20))
+    f.ServeData(200, []byte(ret))
+}
+
+func Lucky() (e *flotilla.App) {
+    e = flotilla.New()
+    e.GET(&quot;/quick/:start&quot;, Display)
+    return e
+}
+
+var quit = make(chan bool)
+
+func init() {
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    go func() {
+        for _ = range c {
+            quit &lt;- true
+        }
+    }()
+}
+
+func main() {
+    fl := Lucky()
+    go fl.Run(&quot;:8080&quot;)
+    &lt;-quit
+}
+</code></pre>
+
+<p>go run main.go &amp; visit: <a href="http://localhost:8080/quick/whatsmyluckynumber">http://localhost:8080/quick/whatsmyluckynumber</a></p>
+
+            <footer>
+    © Copyright 2015 <a href="http://github.com/thrisp">thrisp/hurrata</a>
+</footer>
+
+        </div>
+    </body>
+</html>
