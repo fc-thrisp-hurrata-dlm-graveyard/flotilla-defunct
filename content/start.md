@@ -2,20 +2,20 @@
 title = "start"
 draft = "false"
 +++
-## Getting Started
+# Getting Started
 
-# Installation<a name="installation"></a>
+## Installation<a name="installation"></a>
 
-Flotilla can be installed with `go get -u github.com/thrisp/flotilla`.
-
-Although designed as close to the standard library as possible, Flotilla is built around two core dependencies: 
+Flotilla is built around two core dependencies: 
 
 - [engine](http://github.com/thrisp/engine) *routing, multiplexing, net/http basics & interface*
 
 - [djinn](http://github.com/thrisp/djinn/) *templating*
 
+Flotilla can be installed with `go get -u github.com/thrisp/flotilla`.
 
-# Example<a name="example"></a>
+
+## Example<a name="example"></a>
 
 A simple example application using Flotilla.
 
@@ -47,7 +47,7 @@ main.go
         f.ServeData(200, []byte(ret))
     }
 
-    func Build() (e *flotilla.App) {
+    func Lucky() (e *flotilla.App) {
         e = flotilla.New()
         e.GET("/quick/:start", Display)
         return e
@@ -66,7 +66,7 @@ main.go
     }
 
     func main() {
-        fl := Build()
+        fl := Lucky()
         go fl.Run(":8080")
         <-quit
     }

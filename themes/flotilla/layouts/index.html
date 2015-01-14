@@ -2,13 +2,11 @@
 <html>
     <body>
         <div class="container">
-            <div id=fl-content>
-                {{ partial "logo.html" . }}
+                {{ partial "header.html" }}
                 {{ range where .Data.Pages "Title" "index"}}
-                    {{ .Content}}<br>
+                <div id="pagecontent">{{ .Content}}</div>
                 {{ end }}
                 {{ partial "footer.html" }}
-            </div>
         </div>
     </body>
 </html>

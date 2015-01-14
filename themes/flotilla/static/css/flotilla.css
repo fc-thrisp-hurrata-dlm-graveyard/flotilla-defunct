@@ -7,7 +7,7 @@
  ADB39B 173,179,155
  */
 
-.container { width: 620px; margin: 0 auto; margin-top: 2em; color: #333; font-family: "PT Sans", sans-serif; }
+.container { width: 620px; margin: 0 auto; margin-top: 2em; color: #333; font-family: "PT Sans", sans-serif;}
 
 a img {
     border: none;
@@ -43,13 +43,22 @@ code {
 
 td.code { width: 100%; }
 
-#fl-logo{margin-left: auto; margin-right: auto; width: 100%;}
-#fl-title{font-size:5em; font-weight: 900; float: left; width: 67%;}
-#fl-img{width: 32%; float: right;}
-#fl-img img{width: 200px;}
-#fl-tagline{}
+header{
+    height: 5rem;
+    font-size: 5rem;
+    font-weight: bold;
+    background-image: url("/flotilla/img/logo.png");
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-size: 25%;
+}
 
-#fl-content{}
-#fl-content > table{margin-left: auto; margin-right: auto; width: 100%;}
+#pagecontent > table{/*margin-left: auto; margin-right: auto; width: 100%;*/}
 
-.fl-sidebar{}
+footer {
+   position:fixed;
+   left:0px;
+   bottom:0px;
+   height:30px;
+   width:100%;
+}

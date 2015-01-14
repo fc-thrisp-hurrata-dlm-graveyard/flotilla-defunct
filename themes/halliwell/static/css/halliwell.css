@@ -1,8 +1,21 @@
-body{background-color: rgba(233,233,212,0.2);}
+/*
+ http://www.colourlovers.com/palette/177020/Amsterdam_Acid
+ C7FF00 199,255,0 green
+ 0069FF 0,105,255 blue
+ FF3B2F 255,59,47 red
+ 494E54 73,78,84
+ ADB39B 173,179,155
+ */
+body{background-color: rgba(173,179,155, 0.25);
+    background-image: url("/flotilla/img/logo.png");
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-size: 25%;
+}
 
-a {color: #272B5D; text-decoration: none;}
-a:hover {color: #3D4172; border-bottom: 1px dotted #3D4172;}
-a:visited {color: #595C88;}
+a {color: #0069FF; text-decoration: none;}
+a:hover {color: #FF3B2F; border-bottom: 1px dotted #0069FF;}
+a:visited {color: #0069FF;}
 a.reference em {font-style: normal;}
 
 pre {
@@ -11,7 +24,7 @@ pre {
     line-height: 1.5em;
     padding: .5em 1em; 
     border-radius: 5px;
-    background-color: rgba(245,245,245,0.8);
+    background-color: rgba(173,179,155, 0.8);
     text-shadow: 0 1px 0 white;
     overflow-x: auto;
 }
@@ -57,12 +70,8 @@ html {
 .sidebar {
   text-align: center;
   padding: 2rem 1rem;
-  color: #1C1D00;
-  background-color: rgba(194,196,116,0.4);
-  background-image: url("/flotilla/img/logo.png");
-  background-repeat: no-repeat;
-  background-position: right bottom;
-  background-size: contain;
+  color: rgba(173,179,155, 1.0);
+  background-color: rgba(0,105,255, 1.0);
 }
 
 @media (min-width: 48rem) {
@@ -76,14 +85,14 @@ html {
   }
 }
 
-/* Sidebar links 
-.sidebar a {
-  color: #;
-}*/
+/* Sidebar links */
+.sidebar a {color: rgba(173,179,155, 1.0);}
+.sidebar a:hover{color: #C7FF00}
+.sidebar a:visited{color: #C7FF00}
 
 /* About section */
 .sidebar-about h1 {
-  color: #1C1D00;
+  color: rgba(173,179,155, 1.0);
   margin-top: 0;
   font-family: "PT Sans", sans-serif;
   font-weight: 900;
@@ -115,12 +124,12 @@ html {
     position: absolute;
     right:  1rem;
     bottom: 1rem;
-    left:   1rem; 
+    left:   1rem;
   }
 }
 
 .sidebar-sticky h1 {
-  color: #1C1D00;
+  color: rgba(173,179,155, 1.0);
   margin-top: 0;
   font-family: "PT Sans", sans-serif;
   font-weight: 900;
